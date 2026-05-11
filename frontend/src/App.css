@@ -1,0 +1,32 @@
+/* 隐藏滚动条 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 打字机光标效果 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 脉冲动画延迟 */
+.delay-75 {
+  animation-delay: 75ms;
+}
+
+.delay-150 {
+  animation-delay: 150ms;
+}
+
+/* 全局触摸优化 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, input {
+  touch-action: manipulation;
+}
