@@ -31,7 +31,13 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+基于项目宪法原则，每个功能实现计划 MUST 验证以下检查项：
+
+- [ ] **类型安全**: 是否定义了完整的 Pydantic/TypeScript 类型？静态检查能否通过？
+- [ ] **测试覆盖**: 是否为该功能规划了单元测试、集成测试和契约测试？预期覆盖率是否达标？
+- [ ] **UX 一致性**: 是否遵循 NutUI-React 设计系统？跨端表现是否一致？
+- [ ] **性能影响**: 是否评估了接口延迟、数据库查询次数、缓存策略？
+- [ ] **可观测性**: 是否规划了日志、监控指标和错误追踪？
 
 ## Project Structure
 

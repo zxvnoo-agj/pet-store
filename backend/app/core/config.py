@@ -1,20 +1,28 @@
 from pydantic_settings import BaseSettings
+from functools import lru_cache
+
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Pet Supplies API"
-    DEBUG: bool = False
-    
-    # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost/pet_supplies"
-    
-    # Redis
+    DATABASE_URL: str = "postgresql+asyncpg://petshop:petshop123@localhost:5432/petshop"
     REDIS_URL: str = "redis://localhost:6379/0"
-    
-    # Security
-    SECRET_KEY: str = "your-secret-key-change-in-production"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
-    
+    SECRET_KEY: str = "change-me-in-production"
+    ACCESS_TOKEN_EXPIRE_DAYS: int = 7
+    WECHAT_APP_ID: str = ""
+    WECHAT_APP_SECRET: str = ""
+    OPENAI_API_KEY: str = ""
+    OPENAI_MODEL: str = "gpt-4o"
+    MEILISEARCH_URL: str = "http://localhost:7700"
+    MEILISEARCH_API_KEY: str = ""
+    DEBUG: bool = False
+
     class Config:
         env_file = ".env"
+        case_sensitive = True
 
-settings = Settings()
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()
