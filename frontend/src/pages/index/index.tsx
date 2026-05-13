@@ -91,7 +91,6 @@ export default function HomePage() {
           id: p.id,
           name: p.name,
           icon: p.icon,
-          subtitle: '去看看',
           isMine: false,
         })
       }
@@ -119,10 +118,6 @@ export default function HomePage() {
 
   const navigateToProducts = (petType: string) => {
     Taro.navigateTo({ url: `/pages/product/list?petType=${petType}` })
-  }
-
-  const navigateToCategory = () => {
-    Taro.navigateTo({ url: '/pages/category/index' })
   }
 
   const activeUserPet = myPets.find(p => p.id === activePetId)
@@ -215,28 +210,6 @@ export default function HomePage() {
               </Text>
             </View>
             <Text className="text-white/70 text-xl">💬</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 轻量功能入口 */}
-      <View className="px-5 pt-5 pb-2">
-        <View className="flex gap-3">
-          <View
-            onClick={() => navigateToProducts(petTypeKey)}
-            className="flex-1 bg-white rounded-2xl p-4 border border-gray-100"
-          >
-            <Text className="text-orange-400 text-lg mb-2">📚</Text>
-            <Text className="text-sm font-medium text-gray-800">产品库</Text>
-            <Text className="text-[10px] text-gray-400 mt-0.5">看看大家的选择</Text>
-          </View>
-          <View
-            onClick={navigateToCategory}
-            className="flex-1 bg-white rounded-2xl p-4 border border-gray-100"
-          >
-            <Text className="text-teal-400 text-lg mb-2">🔍</Text>
-            <Text className="text-sm font-medium text-gray-800">分类 browse</Text>
-            <Text className="text-[10px] text-gray-400 mt-0.5">按品类慢慢逛</Text>
           </View>
         </View>
       </View>

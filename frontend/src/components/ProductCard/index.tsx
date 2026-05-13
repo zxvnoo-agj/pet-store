@@ -94,14 +94,14 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
         <Text className="text-xs text-gray-500 mt-0.5">{product.brand}</Text>
         
         {/* 优缺点标签 */}
-        <View className="flex flex-wrap gap-1 mt-1.5">
+        <View className="flex flex-wrap gap-1.5 mt-2">
           {product.pros.slice(0, 2).map((pro, i) => (
-            <Text key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full">
+            <Text key={`pro-${i}`} className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-full">
               +{pro}
             </Text>
           ))}
           {product.cons.slice(0, 1).map((con, i) => (
-            <Text key={`con-${i}`} className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full">
+            <Text key={`con-${i}`} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded-full">
               -{con}
             </Text>
           ))}
