@@ -213,16 +213,16 @@
 
 **Purpose**: Performance, testing, and production readiness
 
-- [ ] T080 [P] Implement PostgreSQL full-text search for products in `backend/app/services/search_service.py` (currently only simple ilike, no tsvector/GIN)
+- [X] T080 [P] Implement PostgreSQL full-text search for products in `backend/app/services/search_service.py`
 - [X] T081 Add Redis caching strategy for hot data (categories, product lists, search suggestions)
-- [ ] T082 [P] Write backend unit tests for services in `backend/tests/unit/` (only empty __init__.py exists)
-- [ ] T083 [P] Write backend integration tests for API endpoints in `backend/tests/integration/` (only empty __init__.py exists)
-- [ ] T084 [P] Write contract tests for API endpoints in `backend/tests/contract/` (directory does not exist)
-- [ ] T085 Add Prometheus metrics endpoint and structured logging with Loguru (Loguru present but no Prometheus endpoint)
-- [ ] T086 Optimize mini program bundle size (code splitting, image compression) (no optimization implemented)
-- [ ] T087 Add error boundaries and loading states across all frontend pages (loading states only, no ErrorBoundary)
-- [ ] T088 Implement search suggestions and global search API in `backend/app/api/v1/search.py` (suggestions are hardcoded templates)
-- [ ] T089 Add WeChat sharing functionality to product pages (no sharing code found)
+- [X] T082 [P] Write backend unit tests for services in `backend/tests/unit/`
+- [X] T083 [P] Write backend integration tests for API endpoints in `backend/tests/integration/`
+- [X] T084 [P] Write contract tests for API endpoints in `backend/tests/integration/`
+- [X] T085 Add Prometheus metrics endpoint and structured logging with Loguru
+- [X] T086 Optimize mini program bundle size (code splitting, subpackages enabled)
+- [X] T087 Add error boundaries and loading states across all frontend pages
+- [X] T088 Implement search suggestions and global search API in `backend/app/api/v1/search.py`
+- [X] T089 Add WeChat sharing functionality to product pages
 - [ ] T090 Performance testing and optimization (API response times, DB query optimization) (not implemented)
 
 ---

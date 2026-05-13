@@ -1,5 +1,5 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -25,6 +25,7 @@ class Product(Base):
     source_url = Column(String(256), nullable=True)
     source_platform = Column(String(32), nullable=True)
     status = Column(String(16), default="active")
+    search_vector = Column(TSVECTOR, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

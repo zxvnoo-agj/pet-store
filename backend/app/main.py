@@ -1,10 +1,12 @@
 import time
+import uuid
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from loguru import logger
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import (
@@ -20,6 +22,19 @@ from app.api.v1 import (
     products,
     reviews,
     search,
+)
+
+# Prometheus metrics
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status_code"],
+)
+REQUEST_DURATION = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
+    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
 app = FastAPI(
@@ -40,32 +55,81 @@ app.add_middleware(
 @app.middleware("http")
 async def request_logging_middleware(request: Request, call_next):
     start_time = time.time()
-    request_id = request.headers.get("X-Request-ID", "")
-
-    logger.info(
-        f"Request started: {request.method} {request.url.path} - ID: {request_id}"
-    )
-
-    try:
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(process_time)
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    
+    # Add request ID to context
+    with logger.contextualize(request_id=request_id):
         logger.info(
-            f"Request completed: {request.method} {request.url.path} - "
-            f"Status: {response.status_code} - Time: {process_time:.3f}s"
+            "Request started",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "query": str(request.query_params),
+                "client": request.client.host if request.client else None,
+            }
         )
-        return response
-    except Exception as exc:
-        process_time = time.time() - start_time
-        logger.error(
-            f"Request failed: {request.method} {request.url.path} - "
-            f"Time: {process_time:.3f}s - Error: {exc}"
-        )
-        raise
+
+        try:
+            response = await call_next(request)
+            process_time = time.time() - start_time
+            response.headers["X-Request-ID"] = request_id
+            response.headers["X-Process-Time"] = str(process_time)
+            
+            # Record Prometheus metrics
+            REQUEST_COUNT.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status_code=response.status_code,
+            ).inc()
+            REQUEST_DURATION.labels(
+                method=request.method,
+                endpoint=request.url.path,
+            ).observe(process_time)
+            
+            logger.info(
+                "Request completed",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "duration_ms": round(process_time * 1000, 2),
+                }
+            )
+            return response
+        except Exception as exc:
+            process_time = time.time() - start_time
+            REQUEST_COUNT.labels(
+                method=request.method,
+                endpoint=request.url.path,
+                status_code=500,
+            ).inc()
+            REQUEST_DURATION.labels(
+                method=request.method,
+                endpoint=request.url.path,
+            ).observe(process_time)
+            
+            logger.error(
+                "Request failed",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "duration_ms": round(process_time * 1000, 2),
+                    "error": str(exc),
+                }
+            )
+            raise
 
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    logger.warning(
+        "HTTP exception",
+        extra={
+            "path": request.url.path,
+            "status_code": exc.status_code,
+            "detail": exc.detail,
+        }
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={"code": exc.status_code, "message": exc.detail, "data": None},
@@ -75,6 +139,13 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
+    logger.warning(
+        "Validation error",
+        extra={
+            "path": request.url.path,
+            "errors": errors,
+        }
+    )
     return JSONResponse(
         status_code=400,
         content={
@@ -87,7 +158,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.exception(f"Unhandled exception: {exc}")
+    logger.exception(
+        "Unhandled exception",
+        extra={
+            "path": request.url.path,
+            "error_type": type(exc).__name__,
+        }
+    )
     return JSONResponse(
         status_code=500,
         content={"code": 5000, "message": "Internal server error", "data": None},
@@ -96,7 +173,16 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint."""
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
 
 
 app.include_router(categories.router, prefix="/v1")

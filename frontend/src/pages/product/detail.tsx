@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
+import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
 import { useCompareStore } from '../../stores/compareStore'
 import { useAuthStore } from '../../stores/authStore'
 import { checkLoginStatus } from '../../services/auth'
+import { ErrorBoundary } from '../../components/ErrorBoundary'
+import { Loading } from '../../components/Loading'
 
-export default function ProductDetailPage() {
+function ProductDetailContent() {
   const router = useRouter()
   const { id } = router.params
   const [product, setProduct] = useState<any>(null)
@@ -85,18 +87,34 @@ export default function ProductDetailPage() {
     Taro.navigateTo({ url: `/pages/chat/index?productId=${id}` })
   }
 
+  // WeChat sharing
+  useShareAppMessage(() => {
+    if (!product) return { title: '宠物用品推荐' }
+    return {
+      title: `${product.name} - ${product.brand || '宠物用品'}`,
+      path: `/pages/product/detail?id=${id}`,
+      imageUrl: product.image_urls?.[0] || '',
+    }
+  })
+
+  useShareTimeline(() => {
+    if (!product) return { title: '宠物用品推荐' }
+    return {
+      title: `${product.name} - ${product.brand || '宠物用品'}`,
+      query: `id=${id}`,
+      imageUrl: product.image_urls?.[0] || '',
+    }
+  })
+
   if (loading) {
-    return (
-      <View className="flex items-center justify-center h-screen text-gray-400">
-        <Text>加载中...</Text>
-      </View>
-    )
+    return <Loading fullScreen text="加载商品详情..." />
   }
 
   if (!product) {
     return (
-      <View className="flex items-center justify-center h-screen text-gray-400">
-        <Text>商品不存在</Text>
+      <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <Text className="text-4xl mb-2">📦</Text>
+        <Text className="text-gray-500">商品不存在或已下架</Text>
       </View>
     )
   }
@@ -125,13 +143,14 @@ export default function ProductDetailPage() {
             <Text className={isFavorited ? 'text-red-400' : 'text-white'}>{isFavorited ? '❤️' : '🤍'}</Text>
           </View>
           <View className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center">
-            <Text className="text-white">↗️</Text>
+            <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent text-white text-sm">
+              ↗️
+            </Button>
           </View>
         </View>
       </View>
 
-      <ScrollView className="flex-1" scrollY
->
+      <ScrollView className="flex-1" scrollY>
         {/* 商品图片 */}
         <View className="aspect-square bg-gray-100">
           <Image src={product.image_urls?.[0] || ''} className="w-full h-full object-cover" />
@@ -341,5 +360,13 @@ export default function ProductDetailPage() {
         </View>
       </View>
     </View>
+  )
+}
+
+export default function ProductDetailPage() {
+  return (
+    <ErrorBoundary>
+      <ProductDetailContent />
+    </ErrorBoundary>
   )
 }

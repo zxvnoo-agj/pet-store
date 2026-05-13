@@ -24,6 +24,14 @@ const config = {
     enable: false
   },
   mini: {
+    // Bundle size optimization
+    optimizeMainPackage: {
+      enable: true,
+    },
+    // Code splitting for subpackages
+    subPackages: {
+      enable: true,
+    },
     postcss: {
       pxtransform: {
         enable: true,
