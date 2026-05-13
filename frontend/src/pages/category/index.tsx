@@ -31,9 +31,9 @@ export default function CategoryPage() {
     Taro.navigateTo({ url: '/pages/search/index' })
   }
 
-  const navigateToProducts = (categoryName: string) => {
+  const navigateToProducts = (categoryId: number, categoryName: string) => {
     Taro.navigateTo({
-      url: `/pages/product/list?petType=${activePet}&category=${categoryName}`,
+      url: `/pages/product/list?petType=${activePet}&categoryId=${categoryId}&category=${categoryName}`,
     })
   }
 
@@ -92,7 +92,7 @@ export default function CategoryPage() {
               <View
                 key={cat.id}
                 className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50"
-                onClick={() => navigateToProducts(cat.name)}
+                onClick={() => navigateToProducts(cat.id, cat.name)}
               >
                 <Text className="text-3xl">{cat.icon}</Text>
                 <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>

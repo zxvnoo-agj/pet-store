@@ -40,6 +40,14 @@ const config = {
         enable: true,
         config: {}
       }
+    },
+    devServer: {
+      static: {
+        directory: require('path').resolve(__dirname, '..')
+      }
+    },
+    webpackChain(chain) {
+      chain.module.rule('js').resolve.set('fullySpecified', false)
     }
   }
 }

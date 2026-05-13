@@ -1,7 +1,8 @@
 import Taro from '@tarojs/taro'
+import { useAuthStore } from '../stores/authStore'
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:8000/v1'
+  ? 'http://localhost:8001/v1'
   : 'https://api.your-domain.com/v1'
 
 interface RequestOptions {
@@ -13,21 +14,28 @@ interface RequestOptions {
 
 class ApiClient {
   private baseURL: string
-  private token: string | null = null
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
   }
 
   setToken(token: string | null) {
-    this.token = token
+    // 保持兼容，实际每次请求都从 store 读取
+    if (token) {
+      useAuthStore.getState().setToken(token)
+    }
+  }
+
+  private getToken(): string | null {
+    return useAuthStore.getState().token
   }
 
   async request<T = any>(options: RequestOptions): Promise<T> {
     const { url, method = 'GET', data, headers = {} } = options
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`
+    const token = this.getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
 
     try {

@@ -1,12 +1,26 @@
+import time
+
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from loguru import logger
-import time
-from app.core.config import settings
-from app.api.v1 import categories, products, reviews, chat, auth, favorites, search
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.api.v1 import (
+    admin_auth,
+    admin_categories,
+    admin_data_sources,
+    admin_products,
+    admin_reviews,
+    auth,
+    categories,
+    chat,
+    favorites,
+    products,
+    reviews,
+    search,
+)
 
 app = FastAPI(
     title="Pet Supplies Assistant API",
@@ -16,7 +30,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:10086", "http://localhost:3001", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,11 +41,11 @@ app.add_middleware(
 async def request_logging_middleware(request: Request, call_next):
     start_time = time.time()
     request_id = request.headers.get("X-Request-ID", "")
-    
+
     logger.info(
         f"Request started: {request.method} {request.url.path} - ID: {request_id}"
     )
-    
+
     try:
         response = await call_next(request)
         process_time = time.time() - start_time
@@ -92,3 +106,10 @@ app.include_router(chat.router, prefix="/v1")
 app.include_router(auth.router, prefix="/v1")
 app.include_router(favorites.router, prefix="/v1")
 app.include_router(search.router, prefix="/v1")
+
+# Admin routes
+app.include_router(admin_auth.router, prefix="/v1")
+app.include_router(admin_products.router, prefix="/v1")
+app.include_router(admin_categories.router, prefix="/v1")
+app.include_router(admin_reviews.router, prefix="/v1")
+app.include_router(admin_data_sources.router, prefix="/v1")

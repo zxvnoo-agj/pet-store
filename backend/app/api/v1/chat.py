@@ -1,12 +1,12 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.schemas.common import ApiResponse
-from app.schemas.chat import ChatSessionCreate, ChatSessionResponse, ChatMessageHistory, ChatStreamRequest
-from app.services.chat_service import ChatService
+
 from app.agents.agent import AIAgent
+from app.core.database import get_db
+from app.schemas.chat import ChatSessionCreate, ChatStreamRequest
+from app.schemas.common import ApiResponse
+from app.services.chat_service import ChatService
 
 router = APIRouter()
 
@@ -61,25 +61,37 @@ async def chat_stream(
 ):
     service = ChatService(db)
     agent = AIAgent(db)
-    
+
     # Get chat history
     messages = await service.get_session_messages(data.session_id)
     history = [{"role": msg.role, "content": msg.content} for msg in messages[-10:]]
-    
+
     # Save user message
     await service.add_message(data.session_id, "user", data.content)
-    
+
     async def event_generator():
         full_response = ""
+        referenced_products = []
         async for chunk in agent.chat_stream(data.content, history):
             if chunk.startswith("data: "):
                 content = chunk[6:].strip()
                 full_response += content
+            elif chunk.startswith("event: products\ndata: "):
+                import json
+                try:
+                    products_data = json.loads(chunk[len("event: products\ndata: "):])
+                    referenced_products = products_data.get("products", [])
+                except json.JSONDecodeError:
+                    pass
             yield chunk
-        
-        # Save assistant message
-        await service.add_message(data.session_id, "assistant", full_response)
-    
+
+        # Save assistant message with referenced products
+        product_ids = [p["id"] for p in referenced_products if "id" in p]
+        await service.add_message(
+            data.session_id, "assistant", full_response,
+            referenced_products=product_ids or None
+        )
+
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",

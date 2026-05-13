@@ -3,6 +3,7 @@ import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import ProductCard from '../../components/ProductCard'
 import { useProductStore } from '../../stores/productStore'
+import { useCompareStore } from '../../stores/compareStore'
 import { apiClient } from '../../services/api'
 
 type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating_desc'
@@ -15,20 +16,23 @@ export default function ProductListPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
 
+  const { compareList } = useCompareStore()
+
   const petType = params?.petType || ''
-  const category = params?.category || ''
-  const searchQuery = params?.search || ''
+  const categoryId = params?.categoryId || ''
+  const category = decodeURIComponent(params?.category || '')
+  const searchQuery = decodeURIComponent(params?.search || '')
 
   useEffect(() => {
     fetchProducts()
-  }, [petType, category, searchQuery, sortBy])
+  }, [petType, categoryId, category, searchQuery, sortBy])
 
   const fetchProducts = async () => {
     setLoading(true)
     try {
       const query: any = { page: 1, page_size: 20 }
       if (petType) query.pet_type = petType
-      if (category) query.category_id = category
+      if (categoryId) query.category_id = categoryId
       if (sortBy !== 'default') query.sort = sortBy
 
       const res = await apiClient.get('/products', query)
@@ -114,6 +118,28 @@ export default function ProductListPage() {
           </View>
         )}
       </View>
+
+      {/* 对比浮动栏 */}
+      {compareList.length > 0 && (
+        <View
+          className="shrink-0 px-4 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3 z-10"
+        >
+          <View className="flex items-center gap-2 flex-1">
+            <View className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+              <Text className="text-sm">📊</Text>
+            </View>
+            <Text className="text-sm text-gray-700">
+              已选 <Text className="text-orange-500 font-bold">{compareList.length}</Text> 个商品
+            </Text>
+          </View>
+          <View
+            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full"
+            onClick={() => Taro.navigateTo({ url: '/pages/product/compare' })}
+          >
+            <Text>去对比</Text>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

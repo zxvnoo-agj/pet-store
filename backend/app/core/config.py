@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -11,6 +12,9 @@ class Settings(BaseSettings):
     WECHAT_APP_SECRET: str = ""
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o"
+    DASHSCOPE_API_KEY: str = ""
+    DASHSCOPE_MODEL: str = "deepseek-v4-flash"
+    DASHSCOPE_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     MEILISEARCH_URL: str = "http://localhost:7700"
     MEILISEARCH_API_KEY: str = ""
     DEBUG: bool = False
@@ -20,7 +24,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     return Settings()
 

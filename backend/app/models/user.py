@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import JSONB
+
 from app.core.database import Base
 
 
@@ -13,5 +14,6 @@ class User(Base):
     avatar_url = Column(String(256), nullable=True)
     pet_types = Column(JSONB, default=list)
     profile = Column(JSONB, default=dict)
+    is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -1,10 +1,10 @@
-from typing import Optional
+
 from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
-    nickname: Optional[str] = None
-    avatar_url: Optional[str] = None
+    nickname: str | None = None
+    avatar_url: str | None = None
     pet_types: list = []
     profile: dict = {}
 
@@ -22,8 +22,8 @@ class UserResponse(UserBase):
 
 class WechatLoginRequest(BaseModel):
     code: str
-    encrypted_data: Optional[str] = None
-    iv: Optional[str] = None
+    encrypted_data: str | None = None
+    iv: str | None = None
 
 
 class WechatLoginResponse(BaseModel):

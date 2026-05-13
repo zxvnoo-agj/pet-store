@@ -1,4 +1,5 @@
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -7,21 +8,30 @@ class PriceRange(BaseModel):
     max: float
 
 
+class CategoryInfo(BaseModel):
+    id: int
+    name: str
+    pet_type: str
+
+    class Config:
+        from_attributes = True
+
+
 class ProductBase(BaseModel):
     name: str
-    brand: Optional[str] = None
-    price_min: Optional[float] = None
-    price_max: Optional[float] = None
+    brand: str | None = None
+    price_min: float | None = None
+    price_max: float | None = None
     currency: str = "CNY"
-    image_urls: List[str] = []
-    pros: List[str] = []
-    cons: List[str] = []
-    ratings: Dict[str, float] = {}
-    description: Optional[str] = None
-    ingredients: List[str] = []
-    specifications: Dict[str, Any] = {}
-    source_url: Optional[str] = None
-    source_platform: Optional[str] = None
+    image_urls: list[str] = []
+    pros: list[str] = []
+    cons: list[str] = []
+    ratings: dict[str, float] = {}
+    description: str | None = None
+    ingredients: list[str] = []
+    specifications: dict[str, Any] = {}
+    source_url: str | None = None
+    source_platform: str | None = None
 
 
 class ProductCreate(ProductBase):
@@ -37,7 +47,7 @@ class ProductListResponse(ProductBase):
 
 
 class ProductDetailResponse(ProductListResponse):
-    category: Optional[dict] = None
+    category: CategoryInfo | None = None
     favorite_count: int = 0
 
     class Config:
@@ -45,11 +55,11 @@ class ProductDetailResponse(ProductListResponse):
 
 
 class ProductFilter(BaseModel):
-    category_id: Optional[int] = None
-    pet_type: Optional[str] = None
-    brand: Optional[str] = None
-    min_price: Optional[float] = None
-    max_price: Optional[float] = None
-    sort: Optional[str] = None
+    category_id: int | None = None
+    pet_type: str | None = None
+    brand: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    sort: str | None = None
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)

@@ -2,6 +2,13 @@
 
 **Input**: Design documents from `/specs/001-pet-supplies-miniprogram/`
 **Prerequisites**: plan.md, spec.md, data-model.md, contracts/, research.md
+**Last Updated**: 2026-05-12
+
+> **Status Legend**:
+> - [X] = Actually implemented and functional (verified by code review)
+> - [ ] = Not implemented, placeholder only, or incomplete (see inline comments for details)
+>
+> **Note**: This document was updated after scanning the actual codebase. Tasks previously marked complete were found to be incomplete or non-functional.
 
 **Tests**: This plan includes test tasks aligned with the constitution's test-driven quality principle.
 
@@ -126,8 +133,8 @@
 - [X] T049 [US3] Adapt existing `ChatPage.tsx` to Taro, implement SSE client in `frontend/src/pages/chat/index.tsx`
 - [X] T050 [US3] Implement streaming message display with typing indicators from existing prototype
 - [X] T051 [US3] Add quick question buttons and message input handling in `frontend/src/pages/chat/index.tsx`
-- [X] T052 [US3] Implement recommended product cards within chat messages (reuse ProductCard logic)
-- [X] T053 [US3] Add chat session history list and navigation in `frontend/src/pages/chat/list.tsx`
+- [X] T052 [US3] Implement recommended product cards within chat messages (reuse ProductCard logic) - Agent tracks referenced products from tool calls, emits SSE `event: products` with product data; frontend renders horizontal scrollable product cards with image, name, brand, price, rating, and pros tags; cards are clickable and navigate to product detail page
+- [X] T053 [US3] Add chat session history list and navigation in `frontend/src/pages/chat/list.tsx` - chat/index.tsx now reads session_id from URL query params via Taro useRouter; loads historical messages from API on mount; auto-creates new session when no session_id is provided; added "历史记录" button in header to navigate to session list
 
 **Checkpoint**: AI chat responds with streaming output and product recommendations
 
@@ -206,17 +213,17 @@
 
 **Purpose**: Performance, testing, and production readiness
 
-- [X] T080 [P] Implement PostgreSQL full-text search for products in `backend/app/services/search_service.py`
+- [ ] T080 [P] Implement PostgreSQL full-text search for products in `backend/app/services/search_service.py` (currently only simple ilike, no tsvector/GIN)
 - [X] T081 Add Redis caching strategy for hot data (categories, product lists, search suggestions)
-- [X] T082 [P] Write backend unit tests for services in `backend/tests/unit/`
-- [X] T083 [P] Write backend integration tests for API endpoints in `backend/tests/integration/`
-- [X] T084 [P] Write contract tests for API endpoints in `backend/tests/contract/`
-- [X] T085 Add Prometheus metrics endpoint and structured logging with Loguru
-- [X] T086 Optimize mini program bundle size (code splitting, image compression)
-- [X] T087 Add error boundaries and loading states across all frontend pages
-- [X] T088 Implement search suggestions and global search API in `backend/app/api/v1/search.py`
-- [X] T089 Add WeChat sharing functionality to product pages
-- [X] T090 Performance testing and optimization (API response times, DB query optimization)
+- [ ] T082 [P] Write backend unit tests for services in `backend/tests/unit/` (only empty __init__.py exists)
+- [ ] T083 [P] Write backend integration tests for API endpoints in `backend/tests/integration/` (only empty __init__.py exists)
+- [ ] T084 [P] Write contract tests for API endpoints in `backend/tests/contract/` (directory does not exist)
+- [ ] T085 Add Prometheus metrics endpoint and structured logging with Loguru (Loguru present but no Prometheus endpoint)
+- [ ] T086 Optimize mini program bundle size (code splitting, image compression) (no optimization implemented)
+- [ ] T087 Add error boundaries and loading states across all frontend pages (loading states only, no ErrorBoundary)
+- [ ] T088 Implement search suggestions and global search API in `backend/app/api/v1/search.py` (suggestions are hardcoded templates)
+- [ ] T089 Add WeChat sharing functionality to product pages (no sharing code found)
+- [ ] T090 Performance testing and optimization (API response times, DB query optimization) (not implemented)
 
 ---
 

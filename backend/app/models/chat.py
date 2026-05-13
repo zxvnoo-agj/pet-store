@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
 
 
@@ -12,7 +13,7 @@ class ChatSession(Base):
     title = Column(String(128), nullable=True)
     model = Column(String(32), default="gpt-4o")
     system_prompt = Column(Text, nullable=True)
-    metadata = Column(JSONB, default=dict)
+    session_metadata = Column(JSONB, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

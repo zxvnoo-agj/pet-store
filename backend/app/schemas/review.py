@@ -1,19 +1,19 @@
 from datetime import datetime
-from typing import Optional, List
+
 from pydantic import BaseModel
 
 
 class ReviewUser(BaseModel):
     nickname: str
-    avatar: Optional[str] = None
+    avatar: str | None = None
 
 
 class ReviewBase(BaseModel):
     rating: float
     content: str
-    images: List[str] = []
-    tags: List[str] = []
-    is_recommended: Optional[bool] = None
+    images: list[str] = []
+    tags: list[str] = []
+    is_recommended: bool | None = None
 
 
 class ReviewCreate(ReviewBase):
@@ -22,7 +22,7 @@ class ReviewCreate(ReviewBase):
 
 class ReviewResponse(ReviewBase):
     id: int
-    user: Optional[ReviewUser] = None
+    user: ReviewUser | None = None
     helpful_count: int = 0
     created_at: datetime
 
@@ -32,10 +32,10 @@ class ReviewResponse(ReviewBase):
 
 class ReviewSummary(BaseModel):
     rating_distribution: dict = {}
-    top_tags: List[str] = []
+    top_tags: list[str] = []
     recommend_rate: float = 0.0
 
 
 class ReviewListResponse(BaseModel):
-    reviews: List[ReviewResponse]
+    reviews: list[ReviewResponse]
     summary: ReviewSummary

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
+import { useCompareStore } from '../../stores/compareStore'
+import { useAuthStore } from '../../stores/authStore'
+import { checkLoginStatus } from '../../services/auth'
 
 export default function ProductDetailPage() {
   const router = useRouter()
@@ -13,12 +16,46 @@ export default function ProductDetailPage() {
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const { addToCompare, isInCompare } = useCompareStore()
+  const { isLoggedIn } = useAuthStore()
+  const inCompare = id ? isInCompare(Number(id)) : false
+
   useEffect(() => {
+    checkLoginStatus()
     if (id) {
       fetchProductDetail()
       fetchReviews()
+      fetchFavoriteStatus()
     }
   }, [id])
+
+  const fetchFavoriteStatus = async () => {
+    if (!isLoggedIn || !id) return
+    try {
+      const res = await apiClient.get(`/products/${id}/favorite`)
+      setIsFavorited(res.is_favorited)
+    } catch {
+      // 静默处理
+    }
+  }
+
+  const toggleFavorite = async () => {
+    if (!isLoggedIn) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    if (!id) return
+    try {
+      const res = await apiClient.post(`/products/${id}/favorite`)
+      setIsFavorited(res.is_favorited)
+      Taro.showToast({
+        title: res.is_favorited ? '已收藏' : '已取消收藏',
+        icon: 'success',
+      })
+    } catch (error: any) {
+      Taro.showToast({ title: error.message || '操作失败', icon: 'none' })
+    }
+  }
 
   const fetchProductDetail = async () => {
     try {
@@ -83,7 +120,7 @@ export default function ProductDetailPage() {
         <View className="flex gap-2">
           <View
             className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center"
-            onClick={() => setIsFavorited(!isFavorited)}
+            onClick={toggleFavorite}
           >
             <Text className={isFavorited ? 'text-red-400' : 'text-white'}>{isFavorited ? '❤️' : '🤍'}</Text>
           </View>
@@ -291,8 +328,13 @@ export default function ProductDetailPage() {
           <Text className="text-orange-500 text-lg">🤖</Text>
           <Text className="text-[10px] text-gray-500">问AI</Text>
         </View>
-        <View className="flex-1 bg-orange-500 text-white text-sm font-medium py-2.5 rounded-full text-center">
-          <Text>加入对比</Text>
+        <View
+          className={`flex-1 text-white text-sm font-medium py-2.5 rounded-full text-center ${
+            inCompare ? 'bg-orange-300' : 'bg-orange-500'
+          }`}
+          onClick={() => id && addToCompare(Number(id))}
+        >
+          <Text>{inCompare ? '已加入对比' : '加入对比'}</Text>
         </View>
         <View className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center">
           <Text>去购买</Text>

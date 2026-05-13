@@ -1,5 +1,6 @@
-from typing import List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.services.product_service import ProductService
 from app.services.review_service import ReviewService
 
@@ -10,8 +11,8 @@ class AgentTools:
         self.product_service = ProductService(db)
         self.review_service = ReviewService(db)
 
-    async def search_products(self, pet_type: Optional[str] = None, category: Optional[str] = None, 
-                             brand: Optional[str] = None, max_price: Optional[float] = None) -> List[dict]:
+    async def search_products(self, pet_type: str | None = None, category: str | None = None,
+                             brand: str | None = None, max_price: float | None = None) -> list[dict]:
         from app.schemas.product import ProductFilter
         filters = ProductFilter(
             pet_type=pet_type,
@@ -23,7 +24,7 @@ class AgentTools:
         products, _ = await self.product_service.get_products(filters)
         return [p.model_dump() for p in products]
 
-    async def get_product_detail(self, product_id: int) -> Optional[dict]:
+    async def get_product_detail(self, product_id: int) -> dict | None:
         product = await self.product_service.get_product_by_id(product_id)
         if product:
             return {
@@ -44,7 +45,7 @@ class AgentTools:
         summary = await self.review_service.get_review_summary(product_id)
         return summary.model_dump()
 
-    async def compare_products(self, product_ids: List[int]) -> List[dict]:
+    async def compare_products(self, product_ids: list[int]) -> list[dict]:
         products = await self.product_service.compare_products(product_ids)
         return [{
             "id": p.id,

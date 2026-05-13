@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/pages/Categories/index.tsx","./src/pages/Dashboard/index.tsx","./src/pages/Login/index.tsx","./src/pages/Products/index.tsx","./src/pages/Reviews/index.tsx","./src/services/api.ts","./src/stores/authStore.ts"],"errors":true,"version":"6.0.3"}

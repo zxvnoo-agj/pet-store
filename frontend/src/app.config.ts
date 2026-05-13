@@ -26,18 +26,26 @@ export default defineAppConfig({
       {
         pagePath: 'pages/index/index',
         text: '首页',
+        iconPath: 'assets/tabbar/home.svg',
+        selectedIconPath: 'assets/tabbar/home-active.svg',
       },
       {
         pagePath: 'pages/category/index',
         text: '分类',
+        iconPath: 'assets/tabbar/category.svg',
+        selectedIconPath: 'assets/tabbar/category-active.svg',
       },
       {
         pagePath: 'pages/chat/index',
         text: 'AI助手',
+        iconPath: 'assets/tabbar/chat.svg',
+        selectedIconPath: 'assets/tabbar/chat-active.svg',
       },
       {
         pagePath: 'pages/mine/index',
         text: '我的',
+        iconPath: 'assets/tabbar/mine.svg',
+        selectedIconPath: 'assets/tabbar/mine-active.svg',
       },
     ],
   },

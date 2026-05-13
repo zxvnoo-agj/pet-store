@@ -1,5 +1,5 @@
 import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 
 async def stream_response(response_iterator) -> AsyncIterator[str]:
@@ -10,5 +10,5 @@ async def stream_response(response_iterator) -> AsyncIterator[str]:
         elif hasattr(chunk, 'tool_call_chunks') and chunk.tool_call_chunks:
             for tool_call in chunk.tool_call_chunks:
                 yield f"event: tool_call\ndata: {json.dumps({'tool': tool_call.name, 'args': tool_call.args})}\n\n"
-    
+
     yield f"event: done\ndata: {json.dumps({'message': 'completed'})}\n\n"

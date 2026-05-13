@@ -29,6 +29,10 @@ export default function MinePage() {
     Taro.navigateTo({ url: '/pages/mine/favorites' })
   }
 
+  const navigateToCompare = () => {
+    Taro.navigateTo({ url: '/pages/product/compare' })
+  }
+
   return (
     <View className="flex flex-col h-screen bg-gray-50">
       {/* 用户信息 */}
@@ -60,6 +64,14 @@ export default function MinePage() {
           onClick={navigateToFavorites}
         >
           <Text className="text-sm text-gray-800">我的收藏</Text>
+          <Text className="text-gray-400">→</Text>
+        </View>
+
+        <View
+          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
+          onClick={navigateToCompare}
+        >
+          <Text className="text-sm text-gray-800">商品对比</Text>
           <Text className="text-gray-400">→</Text>
         </View>
 

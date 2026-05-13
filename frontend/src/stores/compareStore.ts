@@ -1,27 +1,85 @@
 import { create } from 'zustand'
+import Taro from '@tarojs/taro'
+import { apiClient } from '../services/api'
+
+interface CompareProduct {
+  id: number
+  name: string
+  brand: string
+  price_range: { min: number; max: number }
+  image_urls: string[]
+  ratings: Record<string, number>
+  pros: string[]
+  cons: string[]
+  review_count: number
+  specifications?: Record<string, string>
+}
 
 interface CompareState {
   compareList: number[]
-  addToCompare: (productId: number) => void
+  products: CompareProduct[]
+  loading: boolean
+  dimensions: string[]
+  addToCompare: (productId: number) => Promise<void>
   removeFromCompare: (productId: number) => void
   clearCompare: () => void
   isInCompare: (productId: number) => boolean
+  fetchCompareData: () => Promise<void>
 }
 
 export const useCompareStore = create<CompareState>((set, get) => ({
   compareList: [],
-  addToCompare: (productId) => {
+  products: [],
+  loading: false,
+  dimensions: [],
+
+  addToCompare: async (productId) => {
     const { compareList } = get()
     if (compareList.length >= 4) {
+      Taro.showToast({ title: '最多对比4个商品', icon: 'none' })
       return
     }
-    if (!compareList.includes(productId)) {
-      set({ compareList: [...compareList, productId] })
+    if (compareList.includes(productId)) {
+      Taro.showToast({ title: '该商品已在对比栏', icon: 'none' })
+      return
+    }
+    const newList = [...compareList, productId]
+    set({ compareList: newList })
+    Taro.showToast({ title: '已加入对比', icon: 'success' })
+    await get().fetchCompareData()
+  },
+
+  removeFromCompare: (productId) => {
+    const newList = get().compareList.filter((id) => id !== productId)
+    set({
+      compareList: newList,
+      products: get().products.filter((p) => p.id !== productId),
+    })
+  },
+
+  clearCompare: () => set({ compareList: [], products: [], dimensions: [] }),
+
+  isInCompare: (productId) => get().compareList.includes(productId),
+
+  fetchCompareData: async () => {
+    const { compareList } = get()
+    if (compareList.length < 2) {
+      set({ products: [], dimensions: [] })
+      return
+    }
+    set({ loading: true })
+    try {
+      const ids = compareList.join(',')
+      const res = await apiClient.get('/products/compare', { ids })
+      set({
+        products: res.products || [],
+        dimensions: res.comparison?.dimensions || [],
+        loading: false,
+      })
+    } catch (error) {
+      console.error('Failed to fetch compare data:', error)
+      Taro.showToast({ title: '获取对比数据失败', icon: 'none' })
+      set({ loading: false })
     }
   },
-  removeFromCompare: (productId) => {
-    set({ compareList: get().compareList.filter((id) => id !== productId) })
-  },
-  clearCompare: () => set({ compareList: [] }),
-  isInCompare: (productId) => get().compareList.includes(productId),
 }))

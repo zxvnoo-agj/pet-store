@@ -4,9 +4,9 @@ export interface Product {
   brand: string;
   categoryId: number;
   petType: string;
-  priceMin: number;
-  priceMax: number;
-  imageUrl: string;
+  price_min: number;
+  price_max: number;
+  image_urls: string[];
   ratings: {
     overall: number;
     costPerformance: number;

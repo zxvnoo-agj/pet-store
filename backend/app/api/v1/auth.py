@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db
 from app.schemas.common import ApiResponse
-from app.schemas.user import WechatLoginRequest, WechatLoginResponse
+from app.schemas.user import WechatLoginRequest
 from app.services.auth_service import AuthService
 
 router = APIRouter()

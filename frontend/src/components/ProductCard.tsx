@@ -1,25 +1,37 @@
 import React from 'react';
-import { Star, MessageCircle, Heart } from 'lucide-react';
+import { Star, MessageCircle } from 'lucide-react';
 import type { Product } from '../types';
-import { useNavigate } from 'react-router-dom';
+import Taro from '@tarojs/taro';
+import { useCompareStore } from '../stores/compareStore';
 
 interface ProductCardProps {
   product: Product;
   variant?: 'horizontal' | 'vertical';
+  showCompare?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'horizontal' }) => {
-  const navigate = useNavigate();
+const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'horizontal', showCompare = true }) => {
+  const { addToCompare, isInCompare } = useCompareStore();
+  const inCompare = isInCompare(product.id);
+
+  const navigateToDetail = () => {
+    Taro.navigateTo({ url: `/pages/product/detail?id=${product.id}` });
+  };
+
+  const handleCompare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCompare(product.id);
+  };
 
   if (variant === 'vertical') {
     return (
       <div
         className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.98] transition-transform"
-        onClick={() => navigate(`/product/${product.id}`)}
+        onClick={navigateToDetail}
       >
         <div className="aspect-square overflow-hidden bg-gray-100">
           <img
-            src={product.imageUrl}
+            src={product.image_urls?.[0] || ''}
             alt={product.name}
             className="w-full h-full object-cover"
             loading="lazy"
@@ -35,10 +47,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'horizonta
           </div>
           <div className="flex items-baseline justify-between mt-1.5">
             <span className="text-orange-600 font-bold text-sm">
-              ¥{product.priceMin}
-              {product.priceMax > product.priceMin && <span className="text-xs">起</span>}
+              ¥{product.price_min}
+              {product.price_max > product.price_min && <span className="text-xs">起</span>}
             </span>
-            <Heart size={14} className="text-gray-300" />
+            {showCompare && (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer ${
+                  inCompare
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+                onClick={handleCompare}
+              >
+                {inCompare ? '已对比' : '对比'}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -48,11 +71,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'horizonta
   return (
     <div
       className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 active:bg-gray-50 transition-colors"
-      onClick={() => navigate(`/product/${product.id}`)}
+      onClick={navigateToDetail}
     >
       <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shrink-0">
         <img
-          src={product.imageUrl}
+          src={product.image_urls?.[0] || ''}
           alt={product.name}
           className="w-full h-full object-cover"
           loading="lazy"
@@ -87,9 +110,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'horizonta
               <span className="text-[10px]">{product.reviewCount}</span>
             </div>
           </div>
-          <span className="text-orange-600 font-bold text-sm">
-            ¥{product.priceMin}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-orange-600 font-bold text-sm">
+              ¥{product.price_min}
+            </span>
+            {showCompare && (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer ${
+                  inCompare
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'bg-gray-100 text-gray-500'
+                }`}
+                onClick={handleCompare}
+              >
+                {inCompare ? '已对比' : '对比'}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

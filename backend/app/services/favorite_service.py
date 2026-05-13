@@ -1,6 +1,6 @@
-from typing import List, Optional
-from sqlalchemy import select, desc, func
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.favorite import Favorite
 from app.models.product import Product
 from app.schemas.product import ProductListResponse
@@ -44,7 +44,7 @@ class FavoriteService:
 
     async def get_user_favorites(
         self, user_id: int, page: int = 1, page_size: int = 20
-    ) -> tuple[List[ProductListResponse], int]:
+    ) -> tuple[list[ProductListResponse], int]:
         query = (
             select(Product)
             .join(Favorite, Favorite.product_id == Product.id)

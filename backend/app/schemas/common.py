@@ -1,4 +1,5 @@
-from typing import Generic, TypeVar, Optional, List
+from typing import Generic, TypeVar
+
 from pydantic import BaseModel
 
 T = TypeVar("T")
@@ -14,11 +15,11 @@ class Pagination(BaseModel):
 class ApiResponse(BaseModel, Generic[T]):
     code: int = 0
     message: str = "success"
-    data: Optional[T] = None
-    pagination: Optional[Pagination] = None
+    data: T | None = None
+    pagination: Pagination | None = None
 
 
 class ApiError(BaseModel):
     code: int
     message: str
-    detail: Optional[dict] = None
+    detail: dict | None = None

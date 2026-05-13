@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Optional, List, Any
+
 from pydantic import BaseModel
 
 
 class ChatSessionCreate(BaseModel):
-    title: Optional[str] = None
-    system_prompt: Optional[str] = None
+    title: str | None = None
+    system_prompt: str | None = None
 
 
 class ChatSessionResponse(BaseModel):
@@ -21,9 +21,9 @@ class ChatSessionResponse(BaseModel):
 class ChatMessageBase(BaseModel):
     role: str
     content: str
-    tool_calls: Optional[List[dict]] = None
-    tokens_used: Optional[int] = None
-    referenced_products: List[int] = []
+    tool_calls: list[dict] | None = None
+    tokens_used: int | None = None
+    referenced_products: list[int] = []
 
 
 class ChatMessageResponse(ChatMessageBase):
@@ -37,8 +37,8 @@ class ChatMessageResponse(ChatMessageBase):
 class ChatStreamRequest(BaseModel):
     session_id: int
     content: str
-    context: Optional[dict] = None
+    context: dict | None = None
 
 
 class ChatMessageHistory(BaseModel):
-    messages: List[ChatMessageResponse]
+    messages: list[ChatMessageResponse]

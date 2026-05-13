@@ -1,6 +1,8 @@
 import json
-from typing import Optional, Any
+from typing import Any
+
 import redis.asyncio as redis
+
 from app.core.config import settings
 
 redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
@@ -8,7 +10,7 @@ redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 class Cache:
     @staticmethod
-    async def get(key: str) -> Optional[Any]:
+    async def get(key: str) -> Any | None:
         value = await redis_client.get(key)
         if value:
             try:
