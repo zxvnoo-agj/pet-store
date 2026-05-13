@@ -135,20 +135,19 @@ export default function HomePage() {
     <View className="bg-gray-50 min-h-screen">
       {/* 顶部欢迎区 */}
       <View className="px-5 pt-6 pb-2">
-        <View className="flex items-start justify-between">
-          <View>
-            <Text className="text-xs text-gray-400">下午好 👋</Text>
-            <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
-              今天想给{'\n'}
-              <Text className="text-orange-500">{getActivePetName()}</Text> 看点什么？
-            </Text>
-          </View>
-          <View
-            onClick={navigateToSearch}
-            className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center"
-          >
-            <Text className="text-gray-500">🔍</Text>
-          </View>
+        <View>
+          <Text className="text-xs text-gray-400">下午好 👋</Text>
+          <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
+            今天想给{'\n'}
+            <Text className="text-orange-500">{getActivePetName()}</Text> 看点什么？
+          </Text>
+        </View>
+        <View
+          onClick={navigateToSearch}
+          className="mt-3 flex items-center gap-2 bg-white rounded-full px-4 py-2.5 shadow-sm border border-gray-100"
+        >
+          <Text className="text-gray-400 text-sm">🔍</Text>
+          <Text className="text-sm text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
         </View>
       </View>
 
