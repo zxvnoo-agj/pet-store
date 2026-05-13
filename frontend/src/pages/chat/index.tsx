@@ -51,7 +51,7 @@ export default function ChatPage() {
     {
       id: 0,
       role: 'assistant',
-      content: '你好！我是你的宠物用品顾问🐾\n\n我可以帮你：\n• 根据宠物情况推荐合适的用品\n• 对比不同产品的优缺点\n• 分析真实用户评价\n• 解答养宠常见问题\n\n有什么可以帮你的吗？',
+      content: '你好！我是宠物用品顾问🐾\n可以帮你推荐用品、对比产品、分析评价。有什么可以帮你的？',
       isComplete: true,
     },
   ])
@@ -368,7 +368,7 @@ export default function ChatPage() {
   }
 
   return (
-    <View className="flex flex-col bg-gray-50" style={{ height: pageHeightRef.current ? `${pageHeightRef.current}px` : '100vh' }}>
+    <View className="flex flex-col h-screen bg-gray-50">
       {/* 头部 */}
       <View className="shrink-0 bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100 z-10">
         <View className="flex items-center gap-3">
