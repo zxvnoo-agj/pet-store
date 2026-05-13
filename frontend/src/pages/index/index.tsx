@@ -4,10 +4,7 @@ import Taro from '@tarojs/taro'
 import ProductCard from '../../components/ProductCard'
 import { apiClient } from '../../services/api'
 import { useProductStore } from '../../stores/productStore'
-
-const myPets = [
-  { id: 'mimi', name: '咪咪', type: 'cat', breed: '英短', icon: '🐱' },
-]
+import { useAuthStore } from '../../stores/authStore'
 
 const defaultPetChoices = [
   { id: 'cat', name: '猫咪', icon: '🐱' },
@@ -16,18 +13,50 @@ const defaultPetChoices = [
   { id: 'fish', name: '水族', icon: '🐟' },
 ]
 
+const PET_TYPE_MAP: Record<string, { name: string; icon: string }> = {
+  cat: { name: '猫咪', icon: '🐱' },
+  dog: { name: '狗狗', icon: '🐶' },
+  bird: { name: '鸟类', icon: '🐦' },
+  fish: { name: '水族', icon: '🐟' },
+}
+
 export default function HomePage() {
-  const [activePetId, setActivePetId] = useState(myPets[0]?.id || 'cat')
+  const { isLoggedIn, user } = useAuthStore()
+  const [activePetId, setActivePetId] = useState('cat')
   const [recommendedProducts, setRecommendedProducts] = useState([])
+
+  // 获取用户的宠物列表
+  const getUserPets = () => {
+    if (!isLoggedIn || !user?.pet_types || user.pet_types.length === 0) {
+      return []
+    }
+    return user.pet_types.map((type: string, index: number) => ({
+      id: `my-${type}-${index}`,
+      name: PET_TYPE_MAP[type]?.name || type,
+      type,
+      icon: PET_TYPE_MAP[type]?.icon || '🐾',
+    }))
+  }
+
+  const myPets = getUserPets()
+
+  useEffect(() => {
+    // 初始化默认选中的宠物
+    if (myPets.length > 0) {
+      setActivePetId(myPets[0].id)
+    } else {
+      setActivePetId('cat')
+    }
+  }, [isLoggedIn, user])
 
   useEffect(() => {
     fetchRecommendedProducts()
   }, [activePetId])
 
   const fetchRecommendedProducts = async () => {
-    const activeBoundPet = myPets.find(p => p.id === activePetId)
+    const activeUserPet = myPets.find(p => p.id === activePetId)
     const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
-    const petTypeKey = activeBoundPet?.type || activeDefaultPet?.id || 'cat'
+    const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
 
     try {
       const res = await apiClient.get('/products', {
@@ -43,19 +72,21 @@ export default function HomePage() {
   const getPetDisplayList = () => {
     const list: Array<{ id: string; name: string; icon: string; subtitle?: string; isMine?: boolean }> = []
 
+    // 登录用户的宠物
     myPets.forEach(pet => {
       list.push({
         id: pet.id,
         name: pet.name,
         icon: pet.icon,
-        subtitle: pet.breed,
+        subtitle: '宠物',
         isMine: true,
       })
     })
 
-    const boundTypes = new Set(myPets.map(p => p.type))
+    // 默认宠物类型（排除用户已选的）
+    const userPetTypes = new Set(myPets.map(p => p.type))
     defaultPetChoices.forEach(p => {
-      if (!boundTypes.has(p.id)) {
+      if (!userPetTypes.has(p.id)) {
         list.push({
           id: p.id,
           name: p.name,
@@ -94,9 +125,16 @@ export default function HomePage() {
     Taro.navigateTo({ url: '/pages/category/index' })
   }
 
-  const activeBoundPet = myPets.find(p => p.id === activePetId)
+  const activeUserPet = myPets.find(p => p.id === activePetId)
   const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
-  const petTypeKey = activeBoundPet?.type || activeDefaultPet?.id || 'cat'
+  const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
+
+  // 获取当前展示宠物的名称
+  const getActivePetName = () => {
+    if (activeUserPet) return activeUserPet.name
+    if (activeDefaultPet) return activeDefaultPet.name
+    return '毛孩子'
+  }
 
   return (
     <View className="bg-gray-50 min-h-screen">
@@ -107,7 +145,7 @@ export default function HomePage() {
             <Text className="text-xs text-gray-400">下午好 👋</Text>
             <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
               今天想给{'\n'}
-              <Text className="text-orange-500">{myPets[0]?.name || '毛孩子'}</Text> 看点什么？
+              <Text className="text-orange-500">{getActivePetName()}</Text> 看点什么？
             </Text>
           </View>
           <View
@@ -207,7 +245,7 @@ export default function HomePage() {
       <View className="px-5 pt-6 pb-4">
         <View className="flex items-center justify-between mb-3">
           <Text className="text-sm text-gray-800">
-            给 <Text className="font-medium text-orange-500">{activeBoundPet?.name || activeDefaultPet?.name || '猫咪'}</Text> 的推荐
+            给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的推荐
           </Text>
           <Text
             className="text-[11px] text-gray-400"
