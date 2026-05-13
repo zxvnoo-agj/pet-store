@@ -110,10 +110,6 @@ export default function ChatPage() {
     }
   }
 
-  const goBack = () => {
-    Taro.navigateBack()
-  }
-
   const navigateToProduct = (productId: number) => {
     Taro.navigateTo({ url: `/pages/product/detail?id=${productId}` })
   }
@@ -371,18 +367,15 @@ export default function ChatPage() {
     <View className="flex flex-col h-screen bg-gray-50">
       {/* 头部 */}
       <View className="shrink-0 bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100 z-10">
-        <View className="flex items-center gap-3">
-          <Text className="text-gray-600 text-lg" onClick={goBack}>←</Text>
-          <View className="flex items-center gap-2.5">
-            <View className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
-              <Text className="text-white text-base">🐾</Text>
-            </View>
-            <View>
-              <Text className="text-sm font-bold text-gray-800">AI宠物顾问</Text>
-              <View className="flex items-center gap-1.5">
-                <View className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                <Text className="text-[10px] text-gray-400">在线</Text>
-              </View>
+        <View className="flex items-center gap-2.5">
+          <View className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
+            <Text className="text-white text-base">🐾</Text>
+          </View>
+          <View>
+            <Text className="text-sm font-bold text-gray-800">AI宠物顾问</Text>
+            <View className="flex items-center gap-1.5">
+              <View className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              <Text className="text-[10px] text-gray-400">在线</Text>
             </View>
           </View>
         </View>
