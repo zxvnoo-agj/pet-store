@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
@@ -20,7 +21,7 @@ async def admin_list_reviews(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    query = select(Review)
+    query = select(Review).options(selectinload(Review.user), selectinload(Review.product))
     count_query = select(func.count(Review.id))
 
     if status:
@@ -61,14 +62,18 @@ async def admin_approve_review(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Review).where(Review.id == review_id))
+    result = await db.execute(
+        select(Review)
+        .options(selectinload(Review.user), selectinload(Review.product))
+        .where(Review.id == review_id)
+    )
     review = result.scalar_one_or_none()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
     review.status = "approved"
     await db.commit()
-    await db.refresh(review)
+    await db.refresh(review, ["id", "product_id", "user_id", "rating", "content", "images", "tags", "is_recommended", "source", "source_url", "helpful_count", "status", "llm_review_result", "created_at", "updated_at"])
     return ApiResponse(data={"review": ReviewResponse.model_validate(review)})
 
 
@@ -78,14 +83,18 @@ async def admin_reject_review(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Review).where(Review.id == review_id))
+    result = await db.execute(
+        select(Review)
+        .options(selectinload(Review.user), selectinload(Review.product))
+        .where(Review.id == review_id)
+    )
     review = result.scalar_one_or_none()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
     review.status = "rejected"
     await db.commit()
-    await db.refresh(review)
+    await db.refresh(review, ["id", "product_id", "user_id", "rating", "content", "images", "tags", "is_recommended", "source", "source_url", "helpful_count", "status", "llm_review_result", "created_at", "updated_at"])
     return ApiResponse(data={"review": ReviewResponse.model_validate(review)})
 
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
@@ -19,7 +20,10 @@ async def admin_list_categories(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    query = select(Category)
+    query = (
+        select(Category)
+        .options(selectinload(Category.children))
+    )
     count_query = select(func.count(Category.id))
 
     if pet_type:
@@ -59,7 +63,7 @@ async def admin_create_category(
     category = Category(**data.model_dump(exclude={"id", "children"}))
     db.add(category)
     await db.commit()
-    await db.refresh(category)
+    await db.refresh(category, ["id", "name", "pet_type", "parent_id", "level", "icon", "sort_order", "is_active", "created_at"])
     return ApiResponse(data={"category": CategoryResponse.model_validate(category)})
 
 
@@ -69,7 +73,11 @@ async def admin_get_category(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Category).where(Category.id == category_id))
+    result = await db.execute(
+        select(Category)
+        .options(selectinload(Category.children))
+        .where(Category.id == category_id)
+    )
     category = result.scalar_one_or_none()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -83,7 +91,11 @@ async def admin_update_category(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Category).where(Category.id == category_id))
+    result = await db.execute(
+        select(Category)
+        .options(selectinload(Category.children))
+        .where(Category.id == category_id)
+    )
     category = result.scalar_one_or_none()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -92,7 +104,7 @@ async def admin_update_category(
         setattr(category, key, value)
 
     await db.commit()
-    await db.refresh(category)
+    await db.refresh(category, ["id", "name", "pet_type", "parent_id", "level", "icon", "sort_order", "is_active", "created_at"])
     return ApiResponse(data={"category": CategoryResponse.model_validate(category)})
 
 
