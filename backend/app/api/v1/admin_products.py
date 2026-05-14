@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
@@ -20,7 +21,7 @@ async def admin_list_products(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    query = select(Product)
+    query = select(Product).options(selectinload(Product.category))
     count_query = select(func.count(Product.id))
 
     if status:
@@ -74,7 +75,11 @@ async def admin_get_product(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category))
+        .where(Product.id == product_id)
+    )
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -88,7 +93,11 @@ async def admin_update_product(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    result = await db.execute(select(Product).where(Product.id == product_id))
+    result = await db.execute(
+        select(Product)
+        .options(selectinload(Product.category))
+        .where(Product.id == product_id)
+    )
     product = result.scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
