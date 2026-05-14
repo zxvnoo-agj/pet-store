@@ -2,7 +2,7 @@
 
 **Input**: Design documents from `/specs/001-pet-supplies-miniprogram/`
 **Prerequisites**: plan.md, spec.md, data-model.md, contracts/, research.md
-**Last Updated**: 2026-05-12
+**Last Updated**: 2026-05-14
 
 > **Status Legend**:
 > - [X] = Actually implemented and functional (verified by code review)
@@ -223,7 +223,7 @@
 - [X] T087 Add error boundaries and loading states across all frontend pages
 - [X] T088 Implement search suggestions and global search API in `backend/app/api/v1/search.py`
 - [X] T089 Add WeChat sharing functionality to product pages
-- [ ] T090 Performance testing and optimization (API response times, DB query optimization) (not implemented)
+- [X] T090 Performance testing and optimization (API response times, DB query optimization)
 
 ---
 

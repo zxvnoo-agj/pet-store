@@ -20,4 +20,6 @@ meilisearch==0.34.0
 pytest==8.3.5
 pytest-asyncio==0.26.0
 pytest-cov==6.1.1
+pytest-benchmark==5.1.0
+locust==2.32.6
 httpx==0.28.1

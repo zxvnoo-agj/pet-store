@@ -21,26 +21,35 @@ class ChatService:
         return session
 
     async def get_sessions(self, user_id: int | None) -> list[ChatSessionResponse]:
-        query = select(ChatSession).order_by(desc(ChatSession.updated_at))
+        count_subquery = (
+            select(
+                ChatMessage.session_id,
+                func.count(ChatMessage.id).label("msg_count"),
+            )
+            .group_by(ChatMessage.session_id)
+            .subquery()
+        )
+
+        query = (
+            select(ChatSession, count_subquery.c.msg_count)
+            .outerjoin(count_subquery, ChatSession.id == count_subquery.c.session_id)
+            .order_by(desc(ChatSession.updated_at))
+        )
         if user_id:
             query = query.where(ChatSession.user_id == user_id)
 
         result = await self.db.execute(query)
-        sessions = result.scalars().all()
+        rows = result.all()
 
-        session_list = []
-        for session in sessions:
-            msg_count = await self.db.execute(
-                select(func.count(ChatMessage.id)).where(ChatMessage.session_id == session.id)
-            )
-            session_list.append(ChatSessionResponse(
+        return [
+            ChatSessionResponse(
                 id=session.id,
                 title=session.title or "新对话",
-                message_count=msg_count.scalar(),
+                message_count=count or 0,
                 updated_at=session.updated_at,
-            ))
-
-        return session_list
+            )
+            for session, count in rows
+        ]
 
     async def get_session_messages(self, session_id: int) -> list[ChatMessageResponse]:
         result = await self.db.execute(
