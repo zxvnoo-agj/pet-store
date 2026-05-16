@@ -32,9 +32,9 @@
 
 **Purpose**: Add new dependencies, directories, and configuration for the collection module
 
-- [ ] T001 [P] Add collection module dependencies (aiohttp, APScheduler) to backend/requirements.txt
-- [ ] T002 [P] Create admin frontend page directories (Collection/, Strategies/, CollectionLogs/) under admin/src/pages/
-- [ ] T003 Add collection module environment variables to backend/.env (PDD_CLIENT_ID, PDD_CLIENT_SECRET, PDD_PID, XHS_COOKIE, XHS_BACKUP_COOKIE)
+- [X] T001 [P] Add collection module dependencies (aiohttp, APScheduler) to backend/requirements.txt
+- [X] T002 [P] Create admin frontend page directories (Collection/, Strategies/, CollectionLogs/) under admin/src/pages/
+- [X] T003 Add collection module environment variables to backend/.env (PDD_CLIENT_ID, PDD_CLIENT_SECRET, PDD_PID, XHS_COOKIE, XHS_BACKUP_COOKIE)
 
 ---
 
@@ -44,11 +44,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create shared async HTTP client with retry and rate limiting in backend/app/utils/http_client.py
-- [ ] T005 Create Alembic migration for new tables (search_strategies, external_products, price_history) and column additions in backend/alembic/versions/003_data_collection.py
-- [ ] T006 Seed data_sources table with PDD ("拼多多多多进宝", platform='pdd') and XHS ("小红书", platform='xiaohongshu') entries
-- [ ] T007 Setup APScheduler AsyncIOScheduler initialization in backend/app/scheduler/__init__.py
-- [ ] T008 Configure Loguru structured logging for collection tasks in backend/app/utils/logging.py
+- [X] T004 Create shared async HTTP client with retry and rate limiting in backend/app/utils/http_client.py
+- [X] T005 Create Alembic migration for new tables (search_strategies, external_products, price_history) and column additions in backend/alembic/versions/003_data_collection.py
+- [X] T006 Seed data_sources table with PDD ("拼多多多多进宝", platform='pdd') and XHS ("小红书", platform='xiaohongshu') entries
+- [X] T007 Setup APScheduler AsyncIOScheduler initialization in backend/app/scheduler/__init__.py
+- [X] T008 Configure Loguru structured logging for collection tasks in backend/app/utils/logging.py
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -62,19 +62,19 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [P] [US1] Create collection Pydantic schemas (SearchStrategyCreate, SearchStrategyResponse, ProductSeed, CollectionJobResponse, DiscoveryProgress) in backend/app/schemas/collection.py
-- [ ] T010 [P] [US1] Create search_strategies model in backend/app/models/collection.py
-- [ ] T011 [P] [US1] Create external_products model in backend/app/models/collection.py
-- [ ] T012 [P] [US1] Implement PDD Duoduo Jinbao API client with MD5 signature, search/detail endpoints, rate limiting (2s), retry logic in backend/app/services/pdd_client.py
-- [ ] T013 [P] [US1] Implement LLM extraction service for product fields (brand, spec_weight, form, origin, shelf_life, age_range, special_formula, ingredients, nutrition) in backend/app/services/llm_extractor.py
-- [ ] T014 [US1] Extend products model status CHECK constraint to include 'pending', 'enriching', 'failed' in backend/app/models/product.py
-- [ ] T015 [US1] Implement collection orchestration service (search discovery → PDD detail fetch → LLM extraction → product update) in backend/app/services/collection_service.py
-- [ ] T016 [P] [US1] Implement search strategy CRUD + execute endpoints (POST/GET/DELETE strategies, POST execute) in backend/app/api/v1/admin_collect.py
-- [ ] T017 [P] [US1] Implement product seed + collection status + retry endpoints in backend/app/api/v1/admin_collect.py
-- [ ] T018 [US1] Implement SSE discovery progress endpoint in backend/app/api/v1/admin_collect.py
-- [ ] T019 [P] [US1] Create admin Collection management page (product status list, seed form, retry button) in admin/src/pages/Collection/
-- [ ] T020 [P] [US1] Create admin Strategies management page (CRUD list, execute button) in admin/src/pages/Strategies/
-- [ ] T021 [US1] Add collection API service functions (strategies, products, progress) in admin/src/services/api.ts
+- [X] T009 [P] [US1] Create collection Pydantic schemas (SearchStrategyCreate, SearchStrategyResponse, ProductSeed, CollectionJobResponse, DiscoveryProgress) in backend/app/schemas/collection.py
+- [X] T010 [P] [US1] Create search_strategies model in backend/app/models/collection.py
+- [X] T011 [P] [US1] Create external_products model in backend/app/models/collection.py
+- [X] T012 [P] [US1] Implement PDD Duoduo Jinbao API client with MD5 signature, search/detail endpoints, rate limiting (2s), retry logic in backend/app/services/pdd_client.py
+- [X] T013 [P] [US1] Implement LLM extraction service for product fields (brand, spec_weight, form, origin, shelf_life, age_range, special_formula, ingredients, nutrition) in backend/app/services/llm_extractor.py
+- [X] T014 [US1] Extend products model status to include 'pending', 'enriching', 'failed' in backend/app/models/product.py
+- [X] T015 [US1] Implement collection orchestration service (search discovery → PDD detail fetch → LLM extraction → product update) in backend/app/services/collection_service.py
+- [X] T016 [P] [US1] Implement search strategy CRUD + execute endpoints (POST/GET/DELETE strategies, POST execute) in backend/app/api/v1/admin_collect.py
+- [X] T017 [P] [US1] Implement product seed + collection status + retry endpoints in backend/app/api/v1/admin_collect.py
+- [X] T018 [US1] Implement SSE discovery progress endpoint in backend/app/api/v1/admin_collect.py
+- [X] T019 [P] [US1] Create admin Collection management page (product status list, seed form, retry button) in admin/src/pages/Collection/
+- [X] T020 [P] [US1] Create admin Strategies management page (CRUD list, execute button) in admin/src/pages/Strategies/
+- [X] T021 [US1] Add collection API service functions (strategies, products, progress) in admin/src/services/api.ts
 
 **Checkpoint**: US1 fully functional — auto-discovery + manual seeding + PDD data fetch + LLM extraction working
 
@@ -88,12 +88,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Extend reviews model with external_note_id, author, note_published_at, note_likes columns in backend/app/models/review.py
-- [ ] T023 [P] [US2] Implement XHS collector service (note search by keyword, note detail, comment retrieval, cookie auth, rate limiting, dedup by note_id) in backend/app/services/xhs_collector.py
-- [ ] T024 [P] [US2] Implement LLM review analyzer (pros/cons tags, recommendation stance, confidence, cat reaction, summary) in backend/app/services/llm_analyzer.py
-- [ ] T025 [US2] Add XHS collection trigger + admin review list (with author fields) endpoints in backend/app/api/v1/admin_collect.py
-- [ ] T026 [US2] Implement author privacy filtering per FR-017 (author stripped from public API, visible in admin)
-- [ ] T027 [US2] Update admin services with XHS trigger and review list API calls in admin/src/services/api.ts
+- [X] T022 [P] [US2] Extend reviews model with external_note_id, author, note_published_at, note_likes columns in backend/app/models/review.py
+- [X] T023 [P] [US2] Implement XHS collector service (note search by keyword, note detail, comment retrieval, cookie auth, rate limiting, dedup by note_id) in backend/app/services/xhs_collector.py
+- [X] T024 [P] [US2] Implement LLM review analyzer (pros/cons tags, recommendation stance, confidence, cat reaction, summary) in backend/app/services/llm_analyzer.py
+- [X] T025 [US2] Add XHS collection trigger + admin review list (with author fields) endpoints in backend/app/api/v1/admin_collect.py
+- [X] T026 [US2] Implement author privacy filtering per FR-017 (author stripped from public API, visible in admin)
+- [X] T027 [US2] Update admin services with XHS trigger and review list API calls in admin/src/services/api.ts
 
 **Checkpoint**: US2 fully functional — XHS review collection + LLM analysis complete
 
@@ -107,10 +107,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Create price_history model in backend/app/models/collection.py
-- [ ] T029 [P] [US3] Implement hourly price update job (iterate active products, fetch PDD detail, update prices/coupons/sales, record price_history) in backend/app/scheduler/jobs.py
-- [ ] T030 [P] [US3] Implement daily incremental XHS review fetch job (use timestamp cursor, only new notes) in backend/app/scheduler/jobs.py
-- [ ] T031 [US3] Add scheduler status query and manual trigger endpoints in backend/app/api/v1/admin_collect.py
+- [X] T028 [US3] Create price_history model in backend/app/models/collection.py
+- [X] T029 [P] [US3] Implement hourly price update job (iterate active products, fetch PDD detail, update prices/coupons/sales, record price_history) in backend/app/scheduler/jobs.py
+- [X] T030 [P] [US3] Implement daily incremental XHS review fetch job (use timestamp cursor, only new notes) in backend/app/scheduler/jobs.py
+- [X] T031 [US3] Add scheduler status query and manual trigger endpoints in backend/app/api/v1/admin_collect.py
 
 **Checkpoint**: US3 complete — all three scheduled jobs registered and triggerable
 
@@ -124,12 +124,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Extend data_fetch_jobs model with collection_type, cursor_value, product_id columns in backend/app/models/data_source.py
-- [ ] T033 [P] [US4] Implement collection jobs list/detail/retry endpoints in backend/app/api/v1/admin_collect.py
-- [ ] T034 [P] [US4] Implement data source config update endpoint (cookie rotation, is_active toggle) in backend/app/api/v1/admin_collect.py
-- [ ] T035 [US4] Create admin CollectionLogs page (job list with status badges, detail modal, retry button) in admin/src/pages/CollectionLogs/
-- [ ] T036 [US4] Add failed job badge count in admin navigation menu
-- [ ] T037 [US4] Add collection job API service functions in admin/src/services/api.ts
+- [X] T032 [US4] Extend data_fetch_jobs model with collection_type, cursor_value, product_id columns in backend/app/models/data_source.py
+- [X] T033 [P] [US4] Implement collection jobs list/detail/retry endpoints in backend/app/api/v1/admin_collect.py
+- [X] T034 [P] [US4] Implement data source config update endpoint (cookie rotation, is_active toggle) in backend/app/api/v1/admin_collect.py
+- [X] T035 [US4] Create admin CollectionLogs page (job list with status badges, detail modal, retry button) in admin/src/pages/CollectionLogs/
+- [X] T036 [US4] Add failed job badge count in admin navigation menu
+- [X] T037 [US4] Add collection job API service functions in admin/src/services/api.ts
 
 **Checkpoint**: US4 complete — full monitoring and retry capability
 
@@ -143,9 +143,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T038 [P] [US5] Implement weighted tag aggregation logic (confidence-weighted pros/cons count, recommend_rate calculation) in backend/app/services/collection_service.py
-- [ ] T039 [P] [US5] Implement daily tag aggregation scheduled job in backend/app/scheduler/jobs.py
-- [ ] T040 [US5] Add manual aggregation trigger endpoint for a single product in backend/app/api/v1/admin_collect.py
+- [X] T038 [P] [US5] Implement weighted tag aggregation logic (confidence-weighted pros/cons count, recommend_rate calculation) in backend/app/services/collection_service.py
+- [X] T039 [P] [US5] Implement daily tag aggregation scheduled job in backend/app/scheduler/jobs.py
+- [X] T040 [US5] Add manual aggregation trigger endpoint for a single product in backend/app/api/v1/admin_collect.py
 
 **Checkpoint**: US5 complete — tag aggregation working and scheduling integration done
 
@@ -155,9 +155,9 @@
 
 **Purpose**: Documentation, validation, and final cleanup
 
-- [ ] T041 [P] Add cross-cutting documentation for collection module (README updates, API docs)
-- [ ] T042 Run quickstart.md validation steps to verify integration scenarios
-- [ ] T043 Final cleanup, type annotations, and code quality pass
+- [X] T041 [P] Add cross-cutting documentation for collection module (README updates, API docs)
+- [X] T042 Run quickstart.md validation steps to verify integration scenarios
+- [X] T043 Final cleanup, type annotations, and code quality pass
 
 ---
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Search, Trash2, Loader2, Package } from 'lucide-react'
+import { Search, Trash2, Edit3, Loader2, Package } from 'lucide-react'
 import { adminProductApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
+import EditProductModal from '../../components/EditProductModal'
 
 interface Product {
   id: number
@@ -20,6 +21,7 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [editProductId, setEditProductId] = useState<number | null>(null)
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -162,12 +164,20 @@ export default function Products() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setEditProductId(product.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -201,6 +211,17 @@ export default function Products() {
           </div>
         </div>
       </main>
+
+      {editProductId != null && (
+        <EditProductModal
+          productId={editProductId}
+          onClose={() => setEditProductId(null)}
+          onSaved={() => {
+            setEditProductId(null)
+            fetchProducts()
+          }}
+        />
+      )}
     </div>
   )
 }

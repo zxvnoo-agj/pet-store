@@ -2,6 +2,9 @@
 node_modules/
 __pycache__/
 *.pyc
+.venv/
+venv/
+.ruff_cache/
 .pnp
 .pnp.js
 
@@ -38,3 +41,6 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+
+# PDD browser profile
+pdd_profile/
