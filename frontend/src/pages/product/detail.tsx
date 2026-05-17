@@ -87,6 +87,20 @@ function ProductDetailContent() {
     Taro.navigateTo({ url: `/pages/chat/index?productId=${id}` })
   }
 
+  const handleBuy = () => {
+    const url = product.source_url
+    if (!url) {
+      Taro.showToast({ title: '暂无购买链接', icon: 'none' })
+      return
+    }
+    Taro.setClipboardData({
+      data: url,
+      success: () => {
+        Taro.showToast({ title: '购买链接已复制，请在浏览器中打开', icon: 'none' })
+      },
+    })
+  }
+
   // WeChat sharing
   useShareAppMessage(() => {
     if (!product) return { title: '宠物用品推荐' }
@@ -355,7 +369,7 @@ function ProductDetailContent() {
         >
           <Text>{inCompare ? '已加入对比' : '加入对比'}</Text>
         </View>
-        <View className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center">
+        <View className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center" onClick={handleBuy}>
           <Text>去购买</Text>
         </View>
       </View>

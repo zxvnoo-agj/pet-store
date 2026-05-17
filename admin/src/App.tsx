@@ -4,6 +4,9 @@ import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import Categories from './pages/Categories'
 import Reviews from './pages/Reviews'
+import Collection from './pages/Collection'
+import Strategies from './pages/Strategies'
+import CollectionLogs from './pages/CollectionLogs'
 import { useAuthStore } from './stores/authStore'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +48,30 @@ function App() {
           element={
             <PrivateRoute>
               <Reviews />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/collection"
+          element={
+            <PrivateRoute>
+              <Collection />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/strategies"
+          element={
+            <PrivateRoute>
+              <Strategies />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/collection-logs"
+          element={
+            <PrivateRoute>
+              <CollectionLogs />
             </PrivateRoute>
           }
         />

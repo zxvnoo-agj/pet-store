@@ -39,3 +39,10 @@ class ReviewSummary(BaseModel):
 class ReviewListResponse(BaseModel):
     reviews: list[ReviewResponse]
     summary: ReviewSummary
+
+
+class AdminReviewResponse(ReviewResponse):
+    external_note_id: str | None = None
+    author: str | None = None
+    note_published_at: datetime | None = None
+    note_likes: int | None = None

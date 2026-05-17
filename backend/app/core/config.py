@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     DASHSCOPE_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     MEILISEARCH_URL: str = "http://localhost:7700"
     MEILISEARCH_API_KEY: str = ""
+    PDD_CLIENT_ID: str = ""
+    PDD_CLIENT_SECRET: str = ""
+    PDD_PID: str = ""
+    XHS_COOKIE: str = ""
+    XHS_BACKUP_COOKIE: str = ""
+    PLAYWRIGHT_HEADLESS: bool = True
+    CRAWL_DAILY_LIMIT: int = 200
     DEBUG: bool = False
 
     class Config:

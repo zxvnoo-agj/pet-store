@@ -72,6 +72,6 @@ Respond in JSON format:
 
             await db.commit()
             await db.refresh(review)
-            logger.info(f"Review {review.id} moderated: {moderation_result['decision']}")
+            logger.debug(f"Review {review.id} moderated: {moderation_result['decision']}")
 
         return len(reviews)

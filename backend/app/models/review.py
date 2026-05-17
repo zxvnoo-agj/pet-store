@@ -10,6 +10,10 @@ class Review(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_note_id = Column(String(64), nullable=True, index=True)
+    author = Column(String(64), nullable=True)
+    note_published_at = Column(DateTime(timezone=True), nullable=True)
+    note_likes = Column(Integer, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     rating = Column(Numeric(2, 1), nullable=False)
     content = Column(Text, nullable=False)

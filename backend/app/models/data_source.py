@@ -23,11 +23,14 @@ class DataFetchJob(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     data_source_id = Column(Integer, ForeignKey("data_sources.id"), nullable=False)
-    job_type = Column(String(32), nullable=False)  # price, review
+    job_type = Column(String(32), nullable=False)  # price, review, discovery
+    collection_type = Column(String(16), default="full")  # full, incremental
     status = Column(String(16), default="pending")  # pending, running, completed, failed
     params = Column(JSONB, default=dict)  # product_id, keywords, etc.
     result = Column(JSONB, nullable=True)  # fetched data summary
     error_message = Column(Text, nullable=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+    cursor_value = Column(DateTime(timezone=True), nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

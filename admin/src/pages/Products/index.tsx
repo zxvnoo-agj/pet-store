@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Search, Trash2, Loader2, Package } from 'lucide-react'
+import { Search, Trash2, Edit3, Loader2, Package } from 'lucide-react'
 import { adminProductApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
+import EditProductModal from '../../components/EditProductModal'
 
 interface Product {
   id: number
@@ -20,6 +21,8 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [editProductId, setEditProductId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -50,6 +53,36 @@ export default function Products() {
       fetchProducts()
     } catch (error) {
       console.error('Failed to delete product', error)
+    }
+  }
+
+  const toggleSelect = (id: number) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(products.map(p => p.id)))
+    }
+  }
+
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) return
+    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个商品吗？`)) return
+    try {
+      await adminProductApi.batchDelete(Array.from(selectedIds))
+      setSelectedIds(new Set())
+      fetchProducts()
+    } catch (error) {
+      console.error('Failed to batch delete products', error)
     }
   }
 
@@ -89,6 +122,15 @@ export default function Products() {
               <Search className="w-4 h-4" />
               搜索
             </button>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBatchDelete}
+                className="px-6 py-3 bg-red-500 text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 hover:bg-red-600 transition-all duration-300"
+              >
+                <Trash2 className="w-4 h-4" />
+                批量删除 ({selectedIds.size})
+              </button>
+            )}
           </div>
 
           <div className="glass-card overflow-hidden">
@@ -103,6 +145,14 @@ export default function Products() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-peach/10">
+                        <th className="px-6 py-4 text-left">
+                          <input
+                            type="checkbox"
+                            checked={products.length > 0 && selectedIds.size === products.length}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
+                          />
+                        </th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">ID</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">商品信息</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">品牌</th>
@@ -120,6 +170,14 @@ export default function Products() {
                           onMouseEnter={() => setHoveredRow(idx)}
                           onMouseLeave={() => setHoveredRow(null)}
                         >
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(product.id)}
+                              onChange={() => toggleSelect(product.id)}
+                              className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
+                            />
+                          </td>
                           <td className="px-6 py-4 text-sm text-carbon/70 relative">
                             <span className={`absolute left-0 top-0 bottom-0 w-[3px] bg-peach rounded-r-full transition-opacity duration-300 ${
                               hoveredRow === idx ? 'opacity-100' : 'opacity-0'
@@ -162,12 +220,20 @@ export default function Products() {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setEditProductId(product.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(product.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -201,6 +267,17 @@ export default function Products() {
           </div>
         </div>
       </main>
+
+      {editProductId != null && (
+        <EditProductModal
+          productId={editProductId}
+          onClose={() => setEditProductId(null)}
+          onSaved={() => {
+            setEditProductId(null)
+            fetchProducts()
+          }}
+        />
+      )}
     </div>
   )
 }

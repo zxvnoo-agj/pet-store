@@ -7,7 +7,7 @@ from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
 from app.models.review import Review
 from app.schemas.common import ApiResponse, Pagination
-from app.schemas.review import ReviewResponse
+from app.schemas.review import AdminReviewResponse, ReviewResponse
 
 router = APIRouter()
 
@@ -18,6 +18,7 @@ async def admin_list_reviews(
     page_size: int = Query(20, ge=1, le=100),
     status: str | None = Query(None),
     product_id: int | None = Query(None),
+    source: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
@@ -31,6 +32,10 @@ async def admin_list_reviews(
     if product_id:
         query = query.where(Review.product_id == product_id)
         count_query = count_query.where(Review.product_id == product_id)
+
+    if source:
+        query = query.where(Review.source == source)
+        count_query = count_query.where(Review.source == source)
 
     query = query.order_by(Review.created_at.desc())
     offset = (page - 1) * page_size
@@ -51,7 +56,7 @@ async def admin_list_reviews(
     )
 
     return ApiResponse(
-        data={"reviews": [ReviewResponse.model_validate(r) for r in reviews]},
+        data={"reviews": [AdminReviewResponse.model_validate(r) for r in reviews]},
         pagination=pagination,
     )
 

@@ -1,3 +1,4 @@
+import sys
 import time
 import uuid
 
@@ -9,9 +10,11 @@ from loguru import logger
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.config import settings
 from app.api.v1 import (
     admin_auth,
     admin_categories,
+    admin_collect,
     admin_data_sources,
     admin_products,
     admin_reviews,
@@ -37,6 +40,25 @@ REQUEST_DURATION = Histogram(
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
+logger.remove()
+logger.add(
+    sys.stderr,
+    level="DEBUG" if settings.DEBUG else "INFO",
+    format="<green>{time:HH:mm:ss}</green> | <level>{level:<7}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
+    colorize=True,
+    backtrace=True,
+    diagnose=False,
+)
+logger.add(
+    "logs/error_{time:YYYY-MM-DD}.log",
+    level="ERROR",
+    rotation="1 day",
+    retention="30 days",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level:<7} | {name}:{line} | {message}",
+    backtrace=True,
+    diagnose=True,
+)
+
 app = FastAPI(
     title="Pet Supplies Assistant API",
     description="Backend API for Pet Supplies Assistant Mini Program",
@@ -57,15 +79,12 @@ async def request_logging_middleware(request: Request, call_next):
     start_time = time.time()
     request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
     
-    # Add request ID to context
     with logger.contextualize(request_id=request_id):
-        logger.info(
+        logger.debug(
             "Request started",
             extra={
                 "method": request.method,
                 "path": request.url.path,
-                "query": str(request.query_params),
-                "client": request.client.host if request.client else None,
             }
         )
 
@@ -75,7 +94,6 @@ async def request_logging_middleware(request: Request, call_next):
             response.headers["X-Request-ID"] = request_id
             response.headers["X-Process-Time"] = str(process_time)
             
-            # Record Prometheus metrics
             REQUEST_COUNT.labels(
                 method=request.method,
                 endpoint=request.url.path,
@@ -86,17 +104,8 @@ async def request_logging_middleware(request: Request, call_next):
                 endpoint=request.url.path,
             ).observe(process_time)
             
-            logger.info(
-                "Request completed",
-                extra={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                    "duration_ms": round(process_time * 1000, 2),
-                }
-            )
             return response
-        except Exception as exc:
+        except Exception:
             process_time = time.time() - start_time
             REQUEST_COUNT.labels(
                 method=request.method,
@@ -107,16 +116,6 @@ async def request_logging_middleware(request: Request, call_next):
                 method=request.method,
                 endpoint=request.url.path,
             ).observe(process_time)
-            
-            logger.error(
-                "Request failed",
-                extra={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "duration_ms": round(process_time * 1000, 2),
-                    "error": str(exc),
-                }
-            )
             raise
 
 
@@ -198,4 +197,5 @@ app.include_router(admin_auth.router, prefix="/v1")
 app.include_router(admin_products.router, prefix="/v1")
 app.include_router(admin_categories.router, prefix="/v1")
 app.include_router(admin_reviews.router, prefix="/v1")
+app.include_router(admin_collect.router, prefix="/v1")
 app.include_router(admin_data_sources.router, prefix="/v1")
