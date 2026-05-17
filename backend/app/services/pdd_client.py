@@ -62,7 +62,6 @@ class PDDClient:
             "page": str(page),
             "page_size": str(page_size),
             "sort_type": str(sort_type),
-            "with_coupon": "true",
         }
         if opt_id is not None:
             params["opt_id"] = str(opt_id)

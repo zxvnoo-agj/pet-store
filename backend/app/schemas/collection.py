@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -8,11 +8,12 @@ class SearchStrategyCreate(BaseModel):
     data_source_id: int
     name: str = Field(..., max_length=64)
     keywords: list[str] = Field(default_factory=list)
-    opt_id: Optional[int] = None
-    price_min: Optional[int] = None
-    price_max: Optional[int] = None
+    opt_id: int | None = None
+    price_min: int | None = None
+    price_max: int | None = None
     sort_type: int = 0
     max_items: int = 100
+    brand_filter: list[str] = Field(default_factory=list)
 
 
 class SearchStrategyResponse(BaseModel):
@@ -20,13 +21,14 @@ class SearchStrategyResponse(BaseModel):
     data_source_id: int
     name: str
     keywords: list[Any]
-    opt_id: Optional[int] = None
-    price_min: Optional[int] = None
-    price_max: Optional[int] = None
+    opt_id: int | None = None
+    price_min: int | None = None
+    price_max: int | None = None
     sort_type: int
     max_items: int
-    last_run_at: Optional[datetime] = None
-    last_result: Optional[dict] = None
+    brand_filter: list[Any] = Field(default_factory=list)
+    last_run_at: datetime | None = None
+    last_result: dict | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -56,8 +58,8 @@ class ProductCollectionStatus(BaseModel):
     product_id: int
     name: str
     status: str
-    brand: Optional[str] = None
-    source_platform: Optional[str] = None
+    brand: str | None = None
+    source_platform: str | None = None
     created_at: datetime
 
 
@@ -84,13 +86,13 @@ class DiscoveryProgress(BaseModel):
     total: int = 0
     completed: int = 0
     enriched: int = 0
-    total_time_seconds: Optional[float] = None
+    total_time_seconds: float | None = None
 
 
 class PromotionUrlResponse(BaseModel):
     short_url: str
-    mobile_url: Optional[str] = None
-    we_app_url: Optional[str] = None
+    mobile_url: str | None = None
+    we_app_url: str | None = None
     cached: bool = False
 
 
@@ -103,16 +105,16 @@ class StrategyExecuteResponse(BaseModel):
 class CollectionJobResponse(BaseModel):
     id: int
     data_source_id: int
-    data_source_name: Optional[str] = None
+    data_source_name: str | None = None
     job_type: str
     collection_type: str = "full"
     status: str
-    product_id: Optional[int] = None
-    params: Optional[dict] = None
-    result: Optional[dict] = None
-    error_message: Optional[str] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    product_id: int | None = None
+    params: dict | None = None
+    result: dict | None = None
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -143,7 +145,7 @@ class DataSourceResponse(BaseModel):
     name: str
     platform: str
     is_active: bool
-    last_sync_at: Optional[datetime] = None
+    last_sync_at: datetime | None = None
     sync_interval_minutes: int
     created_at: datetime
 
@@ -155,8 +157,8 @@ class DataSourceList(BaseModel):
 
 
 class DataSourceUpdate(BaseModel):
-    is_active: Optional[bool] = None
-    config: Optional[dict] = None
+    is_active: bool | None = None
+    config: dict | None = None
 
 
 class SchedulerStatus(BaseModel):

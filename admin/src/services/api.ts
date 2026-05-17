@@ -42,6 +42,7 @@ export const adminProductApi = {
   create: (data: any) => apiClient.post('/admin/products', data),
   update: (id: number, data: any) => apiClient.put(`/admin/products/${id}`, data),
   delete: (id: number) => apiClient.delete(`/admin/products/${id}`),
+  batchDelete: (ids: number[]) => apiClient.post('/admin/products/batch-delete', ids),
   refreshDdk: (id: number) => apiClient.post(`/admin/products/${id}/refresh-ddk`),
 }
 

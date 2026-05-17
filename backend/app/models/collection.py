@@ -1,6 +1,5 @@
-from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -19,6 +18,7 @@ class SearchStrategy(Base):
     price_max = Column(Integer, nullable=True)
     sort_type = Column(Integer, default=0)
     max_items = Column(Integer, default=100)
+    brand_filter = Column(JSONB, default=list)
     last_run_at = Column(DateTime(timezone=True), nullable=True)
     last_result = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

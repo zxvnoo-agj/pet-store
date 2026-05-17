@@ -197,3 +197,41 @@ async def admin_delete_product(
     await db.delete(product)
     await db.commit()
     return ApiResponse(data={"message": "Product deleted"})
+
+
+@router.post("/admin/products/batch-delete", response_model=ApiResponse[dict])
+async def admin_batch_delete_products(
+    product_ids: list[int],
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="No product IDs provided")
+
+    # Fetch all target products
+    result = await db.execute(select(Product).where(Product.id.in_(product_ids)))
+    products = result.scalars().all()
+    found_ids = {p.id for p in products}
+    missing_ids = set(product_ids) - found_ids
+
+    if missing_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Products not found: {sorted(missing_ids)}"
+        )
+
+    # Delete related records for all products
+    for product in products:
+        for ext in (await db.execute(select(ExternalProduct).where(ExternalProduct.product_id == product.id))).scalars().all():
+            await db.delete(ext)
+        for ph in (await db.execute(select(PriceHistory).where(PriceHistory.product_id == product.id))).scalars().all():
+            await db.delete(ph)
+        for r in (await db.execute(select(Review).where(Review.product_id == product.id))).scalars().all():
+            await db.delete(r)
+        await db.delete(product)
+
+    await db.commit()
+    return ApiResponse(data={
+        "message": f"Deleted {len(products)} products",
+        "deleted_ids": sorted(found_ids)
+    })

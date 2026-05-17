@@ -1,18 +1,17 @@
 import asyncio
 import json
 import re
-from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Callable, Optional
 
 from loguru import logger
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.category import Category
 from app.models.collection import ExternalProduct, PriceHistory, SearchStrategy
-from app.models.data_source import DataFetchJob, DataSource
+from app.models.data_source import DataSource
 from app.models.product import Product
 from app.services.llm_extractor import extract_product_fields
 from app.services.pdd_client import PDDClient
@@ -20,7 +19,7 @@ from app.services.pdd_crawler import ConservativePDDCrawler
 from app.services.vision_service import QwenVLClient
 
 
-def parse_pdd_goods_id(url: str) -> Optional[str]:
+def parse_pdd_goods_id(url: str) -> str | None:
     match = re.search(r"goods_id=(\d+)", url)
     return match.group(1) if match else None
 
@@ -28,7 +27,7 @@ def parse_pdd_goods_id(url: str) -> Optional[str]:
 async def discover_products(
     db: AsyncSession,
     strategy: SearchStrategy,
-    progress_callback: Optional[callable] = None,
+    progress_callback: Optional[Callable] = None,
 ) -> dict[str, int]:
     pdd = PDDClient()
     found = 0
@@ -85,6 +84,22 @@ async def discover_products(
                                 f"coupon_discount={parsed['coupon_discount']}, sales_tip={parsed['sales_tip']}, "
                                 f"category_name={parsed['category_name']}, "
                                 f"goods_sign={goods_sign!r}")
+
+                    # Brand filter: skip if brand_filter is configured and brand doesn't match
+                    brand_filter = strategy.brand_filter or []
+                    if brand_filter:
+                        api_brand = parsed.get("brand") or ""
+                        brand_matched = any(
+                            bf.lower() in api_brand.lower() or api_brand.lower() in bf.lower()
+                            for bf in brand_filter if bf
+                        )
+                        if not brand_matched:
+                            logger.info(f"[discover] Brand filter mismatch for goods_id={goods_id}: "
+                                        f"api_brand='{api_brand}', filter={brand_filter}")
+                            skipped += 1
+                            found += 1
+                            continue
+
                     pdd_cat_name = parsed.get("category_name", "")
                     cat_result = await db.execute(
                         select(Category).where(Category.name.ilike(f"%{pdd_cat_name}%")).limit(1)
@@ -480,7 +495,7 @@ async def update_product_prices(db: AsyncSession):
     return {"succeeded": succeeded, "failed": failed}
 
 
-async def aggregate_product_tags(db: AsyncSession, product_id: Optional[int] = None):
+async def aggregate_product_tags(db: AsyncSession, product_id: int | None = None):
     from app.models.review import Review
 
     query = select(Review).where(
