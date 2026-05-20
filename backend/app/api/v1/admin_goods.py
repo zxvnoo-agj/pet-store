@@ -8,6 +8,7 @@ from app.schemas.common import ApiResponse, Pagination
 from app.schemas.spu import SpuCreate, SpuFilter, SpuResponse, SpuUpdate
 from app.schemas.spu_listing import SpuListingResponse, LinkListingRequest
 from app.services.spu_service import SpuService
+from app.services.spu_listing_service import ImportJobManager, SpuListingService
 
 router = APIRouter()
 
@@ -153,30 +154,50 @@ async def admin_unlink_listing(
 
 @router.get("/admin/goods/matching-queue", response_model=ApiResponse[dict])
 async def admin_get_matching_queue(
-    match_status: str = Query("candidate"),
+    tier: str = Query("all"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
     service = SpuService(db)
-    listings, total = await service.get_matching_queue(match_status, page, page_size)
 
-    total_pages = (total + page_size - 1) // page_size
-    pagination = Pagination(
-        page=page,
-        page_size=page_size,
-        total=total,
-        total_pages=total_pages,
-    )
+    if tier == "all":
+        # Return both candidates and unmatched
+        candidates, candidates_total = await service.get_matching_queue("candidate", page, page_size)
+        unmatched, unmatched_total = await service.get_matching_queue("unmatched", page, page_size)
 
-    return ApiResponse(
-        data={
-            "items": [SpuListingResponse.model_validate(l) for l in listings],
-            "total": total,
-        },
-        pagination=pagination,
-    )
+        return ApiResponse(
+            data={
+                "candidates": {
+                    "total": candidates_total,
+                    "items": [SpuListingResponse.model_validate(l) for l in candidates],
+                },
+                "unmatched": {
+                    "total": unmatched_total,
+                    "items": [SpuListingResponse.model_validate(l) for l in unmatched],
+                },
+            }
+        )
+    else:
+        match_status = tier if tier in ("candidate", "unmatched", "rejected") else "candidate"
+        listings, total = await service.get_matching_queue(match_status, page, page_size)
+
+        total_pages = (total + page_size - 1) // page_size
+        pagination = Pagination(
+            page=page,
+            page_size=page_size,
+            total=total,
+            total_pages=total_pages,
+        )
+
+        return ApiResponse(
+            data={
+                "items": [SpuListingResponse.model_validate(l) for l in listings],
+                "total": total,
+            },
+            pagination=pagination,
+        )
 
 
 @router.post("/admin/goods/matching-queue/confirm", response_model=ApiResponse[dict])
@@ -189,9 +210,16 @@ async def admin_confirm_candidates(
     if not listing_ids:
         raise HTTPException(status_code=400, detail="No listing IDs provided")
 
-    service = SpuService(db)
-    count = await service.confirm_candidates(listing_ids)
-    return ApiResponse(data={"confirmed": count})
+    service = SpuListingService(db)
+    details = await service.confirm_listings(listing_ids)
+    return ApiResponse(
+        data={
+            "processed": len(listing_ids),
+            "linked": len(details),
+            "failed": len(listing_ids) - len(details),
+            "details": details,
+        }
+    )
 
 
 @router.post("/admin/goods/matching-queue/reject", response_model=ApiResponse[dict])
@@ -204,6 +232,71 @@ async def admin_reject_candidates(
     if not listing_ids:
         raise HTTPException(status_code=400, detail="No listing IDs provided")
 
-    service = SpuService(db)
-    count = await service.reject_candidates(listing_ids)
-    return ApiResponse(data={"rejected": count})
+    service = SpuListingService(db)
+    details = await service.reject_listings(listing_ids)
+    return ApiResponse(
+        data={
+            "processed": len(listing_ids),
+            "rejected": len(details),
+            "failed": len(listing_ids) - len(details),
+            "details": details,
+        }
+    )
+
+
+@router.post("/admin/goods/listings/import", response_model=ApiResponse[dict])
+async def admin_import_listings(
+    data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    keyword = data.get("keyword", "")
+    max_results = data.get("max_results", 100)
+    platform = data.get("source", "pdd_ddk").replace("_ddk", "")
+
+    if not keyword:
+        raise HTTPException(status_code=400, detail="Keyword is required")
+
+    service = SpuListingService(db)
+    job = await service.import_and_match(
+        keyword=keyword,
+        max_results=max_results,
+        platform=platform,
+    )
+
+    return ApiResponse(
+        data={
+            "job_id": job.job_id,
+            "status": job.status,
+            "message": "Import and matching job started",
+            "estimated_duration": "2-5 minutes",
+        }
+    )
+
+
+@router.get("/admin/goods/jobs/{job_id}", response_model=ApiResponse[dict])
+async def admin_get_job_status(
+    job_id: str,
+    current_admin = Depends(get_current_admin),
+):
+    job = ImportJobManager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    return ApiResponse(
+        data={
+            "job_id": job.job_id,
+            "status": job.status,
+            "result": {
+                "total_imported": job.total_imported,
+                "auto_linked": job.auto_linked,
+                "candidates": job.candidates,
+                "unmatched": job.unmatched,
+                "high_confidence_count": job.auto_linked,
+                "medium_confidence_count": job.candidates,
+                "low_confidence_count": job.unmatched,
+            },
+            "started_at": job.started_at,
+            "completed_at": job.completed_at,
+        }
+    )

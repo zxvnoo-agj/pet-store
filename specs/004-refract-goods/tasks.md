@@ -126,22 +126,22 @@
 
 ### Tests for User Story 3
 
-- [ ] T034 [P] [US3] Write unit test for LLM matching service with mock responses in `backend/tests/unit/test_matching_service.py`
-- [ ] T035 [P] [US3] Write integration test for import and matching job in `backend/tests/integration/test_import_matching.py`
+- [X] T034 [P] [US3] Write unit test for LLM matching service with mock responses in `backend/tests/unit/test_matching_service.py`
+- [X] T035 [P] [US3] Write integration test for import and matching job in `backend/tests/integration/test_import_matching.py`
 
 ### Backend Implementation
 
-- [ ] T036 [US3] Implement DDK API client wrapper for fetching listings in `backend/app/services/ddk_client.py`
-- [ ] T037 [US3] Implement LLM-based semantic matching service in `backend/app/services/spu_matching_service.py` (prompt builder, structured output parsing, confidence scoring)
-- [ ] T038 [US3] Implement three-tier matching logic (auto-link ≥85%, candidate 60-84%, unmatched <60%) in `backend/app/services/spu_matching_service.py`
-- [ ] T039 [US3] Implement listing import endpoint in `backend/app/api/v1/admin/goods.py` (POST /listings/import) with async background task
-- [ ] T040 [US3] Implement import/matching job status endpoint in `backend/app/api/v1/admin/goods.py` (GET /jobs/{job_id})
-- [ ] T041 [US3] Add price recalculation trigger on listing link/unlink in `backend/app/services/spu_listing_service.py`
+- [X] T036 [US3] Implement DDK API client wrapper for fetching listings in `backend/app/services/ddk_client.py`
+- [X] T037 [US3] Implement LLM-based semantic matching service in `backend/app/services/spu_matching_service.py` (prompt builder, structured output parsing, confidence scoring)
+- [X] T038 [US3] Implement three-tier matching logic (auto-link ≥85%, candidate 60-84%, unmatched <60%) in `backend/app/services/spu_matching_service.py`
+- [X] T039 [US3] Implement listing import endpoint in `backend/app/api/v1/admin/goods.py` (POST /listings/import) with async background task
+- [X] T040 [US3] Implement import/matching job status endpoint in `backend/app/api/v1/admin/goods.py` (GET /jobs/{job_id})
+- [X] T041 [US3] Add price recalculation trigger on listing link/unlink in `backend/app/services/spu_listing_service.py`
 
 ### Admin Frontend Implementation
 
-- [ ] T042 [P] [US3] Create import trigger UI component in `admin/src/pages/Spus/components/ImportTrigger.tsx` (keyword input, max results, start button)
-- [ ] T043 [US3] Add import status polling and progress display in `admin/src/stores/spuStore.ts`
+- [X] T042 [P] [US3] Create import trigger UI component in `admin/src/pages/Spus/components/ImportTrigger.tsx` (keyword input, max results, start button)
+- [X] T043 [US3] Add import status polling and progress display in `admin/src/stores/spuStore.ts`
 
 **Checkpoint**: User Story 3 complete — listings can be imported and automatically matched with confidence tiers
 
@@ -155,22 +155,22 @@
 
 ### Tests for User Story 4
 
-- [ ] T044 [P] [US4] Write integration test for matching queue endpoints in `backend/tests/integration/test_matching_queue.py`
-- [ ] T045 [P] [US4] Write integration test for bulk confirm/reject operations in `backend/tests/integration/test_bulk_matching.py`
+- [X] T044 [P] [US4] Write integration test for matching queue endpoints in `backend/tests/integration/test_matching_queue.py`
+- [X] T045 [P] [US4] Write integration test for bulk confirm/reject operations in `backend/tests/integration/test_bulk_matching.py`
 
 ### Backend Implementation
 
-- [ ] T046 [US4] Implement matching queue endpoint in `backend/app/api/v1/admin/goods.py` (GET /matching-queue with tier filtering)
-- [ ] T047 [US4] Implement bulk confirm endpoint in `backend/app/api/v1/admin/goods.py` (POST /matching-queue/confirm)
-- [ ] T048 [US4] Implement bulk reject endpoint in `backend/app/api/v1/admin/goods.py` (POST /matching-queue/reject)
-- [ ] T049 [US4] Implement manual link endpoint for unmatched listings in `backend/app/api/v1/admin/goods.py` (POST /listings/{id}/link with spu_id)
+- [X] T046 [US4] Implement matching queue endpoint in `backend/app/api/v1/admin/goods.py` (GET /matching-queue with tier filtering)
+- [X] T047 [US4] Implement bulk confirm endpoint in `backend/app/api/v1/admin/goods.py` (POST /matching-queue/confirm)
+- [X] T048 [US4] Implement bulk reject endpoint in `backend/app/api/v1/admin/goods.py` (POST /matching-queue/reject)
+- [X] T049 [US4] Implement manual link endpoint for unmatched listings in `backend/app/api/v1/admin/goods.py` (POST /listings/{id}/link with spu_id)
 
 ### Admin Frontend Implementation
 
-- [ ] T050 [P] [US4] Create `CandidateList` component in `admin/src/pages/MatchingQueue/components/CandidateList.tsx` (shows suggested SPU with confirm/reject buttons)
-- [ ] T051 [P] [US4] Create `UnmatchedList` component in `admin/src/pages/MatchingQueue/components/UnmatchedList.tsx` (shows listings with "Link to SPU" or "Create SPU" actions)
-- [ ] T052 [US4] Implement Matching Queue page `admin/src/pages/MatchingQueue/index.tsx` (tabs for Candidate/Unmatched, bulk actions)
-- [ ] T053 [US4] Add Matching Queue route to admin router in `admin/src/routes/index.tsx`
+- [X] T050 [P] [US4] Create `CandidateList` component in `admin/src/pages/MatchingQueue/components/CandidateList.tsx` (shows suggested SPU with confirm/reject buttons)
+- [X] T051 [P] [US4] Create `UnmatchedList` component in `admin/src/pages/MatchingQueue/components/UnmatchedList.tsx` (shows listings with "Link to SPU" or "Create SPU" actions)
+- [X] T052 [US4] Implement Matching Queue page `admin/src/pages/MatchingQueue/index.tsx` (tabs for Candidate/Unmatched, bulk actions)
+- [X] T053 [US4] Add Matching Queue route to admin router in `admin/src/routes/index.tsx`
 
 **Checkpoint**: User Story 4 complete — admin can review, confirm, reject, and manually link listings
 

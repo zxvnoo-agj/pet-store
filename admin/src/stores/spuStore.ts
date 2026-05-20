@@ -85,6 +85,7 @@ interface SpuState {
   fetchMatchingQueue: (filters?: { match_status?: string; page?: number; page_size?: number }) => Promise<void>
   confirmCandidates: (listingIds: number[]) => Promise<void>
   rejectCandidates: (listingIds: number[]) => Promise<void>
+  pollImportStatus: () => Promise<any>
   setFilters: (filters: SpuFilterParams) => void
   setQueueFilters: (filters: { match_status?: string; page?: number; page_size?: number }) => void
   setImportJob: (jobId: string | null) => void
@@ -198,6 +199,25 @@ export const useSpuStore = create<SpuState>((set, get) => ({
       queueListings: state.queueListings.filter((l) => !listingIds.includes(l.id)),
       queueTotal: state.queueTotal - listingIds.length,
     }))
+  },
+
+  pollImportStatus: async () => {
+    const jobId = get().importJobId
+    if (!jobId) return
+
+    try {
+      const res = await spuApi.getJob(jobId)
+      const job = res.data.data
+      set({ importStatus: job.status })
+
+      if (job.status === 'completed' || job.status === 'failed') {
+        set({ importJobId: null })
+      }
+
+      return job
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to poll job status' })
+    }
   },
 
   setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
