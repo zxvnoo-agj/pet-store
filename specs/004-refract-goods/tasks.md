@@ -19,9 +19,9 @@
 
 **Purpose**: Prepare project for new feature development
 
-- [ ] T001 [P] Create Alembic migration directory for feature 004: `backend/alembic/versions/004_refract_goods_spu.py`
-- [ ] T002 [P] Add new admin menu route configuration for SPU pages in `admin/src/routes/index.tsx`
-- [ ] T003 [P] Create empty page directories: `admin/src/pages/Spus/` and `admin/src/pages/MatchingQueue/`
+- [X] T001 [P] Create Alembic migration directory for feature 004: `backend/alembic/versions/004_refract_goods_spu.py`
+- [X] T002 [P] Add new admin menu route configuration for SPU pages in `admin/src/routes/index.tsx`
+- [X] T003 [P] Create empty page directories: `admin/src/pages/Spus/` and `admin/src/pages/MatchingQueue/`
 
 ---
 
@@ -33,29 +33,29 @@
 
 ### Backend - Database Migration
 
-- [ ] T004 Implement Alembic migration `004_refract_goods_spu.py` to CREATE TABLE `spus` (18 columns + 6 indexes + constraints)
-- [ ] T005 Implement Alembic migration to CREATE TABLE `spu_listings` (16 columns + 5 indexes + FK + constraints)
+- [X] T004 Implement Alembic migration `004_refract_goods_spu.py` to CREATE TABLE `spus` (18 columns + 6 indexes + constraints)
+- [X] T005 Implement Alembic migration to CREATE TABLE `spu_listings` (16 columns + 5 indexes + FK + constraints)
 
 ### Backend - Models
 
-- [ ] T006 [P] Create `Spu` ORM model in `backend/app/models/spu.py` with all columns, indexes, and relationships
-- [ ] T007 [P] Create `SpuListing` ORM model in `backend/app/models/spu_listing.py` with all columns, indexes, and FK
-- [ ] T008 Register new models in `backend/app/models/__init__.py`
+- [X] T006 [P] Create `Spu` ORM model in `backend/app/models/spu.py` with all columns, indexes, and relationships
+- [X] T007 [P] Create `SpuListing` ORM model in `backend/app/models/spu_listing.py` with all columns, indexes, and FK
+- [X] T008 Register new models in `backend/app/models/__init__.py`
 
 ### Backend - Schemas (Pydantic)
 
-- [ ] T009 [P] Create SPU Pydantic schemas in `backend/app/schemas/spu.py` (SpuBase, SpuCreate, SpuUpdate, SpuResponse, SpuListResponse, SpuFilter)
-- [ ] T010 [P] Create Listing Pydantic schemas in `backend/app/schemas/spu_listing.py` (SpuListingBase, SpuListingResponse, SpuListingCreate, LinkListingRequest)
+- [X] T009 [P] Create SPU Pydantic schemas in `backend/app/schemas/spu.py` (SpuBase, SpuCreate, SpuUpdate, SpuResponse, SpuListResponse, SpuFilter)
+- [X] T010 [P] Create Listing Pydantic schemas in `backend/app/schemas/spu_listing.py` (SpuListingBase, SpuListingResponse, SpuListingCreate, LinkListingRequest)
 
 ### Backend - Services - Core
 
-- [ ] T011 Implement `SpuService` in `backend/app/services/spu_service.py` with CRUD operations and duplicate detection
-- [ ] T012 Implement price recalculation utility in `backend/app/utils/price_utils.py` (update_spu_price_range function)
+- [X] T011 Implement `SpuService` in `backend/app/services/spu_service.py` with CRUD operations and duplicate detection
+- [X] T012 Implement price recalculation utility in `backend/app/utils/price_utils.py` (update_spu_price_range function)
 
 ### Admin Frontend - API Client
 
-- [ ] T013 [P] Create SPU API client module `admin/src/services/spuApi.ts` with all endpoint wrappers
-- [ ] T014 [P] Create Zustand store `admin/src/stores/spuStore.ts` for SPU list/detail state management
+- [X] T013 [P] Create SPU API client module `admin/src/services/spuApi.ts` with all endpoint wrappers
+- [X] T014 [P] Create Zustand store `admin/src/stores/spuStore.ts` for SPU list/detail state management
 
 **Checkpoint**: Foundation ready — database tables exist, models/schemas defined, core service and frontend API ready
 
@@ -69,22 +69,22 @@
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Write unit test for SpuService.create_spu with duplicate detection in `backend/tests/unit/test_spu_service.py`
-- [ ] T016 [P] [US1] Write integration test for SPU CRUD endpoints in `backend/tests/integration/test_spu_api.py`
+- [X] T015 [P] [US1] Write unit test for SpuService.create_spu with duplicate detection in `backend/tests/unit/test_spu_service.py`
+- [X] T016 [P] [US1] Write integration test for SPU CRUD endpoints in `backend/tests/integration/test_spu_api.py`
 
 ### Backend Implementation
 
-- [ ] T017 [US1] Implement SPU CRUD API routes in `backend/app/api/v1/admin/goods.py` (POST /spus, GET /spus/{id}, PUT /spus/{id}, DELETE /spus/{id})
-- [ ] T018 [US1] Add duplicate SPU detection (409 response) on create in `backend/app/services/spu_service.py`
-- [ ] T019 [US1] Add full-text search support for SPU name/model in `backend/app/services/spu_service.py`
+- [X] T017 [US1] Implement SPU CRUD API routes in `backend/app/api/v1/admin_goods.py` (POST /spus, GET /spus/{id}, PUT /spus/{id}, DELETE /spus/{id})
+- [X] T018 [US1] Add duplicate SPU detection (409 response) on create in `backend/app/services/spu_service.py`
+- [X] T019 [US1] Add full-text search support for SPU name/model in `backend/app/services/spu_service.py`
 
 ### Admin Frontend Implementation
 
-- [ ] T020 [P] [US1] Create `SpuForm` component in `admin/src/pages/Spus/components/SpuForm.tsx` (create/edit form with all fields)
-- [ ] T021 [P] [US1] Create `SpuCard` component in `admin/src/pages/Spus/components/SpuCard.tsx` (display card for SPU list)
-- [ ] T022 [US1] Implement SPU list page `admin/src/pages/Spus/index.tsx` (grid layout with cards, filters, pagination)
-- [ ] T023 [US1] Implement SPU detail page `admin/src/pages/Spus/Detail.tsx` with editable tabs (Basic Info / Detailed Attributes)
-- [ ] T024 [US1] Add SPU management routes to admin router in `admin/src/routes/index.tsx`
+- [X] T020 [P] [US1] Create `SpuForm` component in `admin/src/pages/Spus/components/SpuForm.tsx` (create/edit form with all fields)
+- [X] T021 [P] [US1] Create `SpuCard` component in `admin/src/pages/Spus/components/SpuCard.tsx` (display card for SPU list)
+- [X] T022 [US1] Implement SPU list page `admin/src/pages/Spus/index.tsx` (grid layout with cards, filters, pagination)
+- [X] T023 [US1] Implement SPU detail page `admin/src/pages/Spus/Detail.tsx` with editable tabs (Basic Info / Detailed Attributes)
+- [X] T024 [US1] Add SPU management routes to admin router in `admin/src/routes/index.tsx`
 
 **Checkpoint**: User Story 1 complete — admin can create, edit, view, and delete SPUs with detailed attributes
 

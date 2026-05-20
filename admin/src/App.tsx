@@ -8,6 +8,7 @@ import Collection from './pages/Collection'
 import Strategies from './pages/Strategies'
 import CollectionLogs from './pages/CollectionLogs'
 import Spus from './pages/Spus'
+import SpuDetail from './pages/Spus/Detail'
 import MatchingQueue from './pages/MatchingQueue'
 import { useAuthStore } from './stores/authStore'
 
@@ -89,7 +90,7 @@ function App() {
           path="/spus/:id"
           element={
             <PrivateRoute>
-              <Spus />
+              <SpuDetail />
             </PrivateRoute>
           }
         />
