@@ -1,10 +1,16 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/003-data-collection-refinement/plan.md
+specs/004-refract-goods/plan.md
 
 Also refer to:
-- Feature specification: specs/003-data-collection-refinement/spec.md
+- Feature specification: specs/004-refract-goods/spec.md
+- Feature 004 data model: specs/004-refract-goods/data-model.md
+- Feature 004 API contracts: specs/004-refract-goods/contracts/api-contracts.md
+- Feature 004 quickstart: specs/004-refract-goods/quickstart.md
+- Feature 004 research notes: specs/004-refract-goods/research.md
+- Feature 003 plan: specs/003-data-collection-refinement/plan.md
+- Feature 003 specification: specs/003-data-collection-refinement/spec.md
 - Feature 003 data model: specs/003-data-collection-refinement/data-model.md
 - Feature 003 API contracts: specs/003-data-collection-refinement/contracts/api-contracts.md
 - Feature 003 quickstart: specs/003-data-collection-refinement/quickstart.md
