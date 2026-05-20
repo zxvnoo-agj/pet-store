@@ -7,6 +7,8 @@ import Reviews from './pages/Reviews'
 import Collection from './pages/Collection'
 import Strategies from './pages/Strategies'
 import CollectionLogs from './pages/CollectionLogs'
+import Spus from './pages/Spus'
+import MatchingQueue from './pages/MatchingQueue'
 import { useAuthStore } from './stores/authStore'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -72,6 +74,30 @@ function App() {
           element={
             <PrivateRoute>
               <CollectionLogs />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/spus"
+          element={
+            <PrivateRoute>
+              <Spus />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/spus/:id"
+          element={
+            <PrivateRoute>
+              <Spus />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/matching-queue"
+          element={
+            <PrivateRoute>
+              <MatchingQueue />
             </PrivateRoute>
           }
         />

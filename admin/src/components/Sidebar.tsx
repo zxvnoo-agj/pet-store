@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, FolderTree, MessageSquare, Database, Search, ClipboardList, LogOut, PawPrint } from 'lucide-react'
+import { LayoutDashboard, Package, FolderTree, MessageSquare, Database, Search, ClipboardList, LogOut, PawPrint, Boxes, GitPullRequest } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 
 const menuItems = [
@@ -10,6 +10,8 @@ const menuItems = [
   { path: '/collection', label: '商品采集', icon: Database },
   { path: '/strategies', label: '搜索策略', icon: Search },
   { path: '/collection-logs', label: '采集日志', icon: ClipboardList },
+  { path: '/spus', label: 'SPU管理', icon: Boxes },
+  { path: '/matching-queue', label: '匹配审核', icon: GitPullRequest },
 ]
 
 export default function Sidebar() {
