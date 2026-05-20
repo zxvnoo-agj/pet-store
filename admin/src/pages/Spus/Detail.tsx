@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Boxes, ExternalLink, Loader2 } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import Sidebar from '../../components/Sidebar'
+import ListingTable from './components/ListingTable'
 
 export default function SpuDetail() {
   const { id } = useParams()
@@ -206,39 +207,15 @@ export default function SpuDetail() {
                     <p className="text-sm">暂无链接</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {currentListings.map((listing: any) => (
-                      <a
-                        key={listing.id}
-                        href={listing.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-4 p-4 bg-white/50 rounded-xl hover:bg-white transition-all group"
-                      >
-                        <div className="w-12 h-12 rounded-lg bg-peach/5 flex items-center justify-center flex-shrink-0">
-                          {listing.image_url ? (
-                            <img src={listing.image_url} alt="" className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <ExternalLink className="w-5 h-5 text-peach/60" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-deep-black truncate">{listing.title}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-carbon/50">{listing.platform}</span>
-                            <span className="text-xs text-carbon/30">·</span>
-                            <span className="text-xs text-carbon/50">{listing.shop_name}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-deep-black">¥{listing.price}</p>
-                          {listing.sales_count && (
-                            <p className="text-xs text-carbon/50">已售 {listing.sales_count}</p>
-                          )}
-                        </div>
-                      </a>
-                    ))}
-                  </div>
+                  <ListingTable
+                    listings={currentListings}
+                    onUnlink={(id) => {
+                      if (confirm('确定要取消关联这个链接吗？')) {
+                        // TODO: implement unlink
+                        console.log('Unlink', id)
+                      }
+                    }}
+                  />
                 )}
               </div>
             )}

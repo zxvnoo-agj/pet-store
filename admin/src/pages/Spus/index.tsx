@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Search, Plus, Trash2, Edit3, Loader2, Boxes } from 'lucide-react'
+import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
+import { adminCategoryApi } from '../../../services/api'
 import Sidebar from '../../../components/Sidebar'
 import SpuForm from './components/SpuForm'
 import SpuCard from './components/SpuCard'
+
+interface Category {
+  id: number
+  name: string
+  pet_type: string
+}
 
 export default function Spus() {
   const { spus, total, loading, error, filters, fetchSpus, deleteSpu, setFilters } = useSpuStore()
@@ -11,14 +18,52 @@ export default function Spus() {
   const [showForm, setShowForm] = useState(false)
   const [editSpu, setEditSpu] = useState<any>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [showFilters, setShowFilters] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [filterBrand, setFilterBrand] = useState(filters.brand || '')
+  const [filterCategory, setFilterCategory] = useState<number | ''>(filters.category_id || '')
+  const [filterPetType, setFilterPetType] = useState(filters.pet_type || '')
+  const [filterStatus, setFilterStatus] = useState(filters.status || '')
 
   useEffect(() => {
     fetchSpus()
   }, [filters.page, filters.page_size])
 
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const res = await adminCategoryApi.list()
+      setCategories(res.data.data?.items || res.data.data || [])
+    } catch (err) {
+      console.error('Failed to fetch categories', err)
+    }
+  }
+
   const handleSearch = () => {
     setFilters({ search, page: 1 })
     fetchSpus({ search, page: 1 })
+  }
+
+  const handleApplyFilters = () => {
+    const newFilters: any = { page: 1 }
+    if (filterBrand) newFilters.brand = filterBrand
+    if (filterCategory) newFilters.category_id = Number(filterCategory)
+    if (filterPetType) newFilters.pet_type = filterPetType
+    if (filterStatus) newFilters.status = filterStatus
+    setFilters(newFilters)
+    fetchSpus(newFilters)
+  }
+
+  const handleResetFilters = () => {
+    setFilterBrand('')
+    setFilterCategory('')
+    setFilterPetType('')
+    setFilterStatus('')
+    setFilters({ page: 1 })
+    fetchSpus({ page: 1 })
   }
 
   const handleDelete = async (id: number) => {
@@ -87,6 +132,17 @@ export default function Spus() {
               搜索
             </button>
             <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-3 rounded-pill text-sm font-medium flex items-center gap-2 transition-all ${
+                showFilters
+                  ? 'bg-peach text-white'
+                  : 'bg-white/50 text-carbon border border-peach/10 hover:bg-white'
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              筛选
+            </button>
+            <button
               onClick={() => { setEditSpu(null); setShowForm(true) }}
               className="px-6 py-3 bg-deep-black text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 ml-auto"
             >
@@ -94,6 +150,75 @@ export default function Spus() {
               新建 SPU
             </button>
           </div>
+
+          {showFilters && (
+            <div className="glass-card p-5 mb-6">
+              <div className="grid grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">品牌</label>
+                  <input
+                    type="text"
+                    value={filterBrand}
+                    onChange={(e) => setFilterBrand(e.target.value)}
+                    placeholder="筛选品牌..."
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">分类</label>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : '')}
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
+                  >
+                    <option value="">全部分类</option>
+                    {categories.map((c: Category) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">宠物类型</label>
+                  <select
+                    value={filterPetType}
+                    onChange={(e) => setFilterPetType(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
+                  >
+                    <option value="">全部</option>
+                    <option value="cat">猫咪</option>
+                    <option value="dog">狗狗</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">状态</label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
+                  >
+                    <option value="">全部</option>
+                    <option value="active">上架</option>
+                    <option value="inactive">下架</option>
+                    <option value="draft">草稿</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-peach/10">
+                <button
+                  onClick={handleResetFilters}
+                  className="px-4 py-2 text-sm text-carbon hover:text-deep-black transition-colors"
+                >
+                  重置
+                </button>
+                <button
+                  onClick={handleApplyFilters}
+                  className="px-5 py-2 text-sm text-white bg-peach rounded-pill hover:shadow-peach transition-all"
+                >
+                  应用筛选
+                </button>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">

@@ -98,21 +98,21 @@
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] Write unit test for price range recalculation in `backend/tests/unit/test_price_utils.py`
-- [ ] T026 [P] [US2] Write integration test for aggregated SPU list endpoint in `backend/tests/integration/test_spu_list_api.py`
+- [X] T025 [P] [US2] Write unit test for price range recalculation in `backend/tests/unit/test_price_utils.py`
+- [X] T026 [P] [US2] Write integration test for aggregated SPU list endpoint in `backend/tests/integration/test_spu_list_api.py`
 
 ### Backend Implementation
 
-- [ ] T027 [US2] Implement SPU list query with aggregation (price range, listing count) in `backend/app/services/spu_service.py`
-- [ ] T028 [US2] Add filter support (brand, category_id, pet_type, search) to SPU list endpoint in `backend/app/api/v1/admin/goods.py`
-- [ ] T029 [US2] Implement listing management endpoints in `backend/app/api/v1/admin/goods.py` (GET /spus/{id}/listings, POST /listings/{id}/link, POST /listings/{id}/unlink)
+- [X] T027 [US2] Implement SPU list query with aggregation (price range, listing count) in `backend/app/services/spu_service.py`
+- [X] T028 [US2] Add filter support (brand, category_id, pet_type, search) to SPU list endpoint in `backend/app/api/v1/admin/goods.py`
+- [X] T029 [US2] Implement listing management endpoints in `backend/app/api/v1/admin/goods.py` (GET /spus/{id}/listings, POST /listings/{id}/link, POST /listings/{id}/unlink)
 
 ### Admin Frontend Implementation
 
-- [ ] T030 [P] [US2] Create `ListingTable` component in `admin/src/pages/Spus/components/ListingTable.tsx` (sortable table of linked listings)
-- [ ] T031 [US2] Update `SpuCard` to display price range (¥min - ¥max) and listing count badge
-- [ ] T032 [US2] Add Listings tab to SPU detail page `admin/src/pages/Spus/Detail.tsx`
-- [ ] T033 [US2] Implement filter UI (brand, category, search) on SPU list page `admin/src/pages/Spus/index.tsx`
+- [X] T030 [P] [US2] Create `ListingTable` component in `admin/src/pages/Spus/components/ListingTable.tsx` (sortable table of linked listings)
+- [X] T031 [US2] Update `SpuCard` to display price range (¥min - ¥max) and listing count badge
+- [X] T032 [US2] Add Listings tab to SPU detail page `admin/src/pages/Spus/Detail.tsx`
+- [X] T033 [US2] Implement filter UI (brand, category, search) on SPU list page `admin/src/pages/Spus/index.tsx`
 
 **Checkpoint**: User Story 2 complete — SPU list shows aggregated data with price ranges and filtering
 

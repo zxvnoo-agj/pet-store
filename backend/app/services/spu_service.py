@@ -63,7 +63,22 @@ class SpuService:
         return True
 
     async def list_spus(self, filters: SpuFilter) -> tuple[list[Spu], int]:
-        query = select(Spu).options(selectinload(Spu.category))
+        # Subquery for linked listing count
+        listing_count_subq = (
+            select(
+                SpuListing.spu_id,
+                func.count(SpuListing.id).label("listing_count"),
+            )
+            .where(SpuListing.match_status == "linked")
+            .group_by(SpuListing.spu_id)
+            .subquery()
+        )
+
+        query = (
+            select(Spu, func.coalesce(listing_count_subq.c.listing_count, 0).label("listing_count"))
+            .outerjoin(listing_count_subq, Spu.id == listing_count_subq.c.spu_id)
+            .options(selectinload(Spu.category))
+        )
         count_query = select(func.count(Spu.id))
 
         if filters.category_id:
@@ -96,12 +111,19 @@ class SpuService:
         query = query.offset(offset).limit(filters.page_size)
 
         result = await self.db.execute(query)
-        spus = result.scalars().all()
+        rows = result.all()
+
+        # Attach listing_count to each SPU instance
+        spus = []
+        for row in rows:
+            spu = row[0]
+            spu.listing_count = row[1]
+            spus.append(spu)
 
         count_result = await self.db.execute(count_query)
         total = count_result.scalar()
 
-        return list(spus), total or 0
+        return spus, total or 0
 
     async def get_listings_by_spu(self, spu_id: int, match_status: str | None = None) -> list[SpuListing]:
         query = select(SpuListing).where(SpuListing.spu_id == spu_id)
