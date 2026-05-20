@@ -13,13 +13,21 @@ def mock_db():
     return db
 
 
+@pytest.fixture
+def mock_result():
+    result = MagicMock()
+    result.one_or_none = MagicMock()
+    return result
+
+
 @pytest.mark.asyncio
-async def test_update_spu_price_range_with_linked_listings(mock_db):
+async def test_update_spu_price_range_with_linked_listings(mock_db, mock_result):
     # Simulate: one listing with price 99.99
     row = MagicMock()
     row.price_min = 99.99
     row.price_max = 99.99
-    mock_db.execute.return_value.one_or_none.return_value = row
+    mock_result.one_or_none.return_value = row
+    mock_db.execute.return_value = mock_result
 
     await update_spu_price_range(mock_db, 1)
 
@@ -28,12 +36,13 @@ async def test_update_spu_price_range_with_linked_listings(mock_db):
 
 
 @pytest.mark.asyncio
-async def test_update_spu_price_range_with_multiple_listings(mock_db):
+async def test_update_spu_price_range_with_multiple_listings(mock_db, mock_result):
     # Simulate: listings with prices 50.00, 100.00, 150.00
     row = MagicMock()
     row.price_min = 50.00
     row.price_max = 150.00
-    mock_db.execute.return_value.one_or_none.return_value = row
+    mock_result.one_or_none.return_value = row
+    mock_db.execute.return_value = mock_result
 
     await update_spu_price_range(mock_db, 1)
 
@@ -42,9 +51,10 @@ async def test_update_spu_price_range_with_multiple_listings(mock_db):
 
 
 @pytest.mark.asyncio
-async def test_update_spu_price_range_no_listings(mock_db):
+async def test_update_spu_price_range_no_listings(mock_db, mock_result):
     # Simulate: no linked listings
-    mock_db.execute.return_value.one_or_none.return_value = None
+    mock_result.one_or_none.return_value = None
+    mock_db.execute.return_value = mock_result
 
     await update_spu_price_range(mock_db, 1)
 

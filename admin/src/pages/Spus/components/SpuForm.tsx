@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Save, Loader2 } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
+import { useToastStore } from '../../../stores/toastStore'
 import { adminCategoryApi } from '../../../services/api'
 
 interface Category {
@@ -17,6 +18,7 @@ interface SpuFormProps {
 
 export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   const { createSpu, updateSpu } = useSpuStore()
+  const { addToast } = useToastStore()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
@@ -67,12 +69,14 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
       }
       if (spu?.id) {
         await updateSpu(spu.id, data)
+        addToast('SPU 更新成功', 'success')
       } else {
         await createSpu(data)
+        addToast('SPU 创建成功', 'success')
       }
       onSaved()
     } catch (err: any) {
-      alert(err.response?.data?.message || err.message || '保存失败')
+      addToast(err.response?.data?.message || err.message || '保存失败', 'error')
     } finally {
       setLoading(false)
     }

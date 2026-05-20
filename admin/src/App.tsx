@@ -10,6 +10,7 @@ import CollectionLogs from './pages/CollectionLogs'
 import Spus from './pages/Spus'
 import SpuDetail from './pages/Spus/Detail'
 import MatchingQueue from './pages/MatchingQueue'
+import ToastContainer from './components/ToastContainer'
 import { useAuthStore } from './stores/authStore'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,9 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
+      <ToastContainer />
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route
@@ -104,6 +107,7 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
+    </>
   )
 }
 

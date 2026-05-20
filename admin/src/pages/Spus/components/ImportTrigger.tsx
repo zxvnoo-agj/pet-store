@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { spuApi } from '../../services/spuApi'
-import { useSpuStore } from '../../stores/spuStore'
+import { spuApi } from '../../../services/spuApi'
+import { useSpuStore } from '../../../stores/spuStore'
 
 export default function ImportTrigger() {
   const [keyword, setKeyword] = useState('')

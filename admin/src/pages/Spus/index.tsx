@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
-import { useSpuStore } from '../../../stores/spuStore'
-import { adminCategoryApi } from '../../../services/api'
-import Sidebar from '../../../components/Sidebar'
+import { useSpuStore } from '../../stores/spuStore'
+import { useToastStore } from '../../stores/toastStore'
+import { adminCategoryApi } from '../../services/api'
+import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
 import SpuCard from './components/SpuCard'
 
@@ -14,6 +15,7 @@ interface Category {
 
 export default function Spus() {
   const { spus, total, loading, error, filters, fetchSpus, deleteSpu, setFilters } = useSpuStore()
+  const { addToast } = useToastStore()
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editSpu, setEditSpu] = useState<any>(null)
@@ -70,8 +72,9 @@ export default function Spus() {
     if (!confirm('确定要删除这个 SPU 吗？')) return
     try {
       await deleteSpu(id)
+      addToast('SPU 删除成功', 'success')
     } catch (err: any) {
-      alert(err.message || '删除失败')
+      addToast(err.message || '删除失败', 'error')
     }
   }
 

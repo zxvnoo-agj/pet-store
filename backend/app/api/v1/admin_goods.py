@@ -13,7 +13,7 @@ from app.services.spu_listing_service import ImportJobManager, SpuListingService
 router = APIRouter()
 
 
-@router.get("/admin/goods/spus", response_model=ApiResponse[dict])
+@router.get("/admin/goods/spus", response_model=ApiResponse[dict], summary="List SPUs", description="Browse aggregated product catalog with filters and pagination.")
 async def admin_list_spus(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -54,7 +54,7 @@ async def admin_list_spus(
     )
 
 
-@router.post("/admin/goods/spus", response_model=ApiResponse[dict])
+@router.post("/admin/goods/spus", response_model=ApiResponse[dict], summary="Create SPU", description="Create a new SPU master record.")
 async def admin_create_spu(
     data: SpuCreate,
     db: AsyncSession = Depends(get_db),
@@ -68,7 +68,7 @@ async def admin_create_spu(
         raise HTTPException(status_code=409, detail=str(e))
 
 
-@router.get("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict])
+@router.get("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict], summary="Get SPU Detail", description="Retrieve complete SPU information including detailed attributes.")
 async def admin_get_spu(
     spu_id: int,
     db: AsyncSession = Depends(get_db),
@@ -81,7 +81,7 @@ async def admin_get_spu(
     return ApiResponse(data={"spu": SpuResponse.model_validate(spu)})
 
 
-@router.put("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict])
+@router.put("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict], summary="Update SPU", description="Update SPU information. All fields are optional.")
 async def admin_update_spu(
     spu_id: int,
     data: SpuUpdate,
@@ -95,7 +95,7 @@ async def admin_update_spu(
     return ApiResponse(data={"spu": SpuResponse.model_validate(spu)})
 
 
-@router.delete("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict])
+@router.delete("/admin/goods/spus/{spu_id}", response_model=ApiResponse[dict], summary="Delete SPU", description="Delete an SPU and all its linked listings.")
 async def admin_delete_spu(
     spu_id: int,
     db: AsyncSession = Depends(get_db),
@@ -108,7 +108,7 @@ async def admin_delete_spu(
     return ApiResponse(data={"message": "SPU deleted"})
 
 
-@router.get("/admin/goods/spus/{spu_id}/listings", response_model=ApiResponse[dict])
+@router.get("/admin/goods/spus/{spu_id}/listings", response_model=ApiResponse[dict], summary="List Listings for SPU", description="Get all e-commerce listings linked to a specific SPU.")
 async def admin_get_spu_listings(
     spu_id: int,
     match_status: str | None = Query(None),
@@ -125,7 +125,7 @@ async def admin_get_spu_listings(
     )
 
 
-@router.post("/admin/goods/listings/{listing_id}/link", response_model=ApiResponse[dict])
+@router.post("/admin/goods/listings/{listing_id}/link", response_model=ApiResponse[dict], summary="Link Listing to SPU", description="Manually assign an unmatched listing to an SPU.")
 async def admin_link_listing(
     listing_id: int,
     data: LinkListingRequest,
@@ -139,7 +139,7 @@ async def admin_link_listing(
     return ApiResponse(data={"listing": SpuListingResponse.model_validate(listing)})
 
 
-@router.post("/admin/goods/listings/{listing_id}/unlink", response_model=ApiResponse[dict])
+@router.post("/admin/goods/listings/{listing_id}/unlink", response_model=ApiResponse[dict], summary="Unlink Listing", description="Remove a listing from its current SPU.")
 async def admin_unlink_listing(
     listing_id: int,
     db: AsyncSession = Depends(get_db),
@@ -152,7 +152,7 @@ async def admin_unlink_listing(
     return ApiResponse(data={"listing": SpuListingResponse.model_validate(listing)})
 
 
-@router.get("/admin/goods/matching-queue", response_model=ApiResponse[dict])
+@router.get("/admin/goods/matching-queue", response_model=ApiResponse[dict], summary="Get Matching Queue", description="Retrieve listings awaiting manual review, grouped by confidence tier.")
 async def admin_get_matching_queue(
     tier: str = Query("all"),
     page: int = Query(1, ge=1),
@@ -200,7 +200,7 @@ async def admin_get_matching_queue(
         )
 
 
-@router.post("/admin/goods/matching-queue/confirm", response_model=ApiResponse[dict])
+@router.post("/admin/goods/matching-queue/confirm", response_model=ApiResponse[dict], summary="Bulk Confirm Matches", description="Bulk confirm candidate matches (move from candidate to linked).")
 async def admin_confirm_candidates(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -222,7 +222,7 @@ async def admin_confirm_candidates(
     )
 
 
-@router.post("/admin/goods/matching-queue/reject", response_model=ApiResponse[dict])
+@router.post("/admin/goods/matching-queue/reject", response_model=ApiResponse[dict], summary="Bulk Reject Matches", description="Bulk reject candidate matches (mark as rejected).")
 async def admin_reject_candidates(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -244,7 +244,7 @@ async def admin_reject_candidates(
     )
 
 
-@router.post("/admin/goods/listings/import", response_model=ApiResponse[dict])
+@router.post("/admin/goods/listings/import", response_model=ApiResponse[dict], summary="Import Listings", description="Import new listings from external data source and run auto-matching.")
 async def admin_import_listings(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -274,7 +274,7 @@ async def admin_import_listings(
     )
 
 
-@router.get("/admin/goods/jobs/{job_id}", response_model=ApiResponse[dict])
+@router.get("/admin/goods/jobs/{job_id}", response_model=ApiResponse[dict], summary="Get Import Job Status", description="Get the status of an import and matching job.")
 async def admin_get_job_status(
     job_id: str,
     current_admin = Depends(get_current_admin),

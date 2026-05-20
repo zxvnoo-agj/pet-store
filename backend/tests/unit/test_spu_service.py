@@ -12,6 +12,11 @@ def mock_db():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
     db.delete = AsyncMock()
+    # Make scalar_one_or_none return a regular MagicMock, not a coroutine
+    result_mock = MagicMock()
+    result_mock.scalar_one_or_none = MagicMock(return_value=None)
+    result_mock.scalars.return_value.all.return_value = []
+    db.execute.return_value = result_mock
     return db
 
 
@@ -60,6 +65,8 @@ async def test_create_spu_success(spu_service, mock_db, sample_spu_create):
 async def test_create_spu_duplicate(spu_service, mock_db, sample_spu_create):
     existing = MagicMock()
     mock_db.execute.return_value.scalar_one_or_none.return_value = existing
+    # Need to set it again since the fixture sets it to None
+    mock_db.execute.return_value.scalar_one_or_none = MagicMock(return_value=existing)
 
     with pytest.raises(ValueError, match="already exists"):
         await spu_service.create_spu(sample_spu_create)
