@@ -42,6 +42,7 @@ from app.services.collection_service import (
     discover_products,
     parse_pdd_goods_id,
     retry_product_collection,
+    run_post_discovery_enrichment,
     seed_product,
     update_product_prices,
 )
@@ -189,10 +190,21 @@ async def list_collection_products(
 
     items = []
     for p in products:
+        ext_result = await db.execute(
+            select(ExternalProduct).where(
+                ExternalProduct.product_id == p.id,
+                ExternalProduct.platform == "pdd",
+            ).limit(1)
+        )
+        ext = ext_result.scalar_one_or_none()
+        goods_id = ext.external_id if ext else None
+        note = (p.specifications or {}).get("_crawl_note") if p.specifications else None
         items.append(ProductCollectionStatus(
             product_id=p.id, name=p.name, status=p.status,
             brand=p.brand, source_platform=p.source_platform,
             created_at=p.created_at,
+            goods_id=goods_id,
+            note=note,
         ).model_dump())
 
     return ApiResponse(
@@ -503,6 +515,14 @@ async def _run_discovery(strategy_id: int, job_id: int):
 
         try:
             result = await discover_products(db, strategy)
+
+            matched_for_003: list[dict] = result.pop("matched_for_003", [])  # type: ignore
+            asyncio.create_task(
+                run_post_discovery_enrichment(
+                    db, strategy_id, job_id, matched_for_003
+                )
+            )
+
             job.status = "completed"
             job.result = result
             job.completed_at = datetime.now(UTC)

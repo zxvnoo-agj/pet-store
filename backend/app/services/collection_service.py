@@ -1,7 +1,8 @@
 import asyncio
 import json
 import re
-from typing import Callable, Optional
+from datetime import UTC, datetime
+from typing import Any, Callable, Optional
 
 from loguru import logger
 from sqlalchemy import select
@@ -11,8 +12,10 @@ from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.category import Category
 from app.models.collection import ExternalProduct, PriceHistory, SearchStrategy
-from app.models.data_source import DataSource
+from app.models.data_source import DataFetchJob, DataSource
 from app.models.product import Product
+from app.services.crawled_product_service import match_goods_ids
+from app.services.enrichment_service import enrich_product
 from app.services.llm_extractor import extract_product_fields
 from app.services.pdd_client import PDDClient
 from app.services.pdd_crawler import ConservativePDDCrawler
@@ -36,7 +39,7 @@ async def discover_products(
     failed = 0
     page = 1
     page_size = min(strategy.max_items, 100)
-    pending_enrich: list[tuple[int, str]] = []
+    pending_enrich: list[tuple[int, str, str]] = []
 
     try:
         while found < strategy.max_items:
@@ -151,7 +154,7 @@ async def discover_products(
                                 f"external_id={ext.external_id}, "
                                 f"specifications={json.dumps(specifications, ensure_ascii=False)}")
 
-                    pending_enrich.append((product.id, goods_sign))
+                    pending_enrich.append((product.id, goods_id, goods_sign))
 
                 except Exception as e:
                     logger.error(f"Failed to process goods {goods_id}: {e}")
@@ -167,10 +170,26 @@ async def discover_products(
     finally:
         await pdd.close()
 
-    for pid, sign in pending_enrich:
-        asyncio.create_task(_enrich_product(pid, sign))
+    goods_ids = [gid for _, _, gid in pending_enrich]
+    matched_dict = await match_goods_ids(db, goods_ids) if goods_ids else {}
 
-    return {"new": new_count, "skipped": skipped, "failed": failed, "found": found}
+    matched_for_003: list[tuple[int, str, str]] = []
+    for pid, sign, gid in pending_enrich:
+        if gid in matched_dict:
+            matched_for_003.append((pid, gid, sign))
+        else:
+            asyncio.create_task(_enrich_product(pid, sign))
+
+    return {
+        "new": new_count,
+        "skipped": skipped,
+        "failed": failed,
+        "found": found,
+        "matched_for_003": [
+            {"product_id": pid, "goods_id": gid, "goods_sign": sign}
+            for pid, gid, sign in matched_for_003
+        ],
+    }
 
 
 async def _enrich_product(product_id: int, goods_sign: str = ""):
@@ -545,3 +564,114 @@ async def aggregate_product_tags(db: AsyncSession, product_id: int | None = None
             p.ratings = ratings
 
     await db.commit()
+
+
+async def run_post_discovery_enrichment(
+    db: AsyncSession,
+    strategy_id: int,
+    search_job_id: int,
+    matched_products: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if not matched_products:
+        return {
+            "total_discovered": 0,
+            "matched": 0,
+            "unmatched": 0,
+            "llm_success": 0,
+            "llm_partial": 0,
+            "llm_failed": 0,
+            "detail_success": 0,
+            "detail_failed": 0,
+            "llm_field_completion_rate": 0.0,
+            "products": [],
+        }
+
+    job = DataFetchJob(
+        data_source_id=0,
+        job_type="enrich_match",
+        status="running",
+        params={
+            "strategy_id": strategy_id,
+            "search_job_id": search_job_id,
+        },
+    )
+    db.add(job)
+    await db.commit()
+    await db.refresh(job)
+
+    seen_goods_ids: set[str] = set()
+    product_results: list[dict[str, Any]] = []
+    llm_success = 0
+    llm_partial = 0
+    llm_failed = 0
+    detail_success = 0
+    detail_failed = 0
+    total_completion = 0.0
+
+    for mp in matched_products:
+        goods_id = mp.get("goods_id", "")
+        if not goods_id or goods_id in seen_goods_ids:
+            continue
+        seen_goods_ids.add(goods_id)
+
+        product_id = mp["product_id"]
+        goods_sign = mp.get("goods_sign", "")
+
+        try:
+            result = await enrich_product(db, product_id, goods_id, goods_sign)
+            product_results.append(result)
+
+            llm_status = result.get("llm_status", "failed")
+            if llm_status == "success":
+                llm_success += 1
+            elif llm_status == "partial":
+                llm_partial += 1
+            else:
+                llm_failed += 1
+
+            if result.get("detail_status") == "success":
+                detail_success += 1
+            elif result.get("detail_status") == "failed":
+                detail_failed += 1
+
+            n_extracted = len(result.get("llm_fields_extracted", []))
+            n_total = 9
+            total_completion += n_extracted / n_total if n_total > 0 else 0
+        except Exception as e:
+            logger.error(f"003 enrichment failed for product {product_id}: {e}")
+            llm_failed += 1
+            product_results.append({
+                "goods_id": goods_id,
+                "product_id": product_id,
+                "match_status": "error",
+                "llm_status": "failed",
+                "llm_fields_extracted": [],
+                "llm_fields_missing": [],
+                "detail_status": "failed",
+                "final_status": "failed",
+            })
+
+    total_processed = len(product_results)
+    summary = {
+        "total_discovered": total_processed,
+        "matched": total_processed,
+        "unmatched": 0,
+        "llm_success": llm_success,
+        "llm_partial": llm_partial,
+        "llm_failed": llm_failed,
+        "detail_success": detail_success,
+        "detail_failed": detail_failed,
+        "llm_field_completion_rate": round(total_completion / total_processed, 2) if total_processed > 0 else 0.0,
+        "products": product_results,
+    }
+
+    job.status = "completed"
+    job.result = summary
+    job.completed_at = datetime.now(UTC)
+    await db.commit()
+
+    logger.info(
+        f"003 enrichment batch complete: {total_processed} products, "
+        f"{llm_success} llm_ok, {llm_partial} partial, {llm_failed} failed"
+    )
+    return summary

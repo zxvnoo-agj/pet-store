@@ -15,6 +15,7 @@ from app.api.v1 import (
     admin_auth,
     admin_categories,
     admin_collect,
+    admin_crawled,
     admin_data_sources,
     admin_products,
     admin_reviews,
@@ -198,4 +199,5 @@ app.include_router(admin_products.router, prefix="/v1")
 app.include_router(admin_categories.router, prefix="/v1")
 app.include_router(admin_reviews.router, prefix="/v1")
 app.include_router(admin_collect.router, prefix="/v1")
+app.include_router(admin_crawled.router, prefix="/v1")
 app.include_router(admin_data_sources.router, prefix="/v1")

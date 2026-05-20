@@ -23,8 +23,17 @@ class ProductService:
         count_query = select(func.count(Product.id)).where(Product.status == "active")
 
         if filters.category_id:
-            query = query.where(Product.category_id == filters.category_id)
-            count_query = count_query.where(Product.category_id == filters.category_id)
+            # Check if this is a parent category and include all child categories
+            category_ids = [filters.category_id]
+            child_result = await self.db.execute(
+                select(Category.id).where(Category.parent_id == filters.category_id)
+            )
+            child_ids = [row[0] for row in child_result.all()]
+            if child_ids:
+                category_ids.extend(child_ids)
+
+            query = query.where(Product.category_id.in_(category_ids))
+            count_query = count_query.where(Product.category_id.in_(category_ids))
 
         if filters.pet_type:
             query = query.join(Category).where(Category.pet_type == filters.pet_type)

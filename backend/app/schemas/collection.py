@@ -61,6 +61,8 @@ class ProductCollectionStatus(BaseModel):
     brand: str | None = None
     source_platform: str | None = None
     created_at: datetime
+    goods_id: str | None = None
+    note: str | None = None
 
 
 class ProductCollectionList(BaseModel):
