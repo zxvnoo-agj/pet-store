@@ -71,7 +71,7 @@ async def chat_stream(
 
     async def event_generator():
         full_response = ""
-        referenced_products = []
+        referenced_spus = []
         async for chunk in agent.chat_stream(data.content, history):
             if chunk.startswith("data: "):
                 content = chunk[6:].strip()
@@ -79,17 +79,17 @@ async def chat_stream(
             elif chunk.startswith("event: products\ndata: "):
                 import json
                 try:
-                    products_data = json.loads(chunk[len("event: products\ndata: "):])
-                    referenced_products = products_data.get("products", [])
+                    spus_data = json.loads(chunk[len("event: products\ndata: "):])
+                    referenced_spus = spus_data.get("products", [])
                 except json.JSONDecodeError:
                     pass
             yield chunk
 
-        # Save assistant message with referenced products
-        product_ids = [p["id"] for p in referenced_products if "id" in p]
+        # Save assistant message with referenced SPUs
+        spu_ids = [p["id"] for p in referenced_spus if "id" in p]
         await service.add_message(
             data.session_id, "assistant", full_response,
-            referenced_products=product_ids or None
+            referenced_spus=spu_ids or None
         )
 
     return StreamingResponse(

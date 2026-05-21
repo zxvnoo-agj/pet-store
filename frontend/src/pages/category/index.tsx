@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { useState } from 'react'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useProductStore } from '../../stores/productStore'
 
 const petTypes = [
   { id: 'cat', name: '猫咪', icon: '🐱' },
@@ -23,7 +22,7 @@ const mockCategories = [
 
 export default function CategoryPage() {
   const [activePet, setActivePet] = useState('cat')
-  const [categories, setCategories] = useState(mockCategories)
+  const [categories] = useState(mockCategories)
 
   const filteredCategories = categories.filter(c => c.petType === activePet)
 

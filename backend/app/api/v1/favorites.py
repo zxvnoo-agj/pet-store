@@ -10,31 +10,31 @@ from app.services.favorite_service import FavoriteService
 router = APIRouter()
 
 
-@router.get("/products/{product_id}/favorite", response_model=ApiResponse[dict])
+@router.get("/spus/{spu_id}/favorite", response_model=ApiResponse[dict])
 async def get_favorite_status(
-    product_id: int,
+    spu_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = FavoriteService(db)
-    is_favorited = await service.is_favorited(current_user.id, product_id)
+    is_favorited = await service.is_favorited(current_user.id, spu_id)
     return ApiResponse(data={"is_favorited": is_favorited})
 
 
-@router.post("/products/{product_id}/favorite", response_model=ApiResponse[dict])
+@router.post("/spus/{spu_id}/favorite", response_model=ApiResponse[dict])
 async def toggle_favorite(
-    product_id: int,
+    spu_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = FavoriteService(db)
 
-    is_favorited = await service.is_favorited(current_user.id, product_id)
+    is_favorited = await service.is_favorited(current_user.id, spu_id)
     if is_favorited:
-        await service.remove_favorite(current_user.id, product_id)
+        await service.remove_favorite(current_user.id, spu_id)
         return ApiResponse(data={"is_favorited": False})
     else:
-        await service.add_favorite(current_user.id, product_id)
+        await service.add_favorite(current_user.id, spu_id)
         return ApiResponse(data={"is_favorited": True})
 
 
@@ -46,7 +46,7 @@ async def get_my_favorites(
     db: AsyncSession = Depends(get_db),
 ):
     service = FavoriteService(db)
-    products, total = await service.get_user_favorites(current_user.id, page, page_size)
+    spus, total = await service.get_user_favorites(current_user.id, page, page_size)
 
     total_pages = (total + page_size - 1) // page_size
     pagination = Pagination(
@@ -56,4 +56,4 @@ async def get_my_favorites(
         total_pages=total_pages,
     )
 
-    return ApiResponse(data={"products": products}, pagination=pagination)
+    return ApiResponse(data={"items": spus}, pagination=pagination)

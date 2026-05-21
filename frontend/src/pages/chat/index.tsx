@@ -26,7 +26,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isComplete?: boolean
-  referencedProducts?: Product[]
+  referencedSpus?: Product[]
   toolCalls?: ToolCall[]
 }
 
@@ -101,7 +101,7 @@ export default function ChatPage() {
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
           isComplete: true,
-          referencedProducts: msg.referenced_products,
+          referencedSpus: msg.referenced_spus,
         }))
         setMessages(loadedMessages)
       }
@@ -252,7 +252,7 @@ export default function ChatPage() {
         role: 'assistant',
         content: accumulated,
         isComplete: true,
-        referencedProducts: products.length > 0 ? products : undefined,
+        referencedSpus: products.length > 0 ? products : undefined,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       }
 
@@ -422,7 +422,7 @@ export default function ChatPage() {
                   {/* Markdown 回答 */}
                   <MarkdownRenderer content={msg.content} />
                   {/* 商品卡片在最下方 */}
-                  {msg.referencedProducts && renderProductCards(msg.referencedProducts)}
+                  {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
                 </View>
               )}
             </View>

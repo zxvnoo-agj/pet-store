@@ -7,13 +7,14 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 
-from app.core.config import settings
 from app.core.database import Base, get_db
 from app.main import app
+from app.utils.cache import cache
 
-# Use in-memory SQLite for testing
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Use PostgreSQL for testing (SQLite doesn't support JSONB)
+TEST_DATABASE_URL = "postgresql+asyncpg://petshop:petshop123@localhost:5432/petshop"
 
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
@@ -29,9 +30,17 @@ TestAsyncSessionLocal = sessionmaker(
 )
 
 
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
 @pytest_asyncio.fixture(scope="session")
 async def db_engine():
-    """Create test database engine."""
+    """Create test database engine and tables."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield test_engine
@@ -44,7 +53,12 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a fresh database session for each test."""
     async with TestAsyncSessionLocal() as session:
         yield session
-        await session.rollback()
+        # Clean up all tables after each test
+        for table in reversed(Base.metadata.sorted_tables):
+            await session.execute(text(f'TRUNCATE TABLE "{table.name}" CASCADE'))
+        await session.commit()
+        # Clear cache after each test
+        await cache.delete_pattern("*")
 
 
 @pytest.fixture

@@ -23,7 +23,7 @@ class ChatMessageBase(BaseModel):
     content: str
     tool_calls: list[dict] | None = None
     tokens_used: int | None = None
-    referenced_products: list[int] = []
+    referenced_spus: list[int] = []
 
 
 class ChatMessageResponse(ChatMessageBase):

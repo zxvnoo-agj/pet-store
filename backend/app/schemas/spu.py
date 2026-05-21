@@ -75,5 +75,57 @@ class SpuFilter(BaseModel):
     brand: str | None = None
     status: str | None = None
     search: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    sort: str | None = None
     page: int = 1
     page_size: int = 20
+
+
+# Mini-program specific schemas
+class SpuMiniProgramListResponse(BaseModel):
+    id: int
+    brand: str
+    name: str
+    model: str
+    pet_type: str
+    category: CategoryInfo | None = None
+    price_min: float | None = None
+    price_max: float | None = None
+    currency: str = "CNY"
+    image_urls: list[str] = []
+    rating: float = 0.0
+    review_count: int = 0
+    status: str = "active"
+
+    class Config:
+        from_attributes = True
+
+
+class SpuMiniProgramDetailResponse(SpuBase):
+    id: int
+    category_id: int
+    price_min: float | None = None
+    price_max: float | None = None
+    category: CategoryInfo | None = None
+    listing_count: int = 0
+    is_favorited: bool = False
+
+    class Config:
+        from_attributes = True
+
+
+class SpuMiniProgramListingResponse(BaseModel):
+    id: int
+    platform: str
+    shop_name: str
+    title: str
+    price: float
+    original_price: float | None = None
+    url: str
+    image_url: str | None = None
+    sales_count: int | None = None
+    promotion_url: str | None = None
+
+    class Config:
+        from_attributes = True

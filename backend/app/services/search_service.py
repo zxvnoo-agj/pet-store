@@ -2,7 +2,7 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.category import Category
-from app.models.product import Product
+from app.models.spu import Spu
 from app.utils.cache import cache
 
 
@@ -16,59 +16,38 @@ class SearchService:
         if cached:
             return cached
 
-        # PostgreSQL full-text search with ranking
-        # Use plainto_tsquery for user input and ts_rank for relevance scoring
-        tsquery = func.plainto_tsquery("simple", query)
-        
-        product_query = (
-            select(Product, func.ts_rank(Product.search_vector, tsquery).label("rank"))
-            .where(
-                Product.status == "active",
-                Product.search_vector.op("@@")(tsquery),
+        # Search SPUs
+        search_term = f"%{query}%"
+        spu_query = select(Spu).where(
+            Spu.status == "active",
+            or_(
+                Spu.name.ilike(search_term),
+                Spu.brand.ilike(search_term),
+                Spu.description.ilike(search_term),
+                Spu.model.ilike(search_term),
             )
-            .order_by(text("rank DESC"))
-            .limit(10)
-        )
+        ).limit(10)
 
         if pet_type:
-            product_query = product_query.join(Category).where(Category.pet_type == pet_type)
+            spu_query = spu_query.where(Spu.pet_type == pet_type)
 
-        result = await self.db.execute(product_query)
-        products_with_rank = result.all()
-
-        # Fallback to ilike if no full-text results found
-        if not products_with_rank:
-            product_query = select(Product).where(
-                Product.status == "active",
-                or_(
-                    Product.name.ilike(f"%{query}%"),
-                    Product.brand.ilike(f"%{query}%"),
-                    Product.description.ilike(f"%{query}%"),
-                )
-            ).limit(10)
-
-            if pet_type:
-                product_query = product_query.join(Category).where(Category.pet_type == pet_type)
-
-            result = await self.db.execute(product_query)
-            products = result.scalars().all()
-        else:
-            products = [p for p, _ in products_with_rank]
+        result = await self.db.execute(spu_query)
+        spus = result.scalars().all()
 
         # Search categories
         category_query = select(Category).where(
-            Category.is_active,
-            Category.name.ilike(f"%{query}%")
+            Category.is_active == True,
+            Category.name.ilike(search_term)
         ).limit(5)
 
         category_result = await self.db.execute(category_query)
         categories = category_result.scalars().all()
 
         # Get brands matching the query
-        brand_query = select(Product.brand).where(
-            Product.status == "active",
-            Product.brand.isnot(None),
-            Product.brand.ilike(f"%{query}%"),
+        brand_query = select(Spu.brand).where(
+            Spu.status == "active",
+            Spu.brand.isnot(None),
+            Spu.brand.ilike(search_term),
         ).distinct().limit(5)
 
         brand_result = await self.db.execute(brand_query)
@@ -79,17 +58,18 @@ class SearchService:
 
         results = {
             "suggestions": suggestions,
-            "products": [{
-                "id": p.id,
-                "name": p.name,
-                "brand": p.brand,
+            "spus": [{
+                "id": s.id,
+                "name": s.name,
+                "brand": s.brand,
+                "model": s.model,
                 "price_range": {
-                    "min": float(p.price_min) if p.price_min else None,
-                    "max": float(p.price_max) if p.price_max else None,
+                    "min": float(s.price_min) if s.price_min else None,
+                    "max": float(s.price_max) if s.price_max else None,
                 },
-                "image_urls": p.image_urls,
-                "ratings": p.ratings,
-            } for p in products],
+                "image_urls": s.image_urls,
+                "pet_type": s.pet_type,
+            } for s in spus],
             "categories": [{"id": c.id, "name": c.name, "pet_type": c.pet_type} for c in categories],
             "brands": brands,
         }
@@ -99,7 +79,7 @@ class SearchService:
         return results
 
     async def get_suggestions(self, query: str, limit: int = 8) -> list[dict]:
-        """Get real-time search suggestions based on product names, brands, and categories."""
+        """Get real-time search suggestions based on SPU names, brands, and categories."""
         if len(query) < 1:
             return []
 
@@ -109,16 +89,17 @@ class SearchService:
             return cached
 
         suggestions = []
+        search_term = f"%{query}%"
         
-        # 1. Product name suggestions
-        product_query = select(Product.name).where(
-            Product.status == "active",
-            Product.name.ilike(f"%{query}%"),
+        # 1. SPU name suggestions
+        spu_query = select(Spu.name).where(
+            Spu.status == "active",
+            Spu.name.ilike(search_term),
         ).distinct().limit(limit)
         
-        result = await self.db.execute(product_query)
-        product_names = result.scalars().all()
-        for name in product_names:
+        result = await self.db.execute(spu_query)
+        spu_names = result.scalars().all()
+        for name in spu_names:
             suggestions.append({
                 "type": "product",
                 "text": name,
@@ -126,10 +107,10 @@ class SearchService:
             })
 
         # 2. Brand suggestions
-        brand_query = select(Product.brand).where(
-            Product.status == "active",
-            Product.brand.isnot(None),
-            Product.brand.ilike(f"%{query}%"),
+        brand_query = select(Spu.brand).where(
+            Spu.status == "active",
+            Spu.brand.isnot(None),
+            Spu.brand.ilike(search_term),
         ).distinct().limit(3)
         
         result = await self.db.execute(brand_query)
@@ -143,8 +124,8 @@ class SearchService:
 
         # 3. Category suggestions
         category_query = select(Category).where(
-            Category.is_active,
-            Category.name.ilike(f"%{query}%"),
+            Category.is_active == True,
+            Category.name.ilike(search_term),
         ).limit(3)
         
         result = await self.db.execute(category_query)
@@ -191,4 +172,4 @@ class SearchService:
         """Highlight matching portion of text."""
         import re
         pattern = re.compile(re.escape(query), re.IGNORECASE)
-        return pattern.sub(f"\u003cmark\u003e{query}\u003c/mark\u003e", text)
+        return pattern.sub(f"<mark>{query}</mark>", text)

@@ -29,7 +29,7 @@ class DataFetchJob(Base):
     params = Column(JSONB, default=dict)  # product_id, keywords, etc.
     result = Column(JSONB, nullable=True)  # fetched data summary
     error_message = Column(Text, nullable=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
+    spu_id = Column(Integer, ForeignKey("spus.id"), nullable=True)
     cursor_value = Column(DateTime(timezone=True), nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)

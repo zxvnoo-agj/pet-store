@@ -1,4 +1,3 @@
-
 from sqlalchemy import asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,18 +11,18 @@ class ReviewService:
 
     async def get_reviews(
         self,
-        product_id: int,
+        spu_id: int,
         rating: int | None = None,
         sort: str | None = None,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[list[ReviewResponse], int]:
         query = select(Review).where(
-            Review.product_id == product_id,
+            Review.spu_id == spu_id,
             Review.status == "approved"
         )
         count_query = select(func.count(Review.id)).where(
-            Review.product_id == product_id,
+            Review.spu_id == spu_id,
             Review.status == "approved"
         )
 
@@ -53,10 +52,10 @@ class ReviewService:
 
         return [ReviewResponse.model_validate(r) for r in reviews], total
 
-    async def get_review_summary(self, product_id: int) -> ReviewSummary:
+    async def get_review_summary(self, spu_id: int) -> ReviewSummary:
         result = await self.db.execute(
             select(Review).where(
-                Review.product_id == product_id,
+                Review.spu_id == spu_id,
                 Review.status == "approved"
             )
         )
@@ -83,15 +82,19 @@ class ReviewService:
         recommend_count = sum(1 for r in reviews if r.is_recommended)
         recommend_rate = recommend_count / len(reviews) if reviews else 0.0
 
+        # Average rating
+        avg_rating = sum(float(r.rating) for r in reviews) / len(reviews) if reviews else 0.0
+
         return ReviewSummary(
+            average_rating=round(avg_rating, 1),
             rating_distribution=rating_distribution,
             top_tags=[tag for tag, _ in top_tags],
             recommend_rate=round(recommend_rate, 2),
         )
 
-    async def create_review(self, product_id: int, user_id: int, review_data: dict) -> Review:
+    async def create_review(self, spu_id: int, user_id: int, review_data: dict) -> Review:
         review = Review(
-            product_id=product_id,
+            spu_id=spu_id,
             user_id=user_id,
             rating=review_data["rating"],
             content=review_data["content"],

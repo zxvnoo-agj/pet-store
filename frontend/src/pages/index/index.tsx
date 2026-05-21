@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import ProductCard from '../../components/ProductCard'
+import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
-import { useProductStore } from '../../stores/productStore'
+import { useSpuStore } from '../../stores/spuStore'
 import { useAuthStore } from '../../stores/authStore'
 
 const defaultPetChoices = [
@@ -23,9 +23,8 @@ const PET_TYPE_MAP: Record<string, { name: string; icon: string }> = {
 export default function HomePage() {
   const { isLoggedIn, user } = useAuthStore()
   const [activePetId, setActivePetId] = useState('cat')
-  const [recommendedProducts, setRecommendedProducts] = useState([])
+  const [recommendedSpus, setRecommendedSpus] = useState([])
 
-  // 获取用户的宠物列表
   const getUserPets = () => {
     if (!isLoggedIn || !user?.pet_types || user.pet_types.length === 0) {
       return []
@@ -41,7 +40,6 @@ export default function HomePage() {
   const myPets = getUserPets()
 
   useEffect(() => {
-    // 初始化默认选中的宠物
     if (myPets.length > 0) {
       setActivePetId(myPets[0].id)
     } else {
@@ -50,29 +48,28 @@ export default function HomePage() {
   }, [isLoggedIn, user])
 
   useEffect(() => {
-    fetchRecommendedProducts()
+    fetchRecommendedSpus()
   }, [activePetId])
 
-  const fetchRecommendedProducts = async () => {
+  const fetchRecommendedSpus = async () => {
     const activeUserPet = myPets.find(p => p.id === activePetId)
     const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
     const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
 
     try {
-      const res = await apiClient.get('/products', {
+      const res = await apiClient.get('/spus', {
         pet_type: petTypeKey,
         page_size: 3,
       })
-      setRecommendedProducts(res.products || [])
+      setRecommendedSpus(res.items || [])
     } catch (error) {
-      console.error('Failed to fetch products:', error)
+      console.error('Failed to fetch SPUs:', error)
     }
   }
 
   const getPetDisplayList = () => {
     const list: Array<{ id: string; name: string; icon: string; subtitle?: string; isMine?: boolean }> = []
 
-    // 登录用户的宠物
     myPets.forEach(pet => {
       list.push({
         id: pet.id,
@@ -83,7 +80,6 @@ export default function HomePage() {
       })
     })
 
-    // 默认宠物类型（排除用户已选的）
     const userPetTypes = new Set(myPets.map(p => p.type))
     defaultPetChoices.forEach(p => {
       if (!userPetTypes.has(p.id)) {
@@ -124,7 +120,6 @@ export default function HomePage() {
   const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
   const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
 
-  // 获取当前展示宠物的名称
   const getActivePetName = () => {
     if (activeUserPet) return activeUserPet.name
     if (activeDefaultPet) return activeDefaultPet.name
@@ -227,8 +222,8 @@ export default function HomePage() {
           </Text>
         </View>
         <View className="space-y-3">
-          {recommendedProducts.map((product: any) => (
-            <ProductCard key={product.id} product={product} />
+          {recommendedSpus.map((spu: any) => (
+            <SpuCard key={spu.id} spu={spu} />
           ))}
         </View>
       </View>

@@ -8,9 +8,9 @@ class Favorite(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        UniqueConstraint("user_id", "product_id", name="uq_user_product_favorite"),
+        UniqueConstraint("user_id", "spu_id", name="uq_user_spu_favorite"),
     )

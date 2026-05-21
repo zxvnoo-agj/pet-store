@@ -22,6 +22,7 @@ class ReviewCreate(ReviewBase):
 
 class ReviewResponse(ReviewBase):
     id: int
+    spu_id: int
     user: ReviewUser | None = None
     helpful_count: int = 0
     created_at: datetime
@@ -31,6 +32,7 @@ class ReviewResponse(ReviewBase):
 
 
 class ReviewSummary(BaseModel):
+    average_rating: float = 0.0
     rating_distribution: dict = {}
     top_tags: list[str] = []
     recommend_rate: float = 0.0

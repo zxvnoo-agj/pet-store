@@ -9,7 +9,7 @@ class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=False, index=True)
     external_note_id = Column(String(64), nullable=True, index=True)
     author = Column(String(64), nullable=True)
     note_published_at = Column(DateTime(timezone=True), nullable=True)
@@ -28,5 +28,5 @@ class Review(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    product = relationship("Product", backref="reviews")
+    spu = relationship("Spu", backref="reviews")
     user = relationship("User", backref="reviews")

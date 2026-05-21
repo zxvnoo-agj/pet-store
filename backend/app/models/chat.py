@@ -30,10 +30,9 @@ class ChatMessage(Base):
     content = Column(Text, nullable=False)
     tool_calls = Column(JSONB, nullable=True)
     tokens_used = Column(Integer, nullable=True)
-    referenced_products = Column(JSONB, default=list)
+    referenced_spus = Column(JSONB, default=list)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
-        # Index for chat history retrieval
         {"comment": "Chat messages for AI assistant conversations"},
     )

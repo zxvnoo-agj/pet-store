@@ -1,6 +1,7 @@
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.category import Category
 from app.schemas.category import CategoryResponse
@@ -17,7 +18,7 @@ class CategoryService:
         if cached:
             return [CategoryResponse(**item) for item in cached]
 
-        query = select(Category).where(Category.is_active)
+        query = select(Category).options(selectinload(Category.children)).where(Category.is_active)
         if pet_type:
             query = query.where(Category.pet_type == pet_type)
 

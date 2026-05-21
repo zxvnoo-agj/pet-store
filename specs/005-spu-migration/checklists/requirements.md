@@ -34,10 +34,17 @@
 **Pass**: All checklist items pass.
 
 **Spec Quality**: The specification clearly defines the migration from products to SPU system with:
-- 4 prioritized user stories (P1-P2)
-- 12 functional requirements covering API, UI, data pipeline
-- 6 measurable success criteria
+- 5 prioritized user stories (P1-P2)
+- 18 functional requirements covering API, UI, data pipeline, AI assistant migration, collections/reviews migration
+- 9 measurable success criteria
 - 7 edge cases identified
-- Clear assumptions documented
+- 3 clarifications recorded in Clarifications section
+- Clear assumptions documented including system scope (link redirects only, no payment/order)
+
+**Key Updates from Clarification**:
+1. Products table will be deleted - no backward compatibility for historical sessions
+2. All functions (collections, reviews, auth, admin) are in scope for this migration
+3. System only supports link redirects via ddk API, no payment/order/logistics features
+4. SPU data volume concerns deferred - will be addressed by future data additions
 
 **Readiness**: Ready for `/speckit.plan`

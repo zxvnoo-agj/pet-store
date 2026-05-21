@@ -1,30 +1,43 @@
-export interface Product {
+export interface Spu {
   id: number;
   name: string;
   brand: string;
-  categoryId: number;
-  petType: string;
+  model: string;
+  category_id: number;
+  pet_type: string;
   price_min: number;
   price_max: number;
   image_urls: string[];
-  ratings: {
-    overall: number;
-    costPerformance: number;
-    quality: number;
-    taste: number;
-    packaging: number;
-  };
+  rating: number;
+  review_count: number;
   pros: string[];
   cons: string[];
   description: string;
   ingredients: string[];
-  reviewCount: number;
-  favoriteCount: number;
+  nutrition: Record<string, string>;
+  extra_attrs: Record<string, string>;
+  currency: string;
+  status: string;
+  is_favorited?: boolean;
+  listing_count?: number;
+}
+
+export interface SpuListing {
+  id: number;
+  platform: string;
+  shop_name: string;
+  title: string;
+  price: number;
+  original_price: number | null;
+  url: string;
+  image_url: string | null;
+  sales_count: number | null;
+  promotion_url: string | null;
 }
 
 export interface Review {
   id: number;
-  productId: number;
+  spu_id: number;
   user: {
     nickname: string;
     avatar: string;
@@ -32,9 +45,9 @@ export interface Review {
   rating: number;
   content: string;
   tags: string[];
-  isRecommended: boolean;
-  helpfulCount: number;
-  createdAt: string;
+  is_recommended: boolean;
+  helpful_count: number;
+  created_at: string;
 }
 
 export interface PetType {
@@ -48,5 +61,8 @@ export interface Category {
   id: number;
   name: string;
   icon: string;
-  petType: string;
+  pet_type: string;
 }
+
+// Backward-compatible alias for gradual migration
+export type Product = Spu;

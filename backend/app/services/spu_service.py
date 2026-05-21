@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import asc, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -124,6 +124,149 @@ class SpuService:
         total = count_result.scalar()
 
         return spus, total or 0
+
+    # Mini-program specific methods
+    async def get_spus_for_miniprogram(self, filters: SpuFilter) -> tuple[list[Spu], int]:
+        """Get SPUs for mini-program with review count and rating."""
+        from app.models.review import Review
+        
+        # Subquery for review stats
+        review_stats_subq = (
+            select(
+                Review.spu_id,
+                func.count(Review.id).label("review_count"),
+                func.avg(Review.rating).label("avg_rating"),
+            )
+            .where(Review.status == "approved")
+            .group_by(Review.spu_id)
+            .subquery()
+        )
+
+        query = (
+            select(Spu)
+            .outerjoin(review_stats_subq, Spu.id == review_stats_subq.c.spu_id)
+            .options(selectinload(Spu.category))
+            .where(Spu.status == "active")
+        )
+        count_query = select(func.count(Spu.id)).where(Spu.status == "active")
+
+        if filters.category_id:
+            query = query.where(Spu.category_id == filters.category_id)
+            count_query = count_query.where(Spu.category_id == filters.category_id)
+
+        if filters.pet_type:
+            query = query.where(Spu.pet_type == filters.pet_type)
+            count_query = count_query.where(Spu.pet_type == filters.pet_type)
+
+        if filters.brand:
+            query = query.where(Spu.brand == filters.brand)
+            count_query = count_query.where(Spu.brand == filters.brand)
+
+        if filters.min_price is not None:
+            query = query.where(Spu.price_min >= filters.min_price)
+            count_query = count_query.where(Spu.price_min >= filters.min_price)
+
+        if filters.max_price is not None:
+            query = query.where(Spu.price_max <= filters.max_price)
+            count_query = count_query.where(Spu.price_max <= filters.max_price)
+
+        # Sorting
+        if filters.sort == "price_asc":
+            query = query.order_by(asc(Spu.price_min))
+        elif filters.sort == "price_desc":
+            query = query.order_by(desc(Spu.price_min))
+        elif filters.sort == "rating":
+            query = query.order_by(desc(review_stats_subq.c.avg_rating))
+        else:
+            query = query.order_by(desc(Spu.updated_at))
+
+        offset = (filters.page - 1) * filters.page_size
+        query = query.offset(offset).limit(filters.page_size)
+
+        result = await self.db.execute(query)
+        spus = result.scalars().all()
+
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar()
+
+        return list(spus), total or 0
+
+    async def get_spu_for_miniprogram(self, spu_id: int) -> Spu | None:
+        """Get SPU detail for mini-program with category."""
+        result = await self.db.execute(
+            select(Spu)
+            .where(Spu.id == spu_id, Spu.status == "active")
+            .options(selectinload(Spu.category))
+        )
+        spu = result.scalar_one_or_none()
+        if spu:
+            # Get listing count
+            listing_count_result = await self.db.execute(
+                select(func.count(SpuListing.id))
+                .where(SpuListing.spu_id == spu_id, SpuListing.match_status == "linked")
+            )
+            spu.listing_count = listing_count_result.scalar() or 0
+        return spu
+
+    async def get_listings_for_miniprogram(self, spu_id: int, platform: str | None = None, sort: str | None = None) -> list[SpuListing]:
+        """Get listings for mini-program price comparison."""
+        query = select(SpuListing).where(
+            SpuListing.spu_id == spu_id,
+            SpuListing.match_status == "linked"
+        )
+        
+        if platform:
+            query = query.where(SpuListing.platform == platform)
+        
+        if sort == "price_desc":
+            query = query.order_by(desc(SpuListing.price))
+        elif sort == "sales":
+            query = query.order_by(desc(SpuListing.sales_count))
+        else:
+            query = query.order_by(asc(SpuListing.price))
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def search_spus(self, query_str: str, pet_type: str | None = None, category_id: int | None = None, page: int = 1, page_size: int = 20) -> tuple[list[Spu], int]:
+        """Search SPUs by keyword across name, brand, description, and ingredients."""
+        from app.models.review import Review
+        
+        search_term = f"%{query_str}%"
+        
+        query = select(Spu).where(Spu.status == "active").options(selectinload(Spu.category))
+        count_query = select(func.count(Spu.id)).where(Spu.status == "active")
+        
+        # Search across multiple fields
+        search_conditions = (
+            (Spu.name.ilike(search_term)) |
+            (Spu.brand.ilike(search_term)) |
+            (Spu.description.ilike(search_term)) |
+            (Spu.model.ilike(search_term))
+        )
+        
+        query = query.where(search_conditions)
+        count_query = count_query.where(search_conditions)
+        
+        if pet_type:
+            query = query.where(Spu.pet_type == pet_type)
+            count_query = count_query.where(Spu.pet_type == pet_type)
+            
+        if category_id:
+            query = query.where(Spu.category_id == category_id)
+            count_query = count_query.where(Spu.category_id == category_id)
+        
+        query = query.order_by(desc(Spu.updated_at))
+        offset = (page - 1) * page_size
+        query = query.offset(offset).limit(page_size)
+        
+        result = await self.db.execute(query)
+        spus = result.scalars().all()
+        
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar()
+        
+        return list(spus), total or 0
 
     async def get_listings_by_spu(self, spu_id: int, match_status: str | None = None) -> list[SpuListing]:
         query = select(SpuListing).where(SpuListing.spu_id == spu_id)

@@ -1,7 +1,7 @@
 """API endpoint performance benchmarks.
 
 Measures response times for critical API endpoints under various conditions.
-Targets: product list < 200ms p95, product detail < 300ms p95, search < 500ms p95.
+Targets: SPU list < 200ms p95, SPU detail < 300ms p95, search < 500ms p95.
 """
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -22,7 +22,7 @@ async def test_product_list_performance(benchmark, db_session):
 
     async def fetch_products():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/products?page=1&page_size=20")
+            resp = await client.get("/api/v1/spus?page=1&page_size=20")
             return resp
 
     result = await benchmark(fetch_products)
@@ -45,7 +45,7 @@ async def test_product_detail_performance(benchmark, db_session):
 
     async def fetch_detail():
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/products/1")
+            resp = await client.get("/api/v1/spus/1")
             return resp
 
     result = await benchmark(fetch_detail)

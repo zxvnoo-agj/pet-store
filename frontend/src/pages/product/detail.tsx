@@ -34,7 +34,7 @@ function ProductDetailContent() {
   const fetchFavoriteStatus = async () => {
     if (!isLoggedIn || !id) return
     try {
-      const res = await apiClient.get(`/products/${id}/favorite`)
+      const res = await apiClient.get(`/spus/${id}/favorite`)
       setIsFavorited(res.is_favorited)
     } catch {
       // 静默处理
@@ -48,7 +48,7 @@ function ProductDetailContent() {
     }
     if (!id) return
     try {
-      const res = await apiClient.post(`/products/${id}/favorite`)
+      const res = await apiClient.post(`/spus/${id}/favorite`)
       setIsFavorited(res.is_favorited)
       Taro.showToast({
         title: res.is_favorited ? '已收藏' : '已取消收藏',
@@ -61,7 +61,7 @@ function ProductDetailContent() {
 
   const fetchProductDetail = async () => {
     try {
-      const res = await apiClient.get(`/products/${id}`)
+      const res = await apiClient.get(`/spus/${id}`)
       setProduct(res.product)
     } catch (error) {
       console.error('Failed to fetch product:', error)
@@ -72,7 +72,7 @@ function ProductDetailContent() {
 
   const fetchReviews = async () => {
     try {
-      const res = await apiClient.get(`/products/${id}/reviews`)
+      const res = await apiClient.get(`/spus/${id}/reviews`)
       setReviews(res.reviews || [])
     } catch (error) {
       console.error('Failed to fetch reviews:', error)

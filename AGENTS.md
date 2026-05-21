@@ -1,10 +1,15 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/004-refract-goods/plan.md
+specs/005-spu-migration/plan.md
 
 Also refer to:
-- Feature specification: specs/004-refract-goods/spec.md
+- Feature specification: specs/005-spu-migration/spec.md
+- Feature 005 data model: specs/005-spu-migration/data-model.md
+- Feature 005 API contracts: specs/005-spu-migration/contracts/api-contracts.md
+- Feature 005 quickstart: specs/005-spu-migration/quickstart.md
+- Feature 004 plan: specs/004-refract-goods/plan.md
+- Feature 004 specification: specs/004-refract-goods/spec.md
 - Feature 004 data model: specs/004-refract-goods/data-model.md
 - Feature 004 API contracts: specs/004-refract-goods/contracts/api-contracts.md
 - Feature 004 quickstart: specs/004-refract-goods/quickstart.md

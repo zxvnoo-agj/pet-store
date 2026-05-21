@@ -1,4 +1,3 @@
-
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -31,7 +30,7 @@ class ExternalProduct(Base):
     __tablename__ = "external_products"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=False)
     source_id = Column(Integer, ForeignKey("data_sources.id"), nullable=False)
     platform = Column(String(32), nullable=False, default="pdd")
     external_id = Column(String(64), nullable=False)
@@ -40,7 +39,7 @@ class ExternalProduct(Base):
     is_primary = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    product = relationship("Product", backref="external_products")
+    spu = relationship("Spu", backref="external_products")
     data_source = relationship("DataSource", backref="external_products")
 
 
@@ -48,7 +47,7 @@ class PriceHistory(Base):
     __tablename__ = "price_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=False)
     source_id = Column(Integer, ForeignKey("data_sources.id"), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     group_price = Column(Numeric(10, 2), nullable=True)
@@ -56,7 +55,7 @@ class PriceHistory(Base):
     coupon_discount = Column(Numeric(10, 2), nullable=True)
     recorded_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    product = relationship("Product", backref="price_history")
+    spu = relationship("Spu", backref="price_history")
     data_source = relationship("DataSource", backref="price_history")
 
 

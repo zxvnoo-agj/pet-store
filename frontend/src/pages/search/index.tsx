@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { View, Text, Input, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { apiClient } from '../../services/api'
-import ProductCard from '../../components/ProductCard'
+import SpuCard from '../../components/SpuCard'
 
 const HOT_SEARCHES = ['猫粮', '狗粮', '猫砂', '牵引绳', '冻干', '罐头', '猫窝']
 const SEARCH_HISTORY_KEY = 'search_history'
@@ -24,7 +24,6 @@ export default function SearchPage() {
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const inputRef = useRef<any>(null)
 
-  // 加载搜索历史
   useEffect(() => {
     try {
       const history = Taro.getStorageSync(SEARCH_HISTORY_KEY) || []
@@ -34,7 +33,6 @@ export default function SearchPage() {
     }
   }, [])
 
-  // 保存搜索历史
   const saveSearchHistory = useCallback((keyword: string) => {
     if (!keyword.trim()) return
     try {
@@ -47,7 +45,6 @@ export default function SearchPage() {
     }
   }, [])
 
-  // 获取搜索建议
   const fetchSuggestions = useCallback(
     debounce(async (keyword: string) => {
       if (!keyword.trim()) {
@@ -66,7 +63,6 @@ export default function SearchPage() {
     []
   )
 
-  // 执行搜索
   const performSearch = useCallback(async (keyword: string) => {
     if (!keyword.trim()) return
     setLoading(true)
@@ -76,30 +72,16 @@ export default function SearchPage() {
 
     try {
       const res = await apiClient.get('/search', { q: keyword })
-      // 转换数据格式以适配 ProductCard 组件
-      const formattedResults = {
-        ...res,
-        products: (res.products || []).map((p: any) => ({
-          ...p,
-          price_min: p.price_range?.min ?? 0,
-          price_max: p.price_range?.max ?? 0,
-          ratings: p.ratings || { overall: 0 },
-          reviewCount: p.review_count || 0,
-          pros: p.pros || [],
-          cons: p.cons || [],
-        })),
-      }
-      setResults(formattedResults)
+      setResults(res)
     } catch (error) {
       console.error('Search failed:', error)
       Taro.showToast({ title: '搜索失败', icon: 'none' })
-      setResults({ products: [], categories: [], brands: [], suggestions: [] })
+      setResults({ spus: [], categories: [], brands: [], suggestions: [] })
     } finally {
       setLoading(false)
     }
   }, [saveSearchHistory])
 
-  // 处理输入变化
   const handleInputChange = (e: any) => {
     const value = e.detail.value
     setQuery(value)
@@ -112,7 +94,6 @@ export default function SearchPage() {
     }
   }
 
-  // 清除搜索
   const clearSearch = () => {
     setQuery('')
     setSuggestions([])
@@ -120,7 +101,6 @@ export default function SearchPage() {
     setResults(null)
   }
 
-  // 清除历史记录
   const clearHistory = () => {
     try {
       Taro.removeStorageSync(SEARCH_HISTORY_KEY)
@@ -130,17 +110,10 @@ export default function SearchPage() {
     }
   }
 
-  // 点击建议项
   const handleSuggestionClick = (suggestion: any) => {
     performSearch(suggestion.text)
   }
 
-  // 导航到商品详情
-  const navigateToProduct = (productId: number) => {
-    Taro.navigateTo({ url: `/pages/product/detail?id=${productId}` })
-  }
-
-  // 导航到商品列表（按分类或品牌筛选）
   const navigateToList = (params: { category?: string; brand?: string; petType?: string }) => {
     const queryParts: string[] = []
     if (params.category) queryParts.push(`category=${encodeURIComponent(params.category)}`)
@@ -243,24 +216,24 @@ export default function SearchPage() {
             </View>
           )}
 
-          {/* 商品列表 */}
+          {/* SPU列表 */}
           <View className="px-4 py-3">
             <View className="flex items-center justify-between mb-3">
               <Text className="text-sm font-medium text-gray-800">
                 搜索结果
               </Text>
               <Text className="text-xs text-gray-400">
-                共 {results.products?.length || 0} 件商品
+                共 {results.spus?.length || 0} 件商品
               </Text>
             </View>
             
             <View className="space-y-3">
-              {results.products?.map((product: any) => (
-                <ProductCard key={product.id} product={product} />
+              {results.spus?.map((spu: any) => (
+                <SpuCard key={spu.id} spu={spu} />
               ))}
             </View>
 
-            {results.products?.length === 0 && !loading && (
+            {results.spus?.length === 0 && !loading && (
               <View className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <Text className="text-4xl mb-2">🔍</Text>
                 <Text className="text-sm">未找到相关商品</Text>
@@ -274,7 +247,6 @@ export default function SearchPage() {
       {/* 默认页面：热门搜索 + 搜索历史 */}
       {!results && !showSuggestions && (
         <ScrollView className="flex-1" scrollY>
-          {/* 搜索历史 */}
           {searchHistory.length > 0 && (
             <View className="bg-white px-4 py-3 mb-2">
               <View className="flex items-center justify-between mb-2">
@@ -295,7 +267,6 @@ export default function SearchPage() {
             </View>
           )}
 
-          {/* 热门搜索 */}
           <View className="bg-white px-4 py-3">
             <Text className="text-sm font-medium text-gray-800 mb-2">热门搜索</Text>
             <View className="flex flex-wrap gap-2">
@@ -313,7 +284,6 @@ export default function SearchPage() {
         </ScrollView>
       )}
 
-      {/* 加载中 */}
       {loading && (
         <View className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
           <View className="flex flex-col items-center">

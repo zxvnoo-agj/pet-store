@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import ProductCard from '../../components/ProductCard'
+import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
 
 export default function FavoritesPage() {
-  const [products, setProducts] = useState([])
+  const [spus, setSpus] = useState([])
   const { isLoggedIn } = useAuthStore()
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function FavoritesPage() {
   const fetchFavorites = async () => {
     try {
       const res = await apiClient.get('/users/me/favorites')
-      setProducts(res.products || [])
+      setSpus(res.items || [])
     } catch (error) {
       console.error('Failed to fetch favorites:', error)
     }
@@ -51,12 +51,12 @@ export default function FavoritesPage() {
 
       <View className="flex-1 overflow-y-auto px-4 py-4">
         <View className="space-y-3">
-          {products.map((product: any) => (
-            <ProductCard key={product.id} product={product} />
+          {spus.map((spu: any) => (
+            <SpuCard key={spu.id} spu={spu} />
           ))}
         </View>
 
-        {products.length === 0 && (
+        {spus.length === 0 && (
           <View className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Text className="text-sm">暂无收藏商品</Text>
           </View>

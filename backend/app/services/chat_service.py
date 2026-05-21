@@ -1,4 +1,3 @@
-
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -67,7 +66,7 @@ class ChatService:
         content: str,
         tool_calls: list[dict] | None = None,
         tokens_used: int | None = None,
-        referenced_products: list[int] | None = None,
+        referenced_spus: list[int] | None = None,
     ) -> ChatMessage:
         message = ChatMessage(
             session_id=session_id,
@@ -75,7 +74,7 @@ class ChatService:
             content=content,
             tool_calls=tool_calls,
             tokens_used=tokens_used,
-            referenced_products=referenced_products or [],
+            referenced_spus=referenced_spus or [],
         )
         self.db.add(message)
         await self.db.commit()

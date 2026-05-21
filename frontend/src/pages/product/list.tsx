@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
-import ProductCard from '../../components/ProductCard'
-import { useProductStore } from '../../stores/productStore'
+import SpuCard from '../../components/SpuCard'
+import { useSpuStore } from '../../stores/spuStore'
 import { useCompareStore } from '../../stores/compareStore'
 import { apiClient } from '../../services/api'
 
-type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating_desc'
+type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating'
 
 export default function ProductListPage() {
   const router = useRouter()
   const { params } = router
   const [sortBy, setSortBy] = useState<SortType>('default')
   const [showSortMenu, setShowSortMenu] = useState(false)
-  const [products, setProducts] = useState([])
+  const [spus, setSpus] = useState([])
   const [loading, setLoading] = useState(false)
 
   const { compareList } = useCompareStore()
@@ -24,10 +24,10 @@ export default function ProductListPage() {
   const searchQuery = decodeURIComponent(params?.search || '')
 
   useEffect(() => {
-    fetchProducts()
+    fetchSpus()
   }, [petType, categoryId, category, searchQuery, sortBy])
 
-  const fetchProducts = async () => {
+  const fetchSpus = async () => {
     setLoading(true)
     try {
       const query: any = { page: 1, page_size: 20 }
@@ -35,10 +35,10 @@ export default function ProductListPage() {
       if (categoryId) query.category_id = categoryId
       if (sortBy !== 'default') query.sort = sortBy
 
-      const res = await apiClient.get('/products', query)
-      setProducts(res.products || [])
+      const res = await apiClient.get('/spus', query)
+      setSpus(res.items || [])
     } catch (error) {
-      console.error('Failed to fetch products:', error)
+      console.error('Failed to fetch SPUs:', error)
     } finally {
       setLoading(false)
     }
@@ -54,7 +54,7 @@ export default function ProductListPage() {
 
   const sortOptions: { key: SortType; label: string }[] = [
     { key: 'default', label: '综合排序' },
-    { key: 'rating_desc', label: '评分最高' },
+    { key: 'rating', label: '评分最高' },
     { key: 'price_asc', label: '价格最低' },
     { key: 'price_desc', label: '价格最高' },
   ]
@@ -101,18 +101,18 @@ export default function ProductListPage() {
 
       {/* 结果数 */}
       <View className="shrink-0 px-4 py-2 bg-gray-50">
-        <Text className="text-xs text-gray-400">共 {products.length} 件商品</Text>
+        <Text className="text-xs text-gray-400">共 {spus.length} 件商品</Text>
       </View>
 
       {/* 商品列表 */}
       <View className="flex-1 overflow-y-auto px-4 pb-4">
         <View className="space-y-3">
-          {products.map((product: any) => (
-            <ProductCard key={product.id} product={product} />
+          {spus.map((spu: any) => (
+            <SpuCard key={spu.id} spu={spu} />
           ))}
         </View>
 
-        {products.length === 0 && !loading && (
+        {spus.length === 0 && !loading && (
           <View className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Text className="text-sm mt-3">暂无相关商品</Text>
           </View>
