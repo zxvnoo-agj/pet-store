@@ -44,11 +44,14 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   const fetchCategories = async () => {
     try {
       const res = await adminCategoryApi.list()
+      console.log('[SpuForm] categories API response:', res.data)
       const data = res.data?.data
       if (Array.isArray(data)) {
         setCategories(data)
       } else if (Array.isArray(data?.items)) {
         setCategories(data.items)
+      } else if (Array.isArray(res.data)) {
+        setCategories(res.data)
       } else {
         setCategories([])
       }
