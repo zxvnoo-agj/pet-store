@@ -9,6 +9,7 @@
 | Date | Change | Reason |
 |------|--------|--------|
 | 2026-05-20 | Initial creation | Feature 004 design |
+| 2026-05-21 | AI-assisted entry (no schema changes) | Added vision LLM for ingredient/nutrition extraction and text LLM for pros/cons generation — pure service layer, no DB changes |
 
 ## Summary of Changes
 

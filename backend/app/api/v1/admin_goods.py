@@ -8,6 +8,7 @@ from app.schemas.common import ApiResponse, Pagination
 from app.schemas.spu import SpuCreate, SpuFilter, SpuResponse, SpuUpdate
 from app.schemas.spu_listing import SpuListingResponse, LinkListingRequest
 from app.services.spu_service import SpuService
+from app.services.spu_ai_service import spu_ai_extractor
 from app.services.spu_listing_service import ImportJobManager, SpuListingService
 
 router = APIRouter()
@@ -300,3 +301,52 @@ async def admin_get_job_status(
             "completed_at": job.completed_at,
         }
     )
+
+
+@router.post("/admin/goods/spus/parse-ingredients", response_model=ApiResponse[dict], summary="Parse Ingredients from Image", description="Upload product ingredient image, use vision LLM to extract ingredient list.")
+async def admin_parse_ingredients(
+    data: dict,
+    current_admin=Depends(get_current_admin),
+):
+    """Parse ingredient list from uploaded image using vision LLM."""
+    image_base64 = data.get("image_base64", "")
+    if not image_base64:
+        raise HTTPException(status_code=400, detail="image_base64 is required")
+
+    ingredients = await spu_ai_extractor.parse_ingredients_from_image(image_base64)
+    return ApiResponse(data={"ingredients": ingredients})
+
+
+@router.post("/admin/goods/spus/parse-nutrition", response_model=ApiResponse[dict], summary="Parse Nutrition from Image/Text", description="Upload nutrition image or input text, use LLM to extract structured nutrition data.")
+async def admin_parse_nutrition(
+    data: dict,
+    current_admin=Depends(get_current_admin),
+):
+    """Parse nutrition facts from image or text."""
+    image_base64 = data.get("image_base64")
+    text = data.get("text")
+
+    if image_base64:
+        nutrition = await spu_ai_extractor.parse_nutrition_from_image(image_base64)
+    elif text:
+        nutrition = await spu_ai_extractor.parse_nutrition_from_text(text)
+    else:
+        raise HTTPException(status_code=400, detail="Either image_base64 or text is required")
+
+    return ApiResponse(data={"nutrition": nutrition})
+
+
+@router.post("/admin/goods/spus/generate-pros-cons", response_model=ApiResponse[dict], summary="Generate Pros & Cons", description="Based on ingredients and nutrition, use LLM to automatically generate product pros and cons.")
+async def admin_generate_pros_cons(
+    data: dict,
+    current_admin=Depends(get_current_admin),
+):
+    """Generate pros and cons from ingredients and nutrition."""
+    ingredients = data.get("ingredients", [])
+    nutrition = data.get("nutrition", {})
+
+    if not ingredients and not nutrition:
+        raise HTTPException(status_code=400, detail="At least one of ingredients or nutrition is required")
+
+    result = await spu_ai_extractor.generate_pros_cons(ingredients, nutrition)
+    return ApiResponse(data=result)

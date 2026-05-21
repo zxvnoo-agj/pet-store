@@ -70,7 +70,8 @@ backend/
 │   ├── services/
 │   │   ├── spu_service.py     # SPU CRUD + price recalculation
 │   │   ├── spu_listing_service.py  # Listing CRUD
-│   │   └── spu_matching_service.py # LLM matching + confidence scoring
+│   │   ├── spu_matching_service.py # LLM matching + confidence scoring
+│   │   └── spu_ai_service.py  # AI-assisted ingredient/nutrition/pros-cons extraction
 │   └── utils/
 │       └── price_utils.py     # Price range calculation
 │
@@ -120,6 +121,16 @@ See [data-model.md](data-model.md).
 - `spu_listings`: 16 columns, FK → spus.id, UNIQUE(platform, goods_id)
 - Existing `products` table: **no changes**
 
+### AI-Assisted Entry (New)
+
+Three AI-powered features to reduce manual data entry time:
+1. **Vision-based ingredient extraction**: Upload product packaging image → LLM extracts ingredient list
+2. **Nutrition parsing (image + text)**: Upload nutrition table image or enter text description → LLM outputs structured JSON
+3. **Pros & Cons generation**: One-click analysis of ingredients + nutrition → LLM generates product advantages/disadvantages
+
+Backend service: `app/services/spu_ai_service.py` (uses qwen-vl-plus vision model and qwen-turbo text model)
+Frontend integration: `SpuForm.tsx` with upload buttons and AI action buttons
+
 ### API Contracts
 
 See [contracts/api-contracts.md](contracts/api-contracts.md).
@@ -129,6 +140,10 @@ See [contracts/api-contracts.md](contracts/api-contracts.md).
 - Listings: `GET /spus/{id}/listings`, `POST /listings/{id}/link`, `POST /listings/{id}/unlink`
 - Matching Queue: `GET /matching-queue`, `POST /matching-queue/confirm`, `POST /matching-queue/reject`
 - Import: `POST /listings/import`, `GET /jobs/{id}`
+- AI Extraction (NEW):
+  - `POST /spus/parse-ingredients` — Vision LLM extract ingredients from image
+  - `POST /spus/parse-nutrition` — Vision LLM or text LLM extract nutrition (image or text input)
+  - `POST /spus/generate-pros-cons` — LLM generate pros/cons from ingredients + nutrition
 
 ### Quick Start
 

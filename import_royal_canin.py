@@ -1,0 +1,1207 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+解析皇家猫粮全系列产品调研报告，提取SPU信息并导入数据库
+"""
+
+import json
+import re
+import requests
+from datetime import UTC, datetime, timedelta
+from jose import jwt
+
+# Configuration
+BASE_URL = "http://localhost:8001/v1/admin/goods"
+SECRET_KEY = "change-me-in-production"
+ADMIN_USER_ID = "1"
+
+# Generate admin token
+token = jwt.encode(
+    {"sub": ADMIN_USER_ID, "exp": datetime.now(UTC) + timedelta(days=7)},
+    SECRET_KEY,
+    algorithm="HS256",
+)
+
+HEADERS = {
+    "Authorization": f"Bearer {token}",
+    "Content-Type": "application/json",
+}
+
+# Category mapping (from database query)
+# parent: 猫粮 (id=39, level=1, pet_type=cat)
+# child 干粮: id=40
+# child 湿粮: id=41
+CATEGORY_DRY = 40  # 干粮
+CATEGORY_WET = 41  # 湿粮
+
+
+# Parse the report and extract products
+# Each product should have: brand, name, model, pet_type, description, ingredients, nutrition, pros, cons
+
+products = [
+    # ==================== 干粮系列 ====================
+    {
+        "brand": "Royal Canin",
+        "name": "Mother & Babycat 离乳期母猫与幼猫配方",
+        "model": "Mother & Babycat",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于怀孕/哺乳期母猫、1-4个月离乳期幼猫。超软慕斯质地，帮助幼猫从母乳过渡到固体食物。含有专利抗氧化复合物（维生素E和C），支持幼猫免疫系统发育。添加Omega-3脂肪酸（DHA），支持脑部发育和视力健康。益生元（MOS）与高消化蛋白，促进肠道菌群平衡。",
+        "ingredients": [
+            "肉类及动物衍生物",
+            "谷物",
+            "油脂",
+            "牛奶及乳制品",
+            "植物衍生物",
+            "矿物质",
+            "酵母"
+        ],
+        "nutrition": {
+            "粗蛋白质": "10.5%",
+            "粗脂肪": "5.5%",
+            "粗纤维": "0.8-0.9%",
+            "粗灰分": "1.7-1.9%",
+            "水分": "78.7-79.0%"
+        },
+        "pros": [
+            "超软慕斯质地，易于离乳期幼猫食用",
+            "专利抗氧化复合物支持免疫系统发育",
+            "Omega-3（DHA）支持脑部发育和视力健康",
+            "益生元促进肠道菌群平衡"
+        ],
+        "cons": [
+            "湿粮水分含量高，需配合干粮使用",
+            "价格相对较高"
+        ],
+        "extra_attrs": {
+            "适用对象": "怀孕/哺乳期母猫、1-4个月离乳期幼猫",
+            "产品形式": "湿粮：超软慕斯罐头（195g）；干粮：离乳期幼猫奶糕"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Kitten 幼猫营养配方",
+        "model": "Kitten",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于4-12个月成长期幼猫（也可用于怀孕或哺乳期母猫）。支持幼猫巩固期的快速生长需求。维生素C和E支持免疫系统健康发育，有助于疫苗接种后抗体更快升高。Omega-3（DHA）支持大脑发育和视力健康。益生元（MOS）与高消化蛋白促进肠道健康。颗粒小巧轻盈，适合幼猫口腔咀嚼。",
+        "ingredients": [
+            "鸡肉副产品粉",
+            "糙米",
+            "啤酒米",
+            "鸡脂肪",
+            "小麦蛋白",
+            "天然香料",
+            "玉米",
+            "玉米蛋白粉",
+            "蛋制品",
+            "甜菜浆",
+            "纤维素",
+            "植物油",
+            "鱼油",
+            "果寡糖",
+            "水解酵母",
+            "海洋微藻油",
+            "牛磺酸"
+        ],
+        "nutrition": {
+            "粗蛋白质（最低）": "34.0%",
+            "粗脂肪（最低）": "16.0%",
+            "粗纤维（最高）": "4.4%",
+            "水分（最高）": "7.5%",
+            "钙（最低）": "0.93%",
+            "磷（最低）": "0.75%",
+            "维生素E（最低）": "350 IU/kg",
+            "代谢能": "3823 kcal/kg"
+        },
+        "pros": [
+            "支持快速生长期营养需求",
+            "维生素C和E促进免疫发育",
+            "DHA支持大脑和视力发育",
+            "小颗粒适合幼猫咀嚼",
+            "高消化蛋白促进肠道健康"
+        ],
+        "cons": [
+            "含有谷物成分（糙米、玉米等）",
+            "部分猫咪可能对鸡肉副产品敏感"
+        ],
+        "extra_attrs": {
+            "适用对象": "4-12个月成长期幼猫、怀孕/哺乳期母猫",
+            "产品形式": "干粮、湿粮（肉汁薄切/肉块浓汤）",
+            "湿粮营养": "蛋白质12%、脂肪4%、纤维0.7%、灰分1.7%、水分78.2%"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Fit 32 理想体态成猫配方",
+        "model": "Fit 32",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于1-10岁健康成猫。均衡营养，维持理想体态。添加食物纤维（洋车前子壳0.5%），促进毛球排出。Omega-3和Omega-6脂肪酸，维护皮肤和毛发健康。独特配方有助于减少牙垢堆积。高消化性，减少排便量。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "米",
+            "小麦",
+            "玉米",
+            "动物脂肪",
+            "小麦蛋白",
+            "水解动物蛋白",
+            "蔬菜纤维",
+            "甜菜浆",
+            "大豆油",
+            "鱼油",
+            "洋车前子壳和籽",
+            "果寡糖",
+            "甘露寡糖",
+            "金盏花提取物"
+        ],
+        "nutrition": {
+            "粗蛋白质": "32%",
+            "粗脂肪": "15%",
+            "粗纤维": "4.3%",
+            "粗灰分": "7.3%",
+            "代谢能": "3641 kcal/kg"
+        },
+        "pros": [
+            "均衡营养维持理想体态",
+            "洋车前子壳促进毛球排出",
+            "Omega-3/6维护皮肤毛发健康",
+            "有助于减少牙垢堆积",
+            "高消化性减少排便量"
+        ],
+        "cons": [
+            "含有较多谷物（米、小麦、玉米）",
+            "蛋白质含量相对品种粮较低"
+        ],
+        "extra_attrs": {
+            "适用对象": "1-10岁健康成猫",
+            "特殊成分": "洋车前子壳0.5%"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Indoor 27 室内成猫配方",
+        "model": "Indoor 27",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于1-7岁室内生活成猫。控制热量，适应室内猫较低的活动量。特定纤维（洋车前子、甜菜浆、果寡糖）帮助排出毛球。高消化蛋白（L.I.P.）减少粪便气味。维护泌尿道健康。",
+        "ingredients": [
+            "鸡肉粉",
+            "玉米",
+            "啤酒米",
+            "玉米蛋白粉",
+            "小麦",
+            "鸡脂肪",
+            "小麦蛋白",
+            "天然香料",
+            "糙米",
+            "豌豆纤维",
+            "米糠",
+            "甜菜浆",
+            "植物油",
+            "硫酸钙",
+            "酵母",
+            "鱼油",
+            "氯化钾",
+            "果寡糖",
+            "焦磷酸钠",
+            "洋车前子壳",
+            "盐",
+            "牛磺酸"
+        ],
+        "nutrition": {
+            "粗蛋白质（最低）": "27.0%",
+            "粗脂肪（最低）": "11.0%",
+            "粗脂肪（最高）": "15.0%",
+            "粗纤维（最高）": "5.7%",
+            "水分（最高）": "8.0%",
+            "代谢能": "3534 kcal/kg"
+        },
+        "pros": [
+            "低热量配方适合室内猫",
+            "多种纤维帮助排毛球",
+            "高消化蛋白减少粪便气味",
+            "维护泌尿道健康"
+        ],
+        "cons": [
+            "蛋白质含量较低（27%）",
+            "含有较多谷物成分"
+        ],
+        "extra_attrs": {
+            "适用对象": "1-7岁室内生活成猫",
+            "生活方式": "室内猫专用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Sensible 33 肠胃敏感成猫配方",
+        "model": "Sensible 33",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于1-7岁消化敏感成猫。三种不同形状颗粒，提高适口性。极高消化性蛋白质（L.I.P.）+ 益生元，支持安全消化和肠道菌群平衡。高能量配方，减少每餐喂食量，减轻消化道负担。维护泌尿道健康。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "米",
+            "动物脂肪",
+            "植物分离蛋白",
+            "小麦粉",
+            "水解动物蛋白",
+            "玉米",
+            "玉米蛋白",
+            "甜菜浆",
+            "鱼油",
+            "蔬菜纤维",
+            "大豆油",
+            "果寡糖"
+        ],
+        "nutrition": {
+            "粗蛋白质": "33.0%",
+            "粗脂肪": "22.0%",
+            "粗灰分": "7.7%",
+            "粗纤维": "1.6%"
+        },
+        "pros": [
+            "三种颗粒形状提高适口性",
+            "极高消化蛋白适合敏感肠胃",
+            "益生元支持肠道菌群平衡",
+            "高能量减少每餐喂食量",
+            "减轻消化道负担"
+        ],
+        "cons": [
+            "脂肪含量较高（22%）",
+            "价格相对较高"
+        ],
+        "extra_attrs": {
+            "适用对象": "1-7岁消化敏感成猫",
+            "功能": "肠胃敏感护理"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Indoor 7+ 室内熟龄猫配方",
+        "model": "Indoor 7+",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于7-12岁室内猫。活力复合物：维生素C、绿茶多酚（150mg/kg）、EPA/DHA，应对初老迹象。调整磷含量，支持肾脏健康。葡萄糖胺和软骨素（500mg/kg）支持关节健康。超软颗粒，适合熟龄猫敏感的牙齿和牙龈。高消化性蛋白减少粪便气味。",
+        "ingredients": [
+            "玉米",
+            "脱水家禽蛋白",
+            "大麦",
+            "玉米粉",
+            "小麦",
+            "水解动物蛋白",
+            "动物脂肪",
+            "小麦蛋白",
+            "甜菜浆",
+            "蔬菜纤维",
+            "大豆油",
+            "鱼油",
+            "果寡糖",
+            "洋车前子壳",
+            "葡萄糖胺",
+            "金盏花粉",
+            "软骨素"
+        ],
+        "nutrition": {
+            "水分": "5.5%",
+            "粗蛋白质": "26.5%",
+            "粗脂肪": "13%",
+            "粗纤维": "3.4%",
+            "粗灰分": "7.2%"
+        },
+        "pros": [
+            "活力复合物应对初老迹象",
+            "调整磷含量支持肾脏健康",
+            "葡萄糖胺和软骨素支持关节",
+            "超软颗粒适合敏感牙齿",
+            "高消化蛋白减少粪便气味"
+        ],
+        "cons": [
+            "蛋白质含量较低（26.5%）",
+            "仅适用于室内熟龄猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "7-12岁室内猫",
+            "生命阶段": "熟龄期",
+            "特殊成分": "绿茶多酚150mg/kg、葡萄糖胺和软骨素500mg/kg"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Ageing 12+ 老年猫配方",
+        "model": "Ageing 12+",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于12岁以上老年猫。适中磷含量，支持肾脏健康。添加番茄红素（来自番茄），抗氧化支持。Omega-3（EPA/DHA）来自鱼油，支持关节健康。葡萄糖胺和软骨素支持关节功能。高消化蛋白，减少粪便量和气味。绿茶提取物（多酚来源）0.6g/kg，抗氧化。",
+        "ingredients": [
+            "植物蛋白分离物",
+            "预煮小麦粉",
+            "动物脂肪",
+            "脱水家禽蛋白",
+            "米",
+            "玉米",
+            "蔬菜纤维",
+            "水解动物蛋白",
+            "菊苣浆",
+            "鱼油",
+            "大豆油",
+            "酵母",
+            "番茄红素",
+            "果寡糖",
+            "洋车前子",
+            "甘露寡糖",
+            "水解甲壳类（葡萄糖胺来源）",
+            "琉璃苣油",
+            "金盏花提取物",
+            "水解软骨（软骨素来源）"
+        ],
+        "nutrition": {
+            "粗蛋白质": "30%",
+            "粗脂肪": "19%",
+            "粗灰分": "5.3%",
+            "粗纤维": "4.4%",
+            "磷": "0.6%",
+            "Omega-3脂肪酸": "10.9 g/kg"
+        },
+        "pros": [
+            "适中磷含量支持肾脏健康",
+            "番茄红素抗氧化支持",
+            "Omega-3支持关节健康",
+            "葡萄糖胺和软骨素保护关节",
+            "高消化蛋白减少粪便量",
+            "绿茶多酚抗氧化"
+        ],
+        "cons": [
+            "脂肪含量较高（19%）",
+            "仅适用于12岁以上老年猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "12岁以上老年猫",
+            "生命阶段": "老年期",
+            "特殊成分": "番茄红素、绿茶提取物0.6g/kg"
+        },
+        "status": "active"
+    },
+    # ==================== 品种专用干粮 ====================
+    {
+        "brand": "Royal Canin",
+        "name": "British Shorthair 英国短毛猫成猫专用",
+        "model": "British Shorthair Adult",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于12月龄以上英短成猫。支持骨骼和关节健康：添加Omega-3（EPA/DHA）。心脏健康：富含牛磺酸、EPA和DHA。L-肉碱参与健康脂肪代谢，帮助维持理想体重。独家新月形大颗粒，适合英短宽大的下颚，促进咀嚼和口腔卫生。34%蛋白含量维持肌肉量。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "米",
+            "植物分离蛋白",
+            "动物脂肪",
+            "玉米",
+            "玉米蛋白",
+            "蔬菜纤维",
+            "水解动物蛋白",
+            "菊苣浆",
+            "鱼油",
+            "大豆油",
+            "酵母",
+            "果寡糖",
+            "甘露寡糖",
+            "琉璃苣油",
+            "水解甲壳类（葡萄糖胺来源）",
+            "金盏花提取物",
+            "水解软骨（软骨素来源）"
+        ],
+        "nutrition": {
+            "粗蛋白质": "34%",
+            "粗脂肪": "19%",
+            "粗灰分": "6.8-6.9%",
+            "粗纤维": "5.3%",
+            "L-肉碱": "200 mg/kg",
+            "牛磺酸": "2.6 g/kg",
+            "Omega-3（含EPA/DHA）": "9.7 g/kg",
+            "代谢能": "4005 kcal/kg"
+        },
+        "pros": [
+            "新月形大颗粒适合英短下颚",
+            "Omega-3支持骨骼关节健康",
+            "牛磺酸和EPA/DHA支持心脏",
+            "L-肉碱帮助维持理想体重",
+            "34%蛋白维持肌肉量"
+        ],
+        "cons": [
+            "仅适用于英短成猫",
+            "代谢能较高（4005 kcal/kg）"
+        ],
+        "extra_attrs": {
+            "适用对象": "12月龄以上英短成猫",
+            "品种专用": "英国短毛猫",
+            "颗粒形状": "新月形大颗粒"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "British Shorthair 英国短毛猫幼猫专用",
+        "model": "British Shorthair Kitten",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于英短幼猫。高蛋白支持骨骼肌肉发育。",
+        "ingredients": [],
+        "nutrition": {
+            "粗蛋白质": "38%",
+            "粗脂肪": "20%",
+            "粗灰分": "8%",
+            "粗纤维": "2.2%",
+            "水分": "5.5%"
+        },
+        "pros": [
+            "高蛋白（38%）支持发育",
+            "专为英短幼猫设计"
+        ],
+        "cons": [
+            "报告未提供完整成分信息",
+            "仅适用于英短幼猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "英短幼猫",
+            "品种专用": "英国短毛猫",
+            "生命阶段": "幼猫期"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Persian 波斯猫专用",
+        "model": "Persian",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于12月龄以上波斯猫。杏仁形特制颗粒，适配波斯猫短面部结构（扁脸），方便用舌头下方舀取食物。Omega-3和Omega-6脂肪酸，保持长毛柔软亮泽。特殊纤维组合，防止毛球形成。独特矿物质组合支持泌尿道健康。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "动物脂肪",
+            "米",
+            "植物分离蛋白",
+            "玉米",
+            "蔬菜纤维",
+            "玉米粉",
+            "水解动物蛋白",
+            "玉米蛋白",
+            "菊苣浆",
+            "鱼油",
+            "洋车前子壳和籽",
+            "大豆油",
+            "果寡糖",
+            "甘露寡糖",
+            "琉璃苣油",
+            "金盏花提取物"
+        ],
+        "nutrition": {},
+        "pros": [
+            "杏仁形颗粒适配扁脸结构",
+            "Omega-3/6保持长毛亮泽",
+            "特殊纤维防止毛球形成",
+            "矿物质组合支持泌尿道"
+        ],
+        "cons": [
+            "报告未提供完整营养数据",
+            "仅适用于波斯猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "12月龄以上波斯猫",
+            "品种专用": "波斯猫",
+            "颗粒形状": "杏仁形"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Maine Coon 缅因猫专用",
+        "model": "Maine Coon",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于15月龄以上缅因猫。关节健康：添加葡萄糖胺和软骨素，支持大体型带来的关节压力。心脏健康：富含牛磺酸和Omega-3，支持心脏功能。大颗粒设计，适合缅因猫大而方正的下颚。富含优质蛋白支持肌肉发育。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "葡萄糖胺和软骨素支持关节",
+            "牛磺酸和Omega-3支持心脏",
+            "大颗粒适合缅因猫下颚",
+            "优质蛋白支持肌肉发育"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "仅适用于缅因猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "15月龄以上缅因猫",
+            "品种专用": "缅因猫",
+            "颗粒形状": "大颗粒"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Ragdoll 布偶猫专用",
+        "model": "Ragdoll",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于12月龄以上布偶猫。关节和骨骼健康：布偶猫体型大、骨骼重，需特别关注。金字塔形颗粒，适合布偶猫宽大的下颚。Omega-3和Omega-6维护半长型丝质被毛。支持心脏健康。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "关注关节和骨骼健康",
+            "金字塔形颗粒适合布偶猫",
+            "Omega-3/6维护丝质被毛",
+            "支持心脏健康"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "仅适用于布偶猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "12月龄以上布偶猫",
+            "品种专用": "布偶猫",
+            "颗粒形状": "金字塔形"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Siamese 暹罗猫专用",
+        "model": "Siamese",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于12月龄以上暹罗猫。管状颗粒设计，适合暹罗猫尖长窄小的下颚，方便用牙齿叼取。高易消化蛋白、低脂肪配方，保持暹罗猫典型的修长体型。氨基酸、维生素和Omega-3/6维持短而光滑的被毛。矿物质平衡支持泌尿道健康。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "植物分离蛋白",
+            "玉米",
+            "小麦",
+            "动物脂肪",
+            "玉米蛋白",
+            "米",
+            "水解动物蛋白",
+            "甜菜浆",
+            "鱼油",
+            "酵母",
+            "果寡糖",
+            "大豆油",
+            "甘露寡糖",
+            "琉璃苣油",
+            "金盏花提取物"
+        ],
+        "nutrition": {
+            "粗蛋白质": "38%",
+            "粗脂肪": "16%",
+            "粗灰分": "7.7%",
+            "粗纤维": "1.4%",
+            "Omega-6脂肪酸": "37.7 g/kg",
+            "Omega-3脂肪酸": "7.9 g/kg",
+            "L-肉碱": "50 mg/kg"
+        },
+        "pros": [
+            "管状颗粒适合暹罗猫下颚",
+            "低脂肪保持修长体型",
+            "高易消化蛋白",
+            "Omega-3/6维持短毛光泽",
+            "矿物质平衡支持泌尿道"
+        ],
+        "cons": [
+            "仅适用于暹罗猫",
+            "含有谷物成分"
+        ],
+        "extra_attrs": {
+            "适用对象": "12月龄以上暹罗猫",
+            "品种专用": "暹罗猫",
+            "颗粒形状": "管状"
+        },
+        "status": "active"
+    },
+    # ==================== 功能护理干粮 ====================
+    {
+        "brand": "Royal Canin",
+        "name": "Digestive Care 消化呵护配方",
+        "model": "Digestive Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "高易消化蛋白质（L.I.P.）。益生元（FOS）和特定纤维组合，支持肠道菌群平衡。有助于改善粪便质量。有干粮和湿粮（loaf in sauce肉饼肉汁型）两种形式。适用于消化不良、软便、肠胃敏感。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "高易消化蛋白质（L.I.P.）",
+            "益生元和纤维支持肠道菌群",
+            "改善粪便质量"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "适用于特定症状"
+        ],
+        "extra_attrs": {
+            "适用症状": "消化不良、软便、肠胃敏感",
+            "功能": "消化呵护"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Hairball Care 毛球护理配方",
+        "model": "Hairball Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "天然纤维组合（洋车前子、甜菜浆等）促进肠道蠕动。帮助毛球顺畅排出，减少呕吐毛球。适用于室内猫和长毛猫。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "天然纤维促进肠道蠕动",
+            "帮助毛球顺畅排出",
+            "减少呕吐毛球"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "主要适用于长毛猫和室内猫"
+        ],
+        "extra_attrs": {
+            "适用对象": "室内猫和长毛猫",
+            "功能": "毛球护理"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Oral Care 口腔护理配方",
+        "model": "Oral Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "特殊颗粒纹理，模拟刷牙动作清洁牙齿。焦磷酸钠捕获有害矿物质，减少牙垢和牙菌斑形成。绿茶多酚有助于口腔卫生。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "特殊颗粒模拟刷牙清洁",
+            "焦磷酸钠减少牙垢牙菌斑",
+            "绿茶多酚有助于口腔卫生"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "不能替代专业洗牙"
+        ],
+        "extra_attrs": {
+            "功能": "口腔护理"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Urinary Care 泌尿道护理配方",
+        "model": "Urinary Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "矿物质平衡配方，维持泌尿道健康。帮助维持尿液pH值。建议搭配湿粮增加水分摄取。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "矿物质平衡维持泌尿道健康",
+            "帮助维持尿液pH值"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "建议搭配湿粮使用"
+        ],
+        "extra_attrs": {
+            "功能": "泌尿道护理",
+            "建议": "搭配湿粮增加水分摄取"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Hair & Skin Care 皮肤与被毛护理配方",
+        "model": "Hair & Skin Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "Omega-3和Omega-6脂肪酸，支持皮肤健康。特定氨基酸和维生素组合，促进毛发光泽。减少掉毛问题。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "Omega-3/6支持皮肤健康",
+            "氨基酸和维生素促进毛发光泽",
+            "减少掉毛问题"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据"
+        ],
+        "extra_attrs": {
+            "功能": "皮肤与被毛护理"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Weight Care 体重管理配方",
+        "model": "Weight Care",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "调整脂肪含量，控制热量。L-肉碱促进脂肪代谢。高纤维增加饱腹感。适用于绝育后易发胖的猫咪。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "调整脂肪控制热量",
+            "L-肉碱促进脂肪代谢",
+            "高纤维增加饱腹感"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "主要适用于需控制体重的猫咪"
+        ],
+        "extra_attrs": {
+            "适用对象": "绝育后易发胖的猫咪",
+            "功能": "体重管理"
+        },
+        "status": "active"
+    },
+    # ==================== 处方粮干粮 ====================
+    {
+        "brand": "Royal Canin",
+        "name": "Urinary S/O 泌尿道处方粮",
+        "model": "Urinary S/O",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于鸟粪石（磷酸铵镁结石）的溶解与预防、草酸钙结石预防、猫下泌尿道疾病（FLUTD）。尿液酸化、低镁配方。降低相对饱和度（RSS），减少结晶形成。稀释尿液，促进定期膀胱冲洗。",
+        "ingredients": [
+            "米",
+            "脱水家禽蛋白",
+            "小麦蛋白",
+            "玉米粉",
+            "蔬菜纤维",
+            "玉米蛋白",
+            "水解动物蛋白",
+            "矿物质",
+            "动物脂肪",
+            "鱼油",
+            "大豆油",
+            "果寡糖",
+            "金盏花粉"
+        ],
+        "nutrition": {},
+        "pros": [
+            "帮助溶解和预防鸟粪石",
+            "预防草酸钙结石",
+            "低镁配方",
+            "降低结晶形成风险",
+            "稀释尿液促进膀胱冲洗"
+        ],
+        "cons": [
+            "需在兽医指导下使用",
+            "不适用于所有猫咪"
+        ],
+        "extra_attrs": {
+            "适用症状": "鸟粪石溶解与预防、草酸钙结石预防、FLUTD",
+            "产品系列": "Urinary S/O / Urinary S/O Moderate Calorie / Urinary S/O Wet",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Renal / Early Renal 肾脏处方粮",
+        "model": "Renal",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适用于慢性肾病早期管理、肾功能下降。适中/低磷含量，减轻肾脏过滤负担。EPA+DHA和抗氧化复合物支持肾功能。高度易消化配方。Early Renal额外含有葡萄糖胺和软骨素支持关节功能，支持健康老龄化。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "适中/低磷含量减轻肾脏负担",
+            "EPA+DHA支持肾功能",
+            "抗氧化复合物支持肾脏",
+            "高度易消化配方",
+            "Early Renal支持关节功能"
+        ],
+        "cons": [
+            "需在兽医指导下使用",
+            "不适用于健康猫咪"
+        ],
+        "extra_attrs": {
+            "适用症状": "慢性肾病早期管理、肾功能下降",
+            "产品系列": "Renal / Early Renal",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Gastrointestinal GI32 肠胃处方粮",
+        "model": "GI32",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "标准版肠胃处方，适合消化敏感的成猫。高度易消化蛋白质（62.7%高消化蛋白来源）。平衡的纤维和益生元，支持肠道菌群。Omega-3（EPA/DHA）帮助舒缓消化道。高能量密度，减少每餐量，减轻肠道负担。S/O指数支持泌尿道健康。高适口性，适合食欲下降的猫。",
+        "ingredients": [
+            "脱水家禽蛋白",
+            "小麦蛋白",
+            "米",
+            "蔬菜纤维",
+            "玉米",
+            "动物脂肪",
+            "水解动物蛋白",
+            "甜菜浆",
+            "大豆油",
+            "鱼油",
+            "洋车前子壳和籽（0.48%）",
+            "果寡糖",
+            "DHA藻油",
+            "甘露寡糖",
+            "金盏花粉"
+        ],
+        "nutrition": {},
+        "pros": [
+            "高度易消化蛋白质（62.7%）",
+            "纤维和益生元支持肠道菌群",
+            "Omega-3舒缓消化道",
+            "高能量密度减少每餐量",
+            "S/O指数支持泌尿道",
+            "高适口性适合食欲下降"
+        ],
+        "cons": [
+            "需在兽医指导下使用",
+            "仅适用于消化敏感的成猫"
+        ],
+        "extra_attrs": {
+            "适用情况": "标准版肠胃处方，适合消化敏感的成猫",
+            "产品系列": "GI32 / GIM35 / Fiber Response",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Gastrointestinal GIM35 肠胃处方粮",
+        "model": "GIM35",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "适中卡路里版肠胃处方，适合需控制体重的肠胃敏感猫。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "适中卡路里适合控制体重",
+            "专为肠胃敏感猫设计"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "需在兽医指导下使用"
+        ],
+        "extra_attrs": {
+            "适用情况": "适中卡路里版，适合需控制体重的肠胃敏感猫",
+            "产品系列": "GI32 / GIM35 / Fiber Response",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Gastrointestinal Fiber Response 肠胃处方粮",
+        "model": "Fiber Response",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "高纤维版肠胃处方，含洋车前子，适合需要肠道蠕动支持的猫。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "高纤维支持肠道蠕动",
+            "含洋车前子促进消化"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "需在兽医指导下使用"
+        ],
+        "extra_attrs": {
+            "适用情况": "高纤维版，适合需要肠道蠕动支持的猫",
+            "产品系列": "GI32 / GIM35 / Fiber Response",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Hypoallergenic 低敏处方粮",
+        "model": "Hypoallergenic",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "水解蛋白处方粮，降低过敏风险。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "水解蛋白降低过敏风险"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "需在兽医指导下使用"
+        ],
+        "extra_attrs": {
+            "特点": "水解蛋白，降低过敏风险",
+            "产品系列": "Hypoallergenic / Anallergenic / Sensitivity Control",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Anallergenic 极致低敏处方粮",
+        "model": "Anallergenic",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "极致低敏处方粮，使用高度水解蛋白。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "高度水解蛋白极致低敏"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "需在兽医指导下使用"
+        ],
+        "extra_attrs": {
+            "特点": "极致低敏，使用高度水解蛋白",
+            "产品系列": "Hypoallergenic / Anallergenic / Sensitivity Control",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Sensitivity Control 低敏处方粮",
+        "model": "Sensitivity Control",
+        "pet_type": "cat",
+        "category_id": CATEGORY_DRY,
+        "description": "新型蛋白源处方粮，适合食物敏感猫。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "新型蛋白源适合食物敏感猫"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据",
+            "需在兽医指导下使用"
+        ],
+        "extra_attrs": {
+            "特点": "新型蛋白源，适合食物敏感猫",
+            "产品系列": "Hypoallergenic / Anallergenic / Sensitivity Control",
+            "注意事项": "需在兽医指导下使用"
+        },
+        "status": "active"
+    },
+    # ==================== 湿粮系列 ====================
+    {
+        "brand": "Royal Canin",
+        "name": "Mother & Babycat 慕斯肉泥",
+        "model": "Mother & Babycat Wet",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "适用于怀孕/哺乳期母猫、1-4个月幼猫。超软细腻质地，易于舔食。DHA支持脑部发育。维生素C和E支持免疫系统。益生元和高消化蛋白支持肠道健康。",
+        "ingredients": [],
+        "nutrition": {
+            "蛋白质": "10.5%",
+            "脂肪": "5.5%",
+            "纤维": "0.8-0.9%",
+            "灰分": "1.7-1.9%",
+            "水分": "78.7-79%"
+        },
+        "pros": [
+            "超软慕斯质地易于舔食",
+            "DHA支持脑部发育",
+            "维生素C和E支持免疫系统",
+            "益生元支持肠道健康"
+        ],
+        "cons": [
+            "水分含量高（78-79%）",
+            "需配合干粮保证营养"
+        ],
+        "extra_attrs": {
+            "适用对象": "怀孕/哺乳期母猫、1-4个月幼猫",
+            "质地类型": "慕斯肉泥（Ultra Soft Mousse / Loaf in Sauce）",
+            "规格": "195g罐头"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "Kitten 幼猫湿粮",
+        "model": "Kitten Wet",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "适用于4-12个月幼猫。肉汁薄切型和肉块浓汤型两种质地。",
+        "ingredients": [],
+        "nutrition": {
+            "蛋白质": "12%",
+            "脂肪": "4%",
+            "纤维": "0.7%",
+            "灰分": "1.7%",
+            "水分": "78.2%"
+        },
+        "pros": [
+            "两种质地可选（薄切/肉块）",
+            "适合幼猫小口食用"
+        ],
+        "cons": [
+            "水分含量高",
+            "蛋白质含量相对干粮较低"
+        ],
+        "extra_attrs": {
+            "适用对象": "4-12个月幼猫",
+            "质地类型": "肉汁薄切（Thin Slices in Gravy）/ 肉块浓汤（Chunks in Gravy）"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "成猫浓汤肉块 IGP7",
+        "model": "IGP7",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "适用于7岁以上成猫。添加牛磺酸、葡萄糖胺和硫酸软骨素，支持心脏与关节健康。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "牛磺酸支持心脏健康",
+            "葡萄糖胺和软骨素支持关节",
+            "适合7岁以上成猫"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据"
+        ],
+        "extra_attrs": {
+            "适用对象": "7岁以上成猫",
+            "质地类型": "浓汤肉块（Chunks in Gravy）"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "成猫慕斯肉泥",
+        "model": "Adult Mousse",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "适用于偏好柔软质地的成猫。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "柔软慕斯质地",
+            "适合偏好软食的成猫"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据"
+        ],
+        "extra_attrs": {
+            "适用对象": "成猫",
+            "质地类型": "慕斯肉泥（Loaf in Sauce）"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "成猫薄切肉汁",
+        "model": "Adult Thin Slices",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "经典成猫主食湿粮。",
+        "ingredients": [],
+        "nutrition": {},
+        "pros": [
+            "经典薄切质地",
+            "可作为主食喂养"
+        ],
+        "cons": [
+            "报告未提供完整成分和营养数据"
+        ],
+        "extra_attrs": {
+            "适用对象": "成猫",
+            "质地类型": "薄切肉汁（Thin Slices in Gravy）"
+        },
+        "status": "active"
+    },
+    {
+        "brand": "Royal Canin",
+        "name": "British Shorthair 英短湿粮",
+        "model": "British Shorthair Wet",
+        "pet_type": "cat",
+        "category_id": CATEGORY_WET,
+        "description": "圆柱形肉块肉汁型，专门适配英短口径。",
+        "ingredients": [],
+        "nutrition": {
+            "蛋白质": "9%",
+            "脂肪": "3.2%",
+            "水分": "81%"
+        },
+        "pros": [
+            "圆柱形肉块适配英短口径",
+            "专为英短设计"
+        ],
+        "cons": [
+            "营养数据不完整",
+            "仅适用于英短"
+        ],
+        "extra_attrs": {
+            "适用对象": "英国短毛猫",
+            "质地类型": "肉块肉汁型",
+            "品种专用": "英国短毛猫"
+        },
+        "status": "active"
+    },
+]
+
+
+def save_to_json():
+    """Save products to JSON file"""
+    output_file = "/home/zxv/code/pet-store/royal_canin_spus.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(products, f, ensure_ascii=False, indent=2)
+    print(f"Saved {len(products)} products to {output_file}")
+
+
+def import_to_database():
+    """Import products to database via API"""
+    url = f"{BASE_URL}/spus"
+    success_count = 0
+    failed_count = 0
+    failed_items = []
+
+    for i, product in enumerate(products):
+        try:
+            response = requests.post(url, json=product, headers=HEADERS, timeout=10)
+            if response.status_code == 200:
+                success_count += 1
+                print(f"[{i+1}/{len(products)}] Created: {product['name']}")
+            elif response.status_code == 409:
+                failed_count += 1
+                print(f"[{i+1}/{len(products)}] Already exists (409): {product['name']}")
+                failed_items.append({"name": product["name"], "status": 409, "error": "Duplicate"})
+            else:
+                failed_count += 1
+                error_text = response.text[:200]
+                print(f"[{i+1}/{len(products)}] Failed ({response.status_code}): {product['name']} - {error_text}")
+                failed_items.append({"name": product["name"], "status": response.status_code, "error": error_text})
+        except Exception as e:
+            failed_count += 1
+            print(f"[{i+1}/{len(products)}] Error: {product['name']} - {str(e)}")
+            failed_items.append({"name": product["name"], "status": "exception", "error": str(e)})
+
+    print(f"\nImport Summary:")
+    print(f"  Total: {len(products)}")
+    print(f"  Success: {success_count}")
+    print(f"  Failed: {failed_count}")
+
+    if failed_items:
+        print(f"\nFailed items:")
+        for item in failed_items:
+            print(f"  - {item['name']}: {item['status']} - {item['error']}")
+
+
+if __name__ == "__main__":
+    print("Step 1: Saving products to JSON file...")
+    save_to_json()
+
+    print("\nStep 2: Importing products to database...")
+    import_to_database()

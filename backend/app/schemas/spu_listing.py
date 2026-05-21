@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -22,9 +24,9 @@ class SpuListingCreate(SpuListingBase):
 class SpuListingResponse(SpuListingBase):
     id: int
     spu_id: int
-    last_synced_at: str | None = None
-    created_at: str | None = None
-    updated_at: str | None = None
+    last_synced_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True

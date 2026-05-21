@@ -42,14 +42,22 @@ psql $DATABASE_URL -c "\dt spu_listings"
 1. Click **"Create SPU"** button
 2. Fill required fields:
    - **Brand**: e.g., "Royal Canin"
-   - **Category**: Select from dropdown (links to existing categories)
+   - **Pet Type**: cat / dog
+   - **Parent Category**: Select top-level category (e.g., "干粮")
+   - **Child Category**: Select sub-category (e.g., "全价干粮")
    - **Product Name**: e.g., "Indoor Adult Cat Food"
    - **Model**: e.g., "K36 2kg"
-   - **Pet Type**: cat / dog
-3. Fill optional detailed attributes:
-   - **Ingredients**: List of main ingredients
-   - **Nutrition**: Protein, fat, fiber percentages
-   - **Pros/Cons**: Key advantages and disadvantages
+3. Fill optional detailed attributes (manually or via AI):
+   - **Ingredients**: 
+     - Manually enter one per line, OR
+     - Click **"Upload Image Parse"** to extract from product packaging photo
+   - **Nutrition**: 
+     - Enter as JSON manually, OR
+     - Click **"Image"** to parse from nutrition table photo, OR
+     - Click **"Convert Text"** to convert text descriptions (e.g., "粗蛋白32%") into JSON
+   - **Pros/Cons**: 
+     - Manually enter one per line, OR
+     - Click **"AI Generate"** after filling ingredients and nutrition to auto-generate
    - **Extra Attributes**: Category-specific fields (JSON key-value)
 4. Upload product images
 5. Click **Save**
@@ -111,7 +119,7 @@ For each unmatched listing:
   - Brand + Name + Model
   - Price range: ¥89 - ¥156
   - Number of linked listings: "12 shops"
-- Filters: Brand, Category, Pet Type, Search
+- Filters: Brand, Pet Type, Parent Category, Child Category, Search
 
 ### SPU Detail Page
 
@@ -164,6 +172,27 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"listing_ids": [301, 302]}' \
   http://localhost:8001/v1/admin/goods/matching-queue/confirm
+
+# AI: Parse ingredients from image
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"image_base64": "data:image/jpeg;base64,/9j/4AAQ..."}' \
+  http://localhost:8001/v1/admin/goods/spus/parse-ingredients
+
+# AI: Parse nutrition from text
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "粗蛋白≥32%，粗脂肪≥15%，粗纤维≤4%"}' \
+  http://localhost:8001/v1/admin/goods/spus/parse-nutrition
+
+# AI: Generate pros & cons
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ingredients": ["脱水鸡肉", "大米", "鱼油"],
+    "nutrition": {"粗蛋白": "≥32%", "粗脂肪": "≥15%"}
+  }' \
+  http://localhost:8001/v1/admin/goods/spus/generate-pros-cons
 ```
 
 ---
@@ -192,11 +221,19 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 - [ ] Update a listing price and verify SPU range recalculates
 - [ ] Unlink a listing and verify SPU range updates
 
+### AI-Assisted Entry
+
+- [ ] Upload ingredient image and verify auto-extracted ingredients appear in form
+- [ ] Upload nutrition table image and verify JSON is auto-populated
+- [ ] Enter nutrition text description and verify LLM converts to structured JSON
+- [ ] Click "AI Generate Pros & Cons" and verify results based on ingredients/nutrition
+- [ ] Verify AI-extracted data merges with (not overwrites) existing manual entries
+
 ### Edge Cases
 
 - [ ] Create SPU with model = "default" (handles no-model case)
 - [ ] Import listing with same (platform, goods_id) as existing (should update, not duplicate)
-- [ ] Test search/filter on SPU list page
+- [ ] Test search/filter on SPU list page (including parent/child category cascade)
 - [ ] Verify pagination on SPU list and listings
 
 ---

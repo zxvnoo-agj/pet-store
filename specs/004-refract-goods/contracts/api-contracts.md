@@ -484,9 +484,145 @@ GET /api/v1/admin/goods/jobs/{job_id}
 
 ---
 
-## 5. Integration Notes
+## 5. AI-Assisted SPU Entry
 
-### 5.1 Response Format
+### 5.1 Parse Ingredients from Image
+
+```
+POST /api/v1/admin/goods/spus/parse-ingredients
+```
+
+Upload a product packaging image to extract ingredient list using vision LLM.
+
+**Request Body**:
+
+```json
+{
+  "image_base64": "data:image/jpeg;base64,/9j/4AAQ..."
+}
+```
+
+**Response** (200):
+
+```json
+{
+  "ingredients": [
+    "脱水鸡肉",
+    "大米",
+    "玉米蛋白粉",
+    "鸡油",
+    "鱼油"
+  ]
+}
+```
+
+**Error** (400):
+
+```json
+{
+  "detail": "image_base64 is required"
+}
+```
+
+### 5.2 Parse Nutrition from Image or Text
+
+```
+POST /api/v1/admin/goods/spus/parse-nutrition
+```
+
+Extract structured nutrition data from an image or convert text description to JSON.
+
+**Request Body** (image mode):
+
+```json
+{
+  "image_base64": "data:image/jpeg;base64,/9j/4AAQ..."
+}
+```
+
+**Request Body** (text mode):
+
+```json
+{
+  "text": "粗蛋白≥32%，粗脂肪≥15%，粗纤维≤4%，粗灰分≤8%，水分≤10%，钙≥1.0%，总磷≥0.8%，牛磺酸≥0.1%"
+}
+```
+
+**Response** (200):
+
+```json
+{
+  "nutrition": {
+    "粗蛋白": "≥32%",
+    "粗脂肪": "≥15%",
+    "粗纤维": "≤4%",
+    "粗灰分": "≤8%",
+    "水分": "≤10%",
+    "钙": "≥1.0%",
+    "总磷": "≥0.8%",
+    "牛磺酸": "≥0.1%"
+  }
+}
+```
+
+**Error** (400):
+
+```json
+{
+  "detail": "Either image_base64 or text is required"
+}
+```
+
+### 5.3 Generate Pros & Cons
+
+```
+POST /api/v1/admin/goods/spus/generate-pros-cons
+```
+
+Analyze ingredients and nutrition data to generate product pros and cons.
+
+**Request Body**:
+
+```json
+{
+  "ingredients": ["脱水鸡肉", "大米", "玉米蛋白粉", "鸡油", "鱼油"],
+  "nutrition": {
+    "粗蛋白": "≥32%",
+    "粗脂肪": "≥15%",
+    "粗纤维": "≤4%"
+  }
+}
+```
+
+**Response** (200):
+
+```json
+{
+  "pros": [
+    "高蛋白含量（≥32%）",
+    "含鱼油有助于毛发健康",
+    "低粗纤维易消化"
+  ],
+  "cons": [
+    "含谷物（大米）可能不适合敏感体质",
+    "使用植物蛋白粉"
+  ]
+}
+```
+
+**Error** (400):
+
+```json
+{
+  "detail": "At least one of ingredients or nutrition is required"
+}
+```
+
+---
+
+## 6. Integration Notes
+
+### 6.1 Response Format
 
 All endpoints use the standard `ApiResponse` wrapper:
 
@@ -509,7 +645,7 @@ Error responses:
 }
 ```
 
-### 5.2 Pagination
+### 6.2 Pagination
 
 List endpoints return paginated results:
 
@@ -523,7 +659,7 @@ List endpoints return paginated results:
 }
 ```
 
-### 5.3 Existing Endpoint Compatibility
+### 6.3 Existing Endpoint Compatibility
 
 No changes to existing endpoints:
 - `/api/v1/admin/products/*` — Continue to work as before (001/002 product management)

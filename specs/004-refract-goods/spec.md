@@ -17,8 +17,10 @@ As an administrator, I want to manually create and edit a product's basic and de
 
 **Acceptance Scenarios**:
 
-1. **Given** the admin is on the product management page, **When** they create a new SPU with required fields (brand, category, name, model) and optional detailed attributes, **Then** the SPU is persisted and visible in the product list.
+1. **Given** the admin is on the product management page, **When** they create a new SPU with required fields (brand, pet type, parent category, child category, name, model) and optional detailed attributes, **Then** the SPU is persisted and visible in the product list.
 2. **Given** an existing SPU, **When** the admin edits its detailed attributes, **Then** the changes are saved and reflected on the SPU detail view.
+3. **Given** the admin is creating an SPU with ingredient/nutrition images, **When** they upload product packaging images, **Then** the system uses vision LLM to auto-extract ingredients and nutrition data into structured fields.
+4. **Given** the admin has filled in ingredients and nutrition, **When** they click "AI Generate Pros & Cons", **Then** the system uses LLM to analyze the data and auto-generate pros and cons lists.
 
 ---
 
@@ -80,13 +82,16 @@ As an administrator, I want to review listings that could not be automatically m
 
 ### Functional Requirements
 
-- **FR-001**: System MUST support creating and editing SPU master records containing brand, category, product name, model, and detailed attributes (e.g., ingredients, nutrition, pros/cons).
+- **FR-001**: System MUST support creating and editing SPU master records containing brand, pet type, parent category, child category, product name, model, and detailed attributes (e.g., ingredients, nutrition, pros/cons).
 - **FR-002**: System MUST display a product list aggregated at the SPU level, collapsing multiple seller listings into a single entry.
 - **FR-003**: System MUST collect e-commerce listings (shop name, price, URL) from external data sources and persist them as child records associated with an SPU.
 - **FR-004**: System MUST provide an automated semantic matching mechanism using a three-tier confidence strategy: high confidence (≥85%) listings are automatically linked; medium confidence (60-84%) listings are presented as candidates in the review queue for quick admin confirmation; low confidence (<60%) listings are marked as unmatched requiring admin action.
 - **FR-005**: Admin MUST be able to manually review, correct, or create linkages between collected listings and SPUs.
 - **FR-006**: System MUST compute and display a consolidated price range (minimum and maximum prices) across all currently linked listings for an SPU.
-- **FR-007**: System MUST allow filtering and searching the product list by brand, category, and product name.
+- **FR-007**: System MUST allow filtering and searching the product list by brand, parent category, child category, pet type, and product name.
+- **FR-008**: System MUST support AI-assisted SPU detail entry by parsing ingredient/nutrition images via vision LLM and auto-populating structured fields.
+- **FR-009**: System MUST support converting text descriptions of nutrition facts into structured JSON via LLM.
+- **FR-010**: System MUST support one-click generation of pros and cons by analyzing ingredients and nutrition data via LLM.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -94,6 +99,7 @@ As an administrator, I want to review listings that could not be automatically m
 - **E-commerce Listing**: A specific seller offering on a platform, including shop name, current price, and URL. Always belongs to exactly one SPU.
 - **Brand / Category**: Hierarchical classification dimensions used to organize and filter SPUs.
 - **Raw Feed Item**: An unprocessed record imported from an external e-commerce API prior to matching and linking.
+- **AI Extraction Service**: Backend service using vision and text LLMs to parse product packaging images and generate structured SPU attributes (ingredients, nutrition, pros/cons).
 
 ## Success Criteria *(mandatory)*
 
@@ -103,6 +109,7 @@ As an administrator, I want to review listings that could not be automatically m
 - **SC-002**: Admin can create a complete SPU profile (basic and detailed information) within 5 minutes.
 - **SC-003**: Automated matching correctly associates at least 80% of incoming e-commerce listings with the appropriate SPU without manual intervention.
 - **SC-004**: Users can view a consolidated price range (min-max) for any given SPU derived from live data across multiple sellers.
+- **SC-005**: Admin can reduce SPU detail entry time by at least 50% through AI-assisted image parsing and auto-generation of ingredients, nutrition, and pros/cons.
 
 ## Clarifications
 

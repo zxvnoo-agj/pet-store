@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -56,8 +57,8 @@ class SpuResponse(SpuBase):
     price_max: float | None = None
     category: CategoryInfo | None = None
     listing_count: int = 0
-    created_at: str | None = None
-    updated_at: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     class Config:
         from_attributes = True

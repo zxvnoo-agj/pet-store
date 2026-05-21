@@ -12,6 +12,7 @@ from app.models.review import Review
 from app.schemas.common import ApiResponse, Pagination
 from app.schemas.product import ProductCreate, ProductUpdate, ProductDetailResponse
 from app.services.pdd_client import PDDClient
+from app.utils.cache import cache
 
 router = APIRouter()
 
@@ -111,6 +112,8 @@ async def admin_update_product(
 
     await db.commit()
     await db.refresh(product)
+    await cache.delete_pattern("products:*")
+    logger.info(f"[admin] Updated product_id={product_id}, cleared product cache")
     return ApiResponse(data={"product": ProductDetailResponse.model_validate(product)})
 
 
@@ -196,6 +199,8 @@ async def admin_delete_product(
         await db.delete(r)
     await db.delete(product)
     await db.commit()
+    await cache.delete_pattern("products:*")
+    logger.info(f"[admin] Deleted product_id={product_id}, cleared product cache")
     return ApiResponse(data={"message": "Product deleted"})
 
 
@@ -231,6 +236,8 @@ async def admin_batch_delete_products(
         await db.delete(product)
 
     await db.commit()
+    await cache.delete_pattern("products:*")
+    logger.info(f"[admin] Batch deleted {len(products)} products, cleared product cache")
     return ApiResponse(data={
         "message": f"Deleted {len(products)} products",
         "deleted_ids": sorted(found_ids)

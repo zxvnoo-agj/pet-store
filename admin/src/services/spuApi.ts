@@ -87,4 +87,12 @@ export const spuApi = {
     apiClient.post('/admin/goods/matching-queue/confirm', { listing_ids: listingIds }),
   rejectCandidates: (listingIds: number[]) =>
     apiClient.post('/admin/goods/matching-queue/reject', { listing_ids: listingIds }),
+
+  // AI Extraction
+  parseIngredients: (imageBase64: string) =>
+    apiClient.post('/admin/goods/spus/parse-ingredients', { image_base64: imageBase64 }),
+  parseNutrition: (imageBase64?: string, text?: string) =>
+    apiClient.post('/admin/goods/spus/parse-nutrition', { image_base64: imageBase64, text }),
+  generateProsCons: (ingredients: string[], nutrition: Record<string, any>) =>
+    apiClient.post('/admin/goods/spus/generate-pros-cons', { ingredients, nutrition }),
 }

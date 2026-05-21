@@ -5,12 +5,13 @@ import { useToastStore } from '../../stores/toastStore'
 import { adminCategoryApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
-import SpuCard from './components/SpuCard'
 
 interface Category {
   id: number
   name: string
   pet_type: string
+  parent_id: number | null
+  level: number
 }
 
 export default function Spus() {
@@ -23,9 +24,23 @@ export default function Spus() {
   const [showFilters, setShowFilters] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [filterBrand, setFilterBrand] = useState(filters.brand || '')
+  const [filterParentId, setFilterParentId] = useState<number | ''>('')
   const [filterCategory, setFilterCategory] = useState<number | ''>(filters.category_id || '')
   const [filterPetType, setFilterPetType] = useState(filters.pet_type || '')
   const [filterStatus, setFilterStatus] = useState(filters.status || '')
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+
+  useEffect(() => {
+    // Reset filters on mount to show all SPUs
+    const defaultFilters = { page: 1, page_size: 20 }
+    setFilters(defaultFilters)
+    setSearch('')
+    setFilterBrand('')
+    setFilterParentId('')
+    setFilterCategory('')
+    setFilterPetType('')
+    setFilterStatus('')
+  }, [])
 
   useEffect(() => {
     fetchSpus()
@@ -34,6 +49,11 @@ export default function Spus() {
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  useEffect(() => {
+    setFilterParentId('')
+    setFilterCategory('')
+  }, [filterPetType])
 
   const fetchCategories = async () => {
     try {
@@ -45,6 +65,8 @@ export default function Spus() {
       } else if (res.data && typeof res.data === 'object') {
         if (Array.isArray(res.data.data)) {
           categoriesList = res.data.data
+        } else if (Array.isArray(res.data.data?.categories)) {
+          categoriesList = res.data.data.categories
         } else if (Array.isArray(res.data.items)) {
           categoriesList = res.data.items
         } else if (res.data.id && res.data.name) {
@@ -78,6 +100,7 @@ export default function Spus() {
 
   const handleResetFilters = () => {
     setFilterBrand('')
+    setFilterParentId('')
     setFilterCategory('')
     setFilterPetType('')
     setFilterStatus('')
@@ -173,7 +196,7 @@ export default function Spus() {
 
           {showFilters && (
             <div className="glass-card p-5 mb-6">
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-5 gap-4">
                 <div>
                   <label className="block text-xs text-carbon/60 mb-1.5">品牌</label>
                   <input
@@ -185,19 +208,6 @@ export default function Spus() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-carbon/60 mb-1.5">分类</label>
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
-                  >
-                    <option value="">全部分类</option>
-                    {categories.map((c: Category) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className="block text-xs text-carbon/60 mb-1.5">宠物类型</label>
                   <select
                     value={filterPetType}
@@ -207,6 +217,42 @@ export default function Spus() {
                     <option value="">全部</option>
                     <option value="cat">猫咪</option>
                     <option value="dog">狗狗</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">父类</label>
+                  <select
+                    value={filterParentId}
+                    onChange={(e) => {
+                      const val = e.target.value ? Number(e.target.value) : ''
+                      setFilterParentId(val)
+                      setFilterCategory('')
+                    }}
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
+                  >
+                    <option value="">全部父类</option>
+                    {categories
+                      .filter(c => !filterPetType || c.pet_type === filterPetType)
+                      .filter(c => c.level === 1)
+                      .map((c: Category) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-carbon/60 mb-1.5">子类</label>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value ? Number(e.target.value) : '')}
+                    disabled={!filterParentId}
+                    className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">全部子类</option>
+                    {categories
+                      .filter(c => c.parent_id === filterParentId && c.level === 2)
+                      .map((c: Category) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
                   </select>
                 </div>
                 <div>
@@ -264,51 +310,108 @@ export default function Spus() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2 mb-4">
-                <input
-                  type="checkbox"
-                  checked={spus.length > 0 && selectedIds.size === spus.length}
-                  onChange={toggleSelectAll}
-                  className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
-                />
-                <span className="text-xs text-carbon/50">
-                  已选择 {selectedIds.size} 项
-                </span>
-              </div>
+              <div className="glass-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-peach/10">
+                        <th className="px-6 py-4 text-left">
+                          <input
+                            type="checkbox"
+                            checked={spus.length > 0 && selectedIds.size === spus.length}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
+                          />
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">SPU 信息</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">品牌</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">分类</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">价格区间</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">状态</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {spus.map((spu: any, idx: number) => (
+                        <tr
+                          key={spu.id}
+                          className="border-b border-peach/5 table-row-hover"
+                          onMouseEnter={() => setHoveredRow(idx)}
+                          onMouseLeave={() => setHoveredRow(null)}
+                        >
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(spu.id)}
+                              onChange={() => toggleSelect(spu.id)}
+                              className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-sm text-carbon/70 relative">
+                            <span className={`absolute left-0 top-0 bottom-0 w-[3px] bg-peach rounded-r-full transition-opacity duration-300 ${
+                              hoveredRow === idx ? 'opacity-100' : 'opacity-0'
+                            }`} />
+                            #{spu.id}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm text-deep-black font-medium">
+                                {spu.name}
+                              </span>
+                              <span className="text-xs text-carbon/50">
+                                型号: {spu.model}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-carbon">{spu.brand || '-'}</td>
+                          <td className="px-6 py-4">
+                            {spu.category ? (
+                              <span className="status-badge bg-peach/10 text-peach">
+                                {spu.category.name}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-carbon/40">-</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-deep-black font-medium">
+                            {spu.price_min ? `¥${spu.price_min}` : '-'}
+                            {spu.price_max ? ` - ¥${spu.price_max}` : ''}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`status-badge ${
+                                spu.status === 'active'
+                                  ? 'bg-emerald-50 text-emerald-600'
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}
+                            >
+                              {spu.status === 'active' ? '上架' : '下架'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => { setEditSpu(spu); setShowForm(true) }}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(spu.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {spus.map((spu: any) => (
-                  <div key={spu.id} className="relative group">
-                    <div className="absolute top-3 left-3 z-10">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(spu.id)}
-                        onChange={() => toggleSelect(spu.id)}
-                        className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/20"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="absolute top-3 right-3 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditSpu(spu); setShowForm(true) }}
-                        className="p-2 rounded-xl bg-white/80 backdrop-blur-sm text-carbon hover:text-peach hover:bg-white shadow-sm transition-all"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(spu.id) }}
-                        className="p-2 rounded-xl bg-white/80 backdrop-blur-sm text-carbon hover:text-red-500 hover:bg-white shadow-sm transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <SpuCard spu={spu} />
-                  </div>
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center justify-between px-6 py-4 border-t border-peach/10">
                   <p className="text-xs text-carbon/50">
                     第 {filters.page} 页 / 共 {totalPages} 页
                   </p>
@@ -329,7 +432,7 @@ export default function Spus() {
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>
