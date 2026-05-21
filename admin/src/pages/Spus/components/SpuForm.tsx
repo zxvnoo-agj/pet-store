@@ -44,17 +44,33 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   const fetchCategories = async () => {
     try {
       const res = await adminCategoryApi.list()
-      console.log('[SpuForm] categories API response:', res.data)
-      const data = res.data?.data
-      if (Array.isArray(data)) {
-        setCategories(data)
-      } else if (Array.isArray(data?.items)) {
-        setCategories(data.items)
-      } else if (Array.isArray(res.data)) {
-        setCategories(res.data)
-      } else {
-        setCategories([])
+      console.log('[SpuForm] Full API response:', res)
+      console.log('[SpuForm] res.data:', res.data)
+      
+      let categoriesList: Category[] = []
+      
+      // Try all possible response formats
+      if (Array.isArray(res.data)) {
+        // Format: [{id, name}, ...]
+        categoriesList = res.data
+      } else if (res.data && typeof res.data === 'object') {
+        if (Array.isArray(res.data.data)) {
+          // Format: {code: 200, data: [{id, name}, ...]}
+          categoriesList = res.data.data
+        } else if (Array.isArray(res.data.items)) {
+          // Format: {items: [{id, name}, ...]}
+          categoriesList = res.data.items
+        } else if (res.data.id && res.data.name) {
+          // Format: single object {id, name, ...}
+          categoriesList = [res.data]
+        } else if (res.data.data && typeof res.data.data === 'object' && res.data.data.id) {
+          // Format: {data: {id, name, ...}}
+          categoriesList = [res.data.data]
+        }
       }
+      
+      console.log('[SpuForm] Parsed categories:', categoriesList)
+      setCategories(categoriesList)
     } catch (err) {
       console.error('Failed to fetch categories', err)
       setCategories([])

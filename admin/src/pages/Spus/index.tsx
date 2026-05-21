@@ -38,14 +38,23 @@ export default function Spus() {
   const fetchCategories = async () => {
     try {
       const res = await adminCategoryApi.list()
-      const data = res.data?.data
-      if (Array.isArray(data)) {
-        setCategories(data)
-      } else if (Array.isArray(data?.items)) {
-        setCategories(data.items)
-      } else {
-        setCategories([])
+      let categoriesList: Category[] = []
+      
+      if (Array.isArray(res.data)) {
+        categoriesList = res.data
+      } else if (res.data && typeof res.data === 'object') {
+        if (Array.isArray(res.data.data)) {
+          categoriesList = res.data.data
+        } else if (Array.isArray(res.data.items)) {
+          categoriesList = res.data.items
+        } else if (res.data.id && res.data.name) {
+          categoriesList = [res.data]
+        } else if (res.data.data && typeof res.data.data === 'object' && res.data.data.id) {
+          categoriesList = [res.data.data]
+        }
       }
+      
+      setCategories(categoriesList)
     } catch (err) {
       console.error('Failed to fetch categories', err)
       setCategories([])
