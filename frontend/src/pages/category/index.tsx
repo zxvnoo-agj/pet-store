@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { apiClient } from '../../services/api'
 
 const petTypes = [
   { id: 'cat', name: '猫咪', icon: '🐱' },
@@ -9,22 +10,42 @@ const petTypes = [
   { id: 'fish', name: '水族', icon: '🐟' },
 ]
 
-const mockCategories = [
-  { id: 1, name: '猫粮', icon: '🍖', petType: 'cat' },
-  { id: 2, name: '猫砂', icon: '🧻', petType: 'cat' },
-  { id: 3, name: '猫玩具', icon: '🧶', petType: 'cat' },
-  { id: 4, name: '猫窝', icon: '🏠', petType: 'cat' },
-  { id: 5, name: '狗粮', icon: '🍖', petType: 'dog' },
-  { id: 6, name: '狗玩具', icon: '🎾', petType: 'dog' },
-  { id: 7, name: '狗窝', icon: '🏠', petType: 'dog' },
-  { id: 8, name: '牵引绳', icon: '🦮', petType: 'dog' },
-]
+interface Category {
+  id: number
+  name: string
+  pet_type: string
+  icon: string | null
+  sort_order: number
+  children?: Category[]
+}
 
 export default function CategoryPage() {
   const [activePet, setActivePet] = useState('cat')
-  const [categories] = useState(mockCategories)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredCategories = categories.filter(c => c.petType === activePet)
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const res = await apiClient.get('/categories')
+      setCategories(res.categories || [])
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredCategories = categories.filter(
+    (c) => c.pet_type === activePet && !c.children
+  )
+
+  const parentCategories = categories.filter(
+    (c) => c.pet_type === activePet && c.children && c.children.length > 0
+  )
 
   const navigateToSearch = () => {
     Taro.navigateTo({ url: '/pages/search/index' })
@@ -40,6 +61,14 @@ export default function CategoryPage() {
     Taro.navigateTo({
       url: `/pages/product/list?brand=${brand}`,
     })
+  }
+
+  if (loading) {
+    return (
+      <View className="flex flex-col h-screen bg-white items-center justify-center">
+        <Text className="text-gray-400">加载中...</Text>
+      </View>
+    )
   }
 
   return (
@@ -81,37 +110,66 @@ export default function CategoryPage() {
         <View className="flex-1 p-4 overflow-y-auto">
           <View className="mb-4">
             <Text className="text-base font-bold text-gray-800">
-              {petTypes.find(p => p.id === activePet)?.name}用品
+              {petTypes.find((p) => p.id === activePet)?.name}用品
             </Text>
-            <Text className="text-xs text-gray-400 mt-0.5">共 {filteredCategories.length} 个分类</Text>
+            <Text className="text-xs text-gray-400 mt-0.5">
+              共 {filteredCategories.length + parentCategories.length} 个分类
+            </Text>
           </View>
 
-          <View className="grid grid-cols-3 gap-3">
-            {filteredCategories.map((cat) => (
-              <View
-                key={cat.id}
-                className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50"
-                onClick={() => navigateToProducts(cat.id, cat.name)}
-              >
-                <Text className="text-3xl">{cat.icon}</Text>
-                <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
+          {/* 父分类（点击后查询所有子分类） */}
+          {parentCategories.length > 0 && (
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">分类</Text>
+              <View className="grid grid-cols-3 gap-3">
+                {parentCategories.map((cat) => (
+                  <View
+                    key={cat.id}
+                    className="flex flex-col items-center gap-2 py-4 bg-orange-50 rounded-xl active:bg-orange-100"
+                    onClick={() => navigateToProducts(cat.id, cat.name)}
+                  >
+                    <Text className="text-3xl">{cat.icon || '📦'}</Text>
+                    <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
+            </View>
+          )}
+
+          {/* 子分类（直接点击） */}
+          {filteredCategories.length > 0 && (
+            <View className="mb-4">
+              <Text className="text-sm font-bold text-gray-700 mb-2">细分</Text>
+              <View className="grid grid-cols-3 gap-3">
+                {filteredCategories.map((cat) => (
+                  <View
+                    key={cat.id}
+                    className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50"
+                    onClick={() => navigateToProducts(cat.id, cat.name)}
+                  >
+                    <Text className="text-3xl">{cat.icon || '📦'}</Text>
+                    <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* 品牌推荐 */}
           <View className="mt-6">
             <Text className="text-sm font-bold text-gray-800 mb-3">热门品牌</Text>
             <View className="flex flex-wrap gap-2">
-              {['皇家', '渴望', '爱肯拿', '巅峰', '网易严选', '素力高', 'Now Fresh', 'K9'].map((brand) => (
-                <Text
-                  key={brand}
-                  className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full font-medium"
-                  onClick={() => navigateToBrand(brand)}
-                >
-                  {brand}
-                </Text>
-              ))}
+              {['皇家', '渴望', '爱肯拿', '巅峰', '网易严选', '素力高', 'Now Fresh', 'K9'].map(
+                (brand) => (
+                  <Text
+                    key={brand}
+                    className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full font-medium"
+                    onClick={() => navigateToBrand(brand)}
+                  >
+                    {brand}
+                  </Text>
+                )
+              )}
             </View>
           </View>
         </View>

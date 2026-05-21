@@ -151,8 +151,21 @@ class SpuService:
         count_query = select(func.count(Spu.id)).where(Spu.status == "active")
 
         if filters.category_id:
-            query = query.where(Spu.category_id == filters.category_id)
-            count_query = count_query.where(Spu.category_id == filters.category_id)
+            # Check if category has children; if so, include all child category IDs
+            from app.models.category import Category
+            child_ids_result = await self.db.execute(
+                select(Category.id).where(Category.parent_id == filters.category_id)
+            )
+            child_ids = [row[0] for row in child_ids_result.all()]
+            if child_ids:
+                # Parent category: include all children
+                all_ids = [filters.category_id] + child_ids
+                query = query.where(Spu.category_id.in_(all_ids))
+                count_query = count_query.where(Spu.category_id.in_(all_ids))
+            else:
+                # Leaf category: exact match
+                query = query.where(Spu.category_id == filters.category_id)
+                count_query = count_query.where(Spu.category_id == filters.category_id)
 
         if filters.pet_type:
             query = query.where(Spu.pet_type == filters.pet_type)
