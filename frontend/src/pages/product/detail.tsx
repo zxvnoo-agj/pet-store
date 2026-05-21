@@ -62,7 +62,7 @@ function ProductDetailContent() {
   const fetchProductDetail = async () => {
     try {
       const res = await apiClient.get(`/spus/${id}`)
-      setProduct(res.product)
+      setProduct(res)
     } catch (error) {
       console.error('Failed to fetch product:', error)
     } finally {
@@ -73,7 +73,7 @@ function ProductDetailContent() {
   const fetchReviews = async () => {
     try {
       const res = await apiClient.get(`/spus/${id}/reviews`)
-      setReviews(res.reviews || [])
+      setReviews(res.items || [])
     } catch (error) {
       console.error('Failed to fetch reviews:', error)
     }
