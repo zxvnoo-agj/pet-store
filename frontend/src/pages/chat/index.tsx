@@ -4,7 +4,7 @@ import Taro, { useRouter } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 
-interface Product {
+interface Spu {
   id: number
   name: string
   brand: string
@@ -26,7 +26,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   isComplete?: boolean
-  referencedSpus?: Product[]
+  referencedSpus?: Spu[]
   toolCalls?: ToolCall[]
 }
 
@@ -58,7 +58,7 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [currentStream, setCurrentStream] = useState('')
-  const [streamProducts, setStreamProducts] = useState<Product[]>([])
+  const [streamProducts, setStreamProducts] = useState<Spu[]>([])
   const [activeTools, setActiveTools] = useState<ToolCall[]>([])
   const scrollViewRef = useRef(null)
   const pageHeightRef = useRef(0)
@@ -186,7 +186,7 @@ export default function ChatPage() {
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let accumulated = ''
-      let products: Product[] = []
+      let spus: Spu[] = []
       let toolCalls: ToolCall[] = []
 
       if (reader) {
@@ -236,8 +236,8 @@ export default function ChatPage() {
               case 'products':
                 try {
                   const data = JSON.parse(event.data)
-                  products = data.products || []
-                  setStreamProducts(products)
+                  spus = data.products || []
+                  setStreamProducts(spus)
                 } catch {
                   // Ignore malformed products
                 }
@@ -252,7 +252,7 @@ export default function ChatPage() {
         role: 'assistant',
         content: accumulated,
         isComplete: true,
-        referencedSpus: products.length > 0 ? products : undefined,
+        referencedSpus: spus.length > 0 ? spus : undefined,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       }
 
@@ -268,46 +268,46 @@ export default function ChatPage() {
     }
   }
 
-  const renderProductCards = (products: Product[]) => {
-    if (!products || products.length === 0) return null
+  const renderProductCards = (spus: Spu[]) => {
+    if (!spus || spus.length === 0) return null
 
     return (
       <View className="mt-3">
         <Text className="text-xs text-gray-500 font-medium mb-2">推荐产品</Text>
         <View className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-          {products.map((product) => (
+          {spus.map((spu) => (
             <View
-              key={product.id}
+              key={spu.id}
               className="shrink-0 w-36 bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm"
-              onClick={() => navigateToProduct(product.id)}
+              onClick={() => navigateToProduct(spu.id)}
             >
               <View className="aspect-square overflow-hidden bg-gray-50">
                 <Image
-                  src={product.image_urls?.[0] || ''}
+                  src={spu.image_urls?.[0] || ''}
                   className="w-full h-full object-cover"
                   lazyLoad
                 />
               </View>
               <View className="p-2.5">
-                <Text className="text-xs font-semibold text-gray-900 truncate">{product.name}</Text>
-                <Text className="text-[11px] text-gray-500 mt-0.5">{product.brand}</Text>
+                <Text className="text-xs font-semibold text-gray-900 truncate">{spu.name}</Text>
+                <Text className="text-[11px] text-gray-500 mt-0.5">{spu.brand}</Text>
                 <View className="flex items-center justify-between mt-2">
                   <Text className="text-sm font-bold text-orange-600">
-                    ¥{product.price_min}
-                    {product.price_max > product.price_min && (
+                    ¥{spu.price_min}
+                    {spu.price_max > spu.price_min && (
                       <Text className="text-xs font-normal">起</Text>
                     )}
                   </Text>
-                  {product.ratings?.overall && (
+                  {spu.ratings?.overall && (
                     <View className="flex items-center gap-0.5">
                       <Text className="text-xs">⭐</Text>
-                      <Text className="text-xs text-orange-600 font-medium">{product.ratings.overall}</Text>
+                      <Text className="text-xs text-orange-600 font-medium">{spu.ratings.overall}</Text>
                     </View>
                   )}
                 </View>
-                {product.pros && product.pros.length > 0 && (
+                {spu.pros && spu.pros.length > 0 && (
                   <View className="flex flex-wrap gap-1 mt-1.5">
-                    {product.pros.slice(0, 2).map((pro, i) => (
+                    {spu.pros.slice(0, 2).map((pro, i) => (
                       <Text
                         key={i}
                         className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full"
