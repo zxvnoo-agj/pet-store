@@ -46,8 +46,10 @@ async def get_spus(
     )
 
     return ApiResponse(
-        data={"items": [SpuMiniProgramListResponse.model_validate(s) for s in spus]},
-        pagination=pagination,
+        data={
+            "items": [SpuMiniProgramListResponse.model_validate(s) for s in spus],
+            "pagination": pagination,
+        }
     )
 
 
@@ -119,6 +121,6 @@ async def get_spu_reviews(
         data={
             "items": reviews,
             "summary": summary,
+            "pagination": pagination,
         },
-        pagination=pagination,
     )
