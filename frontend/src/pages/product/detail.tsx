@@ -15,7 +15,7 @@ function SpuDetailContent() {
   const [listings, setListings] = useState<any[]>([])
   const [reviews, setReviews] = useState<any[]>([])
   const [isFavorited, setIsFavorited] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'nutrition' | 'reviews'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'reviews'>('overview')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [loading, setLoading] = useState(true)
   const [, setShowPriceCompare] = useState(false)
@@ -156,7 +156,7 @@ function SpuDetailContent() {
   if (!spu) {
     return (
       <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Text className="text-4xl mb-2">📦</Text>
+        <Text className="text-4xl mb-2"></Text>
         <Text className="text-gray-500">产品不存在或已下架</Text>
       </View>
     )
@@ -183,11 +183,11 @@ function SpuDetailContent() {
             className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center"
             onClick={toggleFavorite}
           >
-            <Text className={isFavorited ? 'text-red-400' : 'text-white'}>{isFavorited ? '❤️' : '🤍'}</Text>
+            <Text className={isFavorited ? 'text-red-400' : 'text-white'}>{isFavorited ? '已收藏' : '收藏'}</Text>
           </View>
           <View className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center">
             <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent text-white text-sm">
-              ↗️
+              分享
             </Button>
           </View>
         </View>
@@ -231,7 +231,7 @@ function SpuDetailContent() {
           {/* 评分和评价 */}
           <View className="flex items-center gap-4 mt-3">
             <View className="flex items-center gap-1">
-              <Text className="text-sm font-bold text-gray-800">⭐ {spu.rating || 0}</Text>
+              <Text className="text-sm font-bold text-gray-800">评分 {spu.rating || 0}</Text>
             </View>
             <Text className="text-xs text-gray-400">{spu.review_count || 0}条评价</Text>
             {reviews.length > 0 && (
@@ -263,13 +263,13 @@ function SpuDetailContent() {
           </View>
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
-              activeTab === 'nutrition'
+              activeTab === 'links'
                 ? 'border-orange-500 text-orange-500'
                 : 'border-transparent text-gray-500'
             }`}
-            onClick={() => setActiveTab('nutrition')}
+            onClick={() => setActiveTab('links')}
           >
-            <Text>营养成分</Text>
+            <Text>商品链接</Text>
           </View>
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
@@ -283,13 +283,13 @@ function SpuDetailContent() {
           </View>
         </View>
 
-        {/* 产品概览 */}
+          {/* 产品概览 */}
         {activeTab === 'overview' && (
           <View className="px-4 py-4 space-y-4">
             {/* 优点 */}
             {spu.pros && spu.pros.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-green-700 mb-2">✅ 优点</Text>
+                <Text className="text-sm font-bold text-green-700 mb-2">优点</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.pros.map((pro: string, i: number) => (
                     <Text key={i} className="px-3 py-1.5 bg-green-50 text-green-700 text-xs rounded-full font-medium">
@@ -303,7 +303,7 @@ function SpuDetailContent() {
             {/* 缺点 */}
             {spu.cons && spu.cons.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-red-600 mb-2">❌ 缺点</Text>
+                <Text className="text-sm font-bold text-red-600 mb-2">缺点</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.cons.map((con: string, i: number) => (
                     <Text key={i} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs rounded-full font-medium">
@@ -317,7 +317,7 @@ function SpuDetailContent() {
             {/* 成分 */}
             {spu.ingredients && spu.ingredients.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">🥩 主要成分</Text>
+                <Text className="text-sm font-bold text-gray-800 mb-2">主要成分</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.ingredients.map((ing: string, i: number) => (
                     <Text key={i} className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs rounded-full">
@@ -331,15 +331,30 @@ function SpuDetailContent() {
             {/* 产品描述 */}
             {spu.description && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">📝 产品描述</Text>
+                <Text className="text-sm font-bold text-gray-800 mb-2">产品描述</Text>
                 <Text className="text-xs text-gray-600 leading-relaxed">{spu.description}</Text>
+              </View>
+            )}
+
+            {/* 营养成分 */}
+            {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-2">营养成分</Text>
+                <View className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
+                    <View key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <Text className="text-xs text-gray-600">{key}</Text>
+                      <Text className="text-xs font-medium text-gray-800">{String(value)}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
 
             {/* 额外属性 */}
             {spu.extra_attrs && Object.keys(spu.extra_attrs).length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">📋 产品参数</Text>
+                <Text className="text-sm font-bold text-gray-800 mb-2">产品参数</Text>
                 <View className="space-y-2">
                   {Object.entries(spu.extra_attrs).map(([key, value]: [string, any]) => (
                     <View key={key} className="flex justify-between py-2 border-b border-gray-50">
@@ -354,7 +369,7 @@ function SpuDetailContent() {
             {/* 多平台价格对比 */}
             {listings.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">💰 多平台价格</Text>
+                <Text className="text-sm font-bold text-gray-800 mb-2">多平台价格</Text>
                 <View className="space-y-2">
                   {listings.slice(0, 3).map((listing: any) => (
                     <View key={listing.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -391,37 +406,13 @@ function SpuDetailContent() {
           </View>
         )}
 
-        {/* 营养成分 */}
-        {activeTab === 'nutrition' && (
+        {/* 商品链接 */}
+        {activeTab === 'links' && (
           <View className="px-4 py-4 space-y-4">
-            {spu.nutrition && Object.keys(spu.nutrition).length > 0 ? (
-              <View>
-                <Text className="text-sm font-bold text-gray-800 mb-3">🥗 营养成分表</Text>
-                <View className="bg-gray-50 rounded-xl p-4 space-y-3">
-                  {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
-                    <View key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                      <Text className="text-xs text-gray-600">{key}</Text>
-                      <Text className="text-xs font-medium text-gray-800">{String(value)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ) : (
-              <View className="flex flex-col items-center justify-center py-20">
-                <Text className="text-4xl mb-2">🥗</Text>
-                <Text className="text-gray-400 text-sm">暂无营养成分信息</Text>
-              </View>
-            )}
-
-            {/* 成分列表（再次展示） */}
-            {spu.ingredients && spu.ingredients.length > 0 && (
-              <View className="mt-4">
-                <Text className="text-sm font-bold text-gray-800 mb-2">🥩 成分说明</Text>
-                <Text className="text-xs text-gray-600 leading-relaxed">
-                  {spu.ingredients.join('、')}
-                </Text>
-              </View>
-            )}
+            <View className="flex flex-col items-center justify-center py-20">
+              <Text className="text-gray-400 text-sm">商品链接功能开发中</Text>
+              <Text className="text-xs text-gray-300 mt-2">将展示各电商平台的价格和购买链接</Text>
+            </View>
           </View>
         )}
 
@@ -455,7 +446,7 @@ function SpuDetailContent() {
                   </View>
                   <Text className="text-xs font-medium text-gray-700">{review.user?.nickname || '匿名用户'}</Text>
                   <View className="ml-auto flex items-center gap-0.5">
-                    <Text className="text-xs text-orange-400">{'⭐'.repeat(Math.round(review.rating || 0))}</Text>
+                    <Text className="text-xs text-orange-400">{'★'.repeat(Math.round(review.rating || 0))}</Text>
                   </View>
                 </View>
                 <Text className="text-xs text-gray-600 leading-relaxed">{review.content}</Text>
@@ -469,7 +460,7 @@ function SpuDetailContent() {
                 <View className="flex items-center justify-between mt-2">
                   <Text className="text-[10px] text-gray-400">{review.created_at}</Text>
                   <View className="flex items-center gap-1 text-gray-400">
-                    <Text className="text-[10px]">👍 {review.helpful_count || 0}</Text>
+                    <Text className="text-[10px]">赞 {review.helpful_count || 0}</Text>
                   </View>
                 </View>
               </View>
@@ -493,7 +484,7 @@ function SpuDetailContent() {
           className="flex flex-col items-center gap-0.5 px-2"
           onClick={navigateToChat}
         >
-          <Text className="text-orange-500 text-lg">🤖</Text>
+          <Text className="text-orange-500 text-lg">AI</Text>
           <Text className="text-[10px] text-gray-500">问AI</Text>
         </View>
         <View
