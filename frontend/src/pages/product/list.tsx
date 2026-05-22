@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
@@ -19,6 +19,10 @@ export default function ProductListPage() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
+  
+  // 使用 ref 追踪最新 spus 长度，避免闭包问题
+  const spusRef = useRef(spus)
+  spusRef.current = spus
 
   const { compareList } = useCompareStore()
 
@@ -57,14 +61,18 @@ export default function ProductListPage() {
       }
 
       setTotal(pagination.total || 0)
-      setHasMore(newItems.length === PAGE_SIZE && spus.length + newItems.length < (pagination.total || 0))
+      
+      // 判断是否有更多数据
+      const currentLoaded = isRefresh ? newItems.length : spusRef.current.length + newItems.length
+      const hasMoreData = newItems.length > 0 && currentLoaded < (pagination.total || 0)
+      setHasMore(hasMoreData)
       setPage(targetPage)
     } catch (error) {
       console.error('Failed to fetch SPUs:', error)
     } finally {
       setLoading(false)
     }
-  }, [petType, categoryId, sortBy, loading, hasMore, spus.length])
+  }, [petType, categoryId, sortBy, loading, hasMore])
 
   const handleScrollToLower = () => {
     if (!loading && hasMore) {
