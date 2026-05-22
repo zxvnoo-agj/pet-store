@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { useState, useEffect, useCallback } from 'react'
+import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
-import { useSpuStore } from '../../stores/spuStore'
 import { useCompareStore } from '../../stores/compareStore'
 import { apiClient } from '../../services/api'
 
 type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating'
+
+const PAGE_SIZE = 20
 
 export default function ProductListPage() {
   const router = useRouter()
   const { params } = router
   const [sortBy, setSortBy] = useState<SortType>('default')
   const [showSortMenu, setShowSortMenu] = useState(false)
-  const [spus, setSpus] = useState([])
+  const [spus, setSpus] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState(0)
 
   const { compareList } = useCompareStore()
 
@@ -23,24 +27,48 @@ export default function ProductListPage() {
   const category = decodeURIComponent(params?.category || '')
   const searchQuery = decodeURIComponent(params?.search || '')
 
+  // 当筛选条件变化时，重置分页并重新加载
   useEffect(() => {
-    fetchSpus()
+    setPage(1)
+    setSpus([])
+    setHasMore(true)
+    loadSpus(1, true)
   }, [petType, categoryId, category, searchQuery, sortBy])
 
-  const fetchSpus = async () => {
+  const loadSpus = useCallback(async (targetPage: number, isRefresh: boolean = false) => {
+    if (loading && !isRefresh) return
+    if (!isRefresh && !hasMore) return
+
     setLoading(true)
     try {
-      const query: any = { page: 1, page_size: 20 }
+      const query: any = { page: targetPage, page_size: PAGE_SIZE }
       if (petType) query.pet_type = petType
       if (categoryId) query.category_id = categoryId
       if (sortBy !== 'default') query.sort = sortBy
 
       const res = await apiClient.get('/spus', query)
-      setSpus(res.items || [])
+      const newItems = res.items || []
+      const pagination = res.pagination || {}
+
+      if (isRefresh) {
+        setSpus(newItems)
+      } else {
+        setSpus(prev => [...prev, ...newItems])
+      }
+
+      setTotal(pagination.total || 0)
+      setHasMore(newItems.length === PAGE_SIZE && spus.length + newItems.length < (pagination.total || 0))
+      setPage(targetPage)
     } catch (error) {
       console.error('Failed to fetch SPUs:', error)
     } finally {
       setLoading(false)
+    }
+  }, [petType, categoryId, sortBy, loading, hasMore, spus.length])
+
+  const handleScrollToLower = () => {
+    if (!loading && hasMore) {
+      loadSpus(page + 1, false)
     }
   }
 
@@ -101,23 +129,43 @@ export default function ProductListPage() {
 
       {/* 结果数 */}
       <View className="shrink-0 px-4 py-2 bg-gray-50">
-        <Text className="text-xs text-gray-400">共 {spus.length} 件商品</Text>
+        <Text className="text-xs text-gray-400">共 {total} 件商品</Text>
       </View>
 
-      {/* 商品列表 */}
-      <View className="flex-1 overflow-y-auto px-4 pb-4">
-        <View className="space-y-3">
+      {/* 商品列表 - 支持滚动加载 */}
+      <ScrollView
+        className="flex-1"
+        scrollY
+        onScrollToLower={handleScrollToLower}
+        lowerThreshold={100}
+      >
+        <View className="px-4 pb-4 space-y-3">
           {spus.map((spu: any) => (
             <SpuCard key={spu.id} spu={spu} />
           ))}
-        </View>
 
-        {spus.length === 0 && !loading && (
-          <View className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <Text className="text-sm mt-3">暂无相关商品</Text>
-          </View>
-        )}
-      </View>
+          {/* 加载状态 */}
+          {loading && (
+            <View className="flex items-center justify-center py-4">
+              <Text className="text-xs text-gray-400">加载中...</Text>
+            </View>
+          )}
+
+          {/* 没有更多 */}
+          {!loading && !hasMore && spus.length > 0 && (
+            <View className="flex items-center justify-center py-4">
+              <Text className="text-xs text-gray-400">已经到底了</Text>
+            </View>
+          )}
+
+          {/* 空状态 */}
+          {spus.length === 0 && !loading && (
+            <View className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <Text className="text-sm mt-3">暂无相关商品</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
 
       {/* 对比浮动栏 */}
       {compareList.length > 0 && (
