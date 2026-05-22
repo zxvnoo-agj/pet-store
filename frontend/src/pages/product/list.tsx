@@ -23,6 +23,7 @@ export default function ProductListPage() {
   const pageRef = useRef(1)
   const loadingRef = useRef(false)
   const hasMoreRef = useRef(true)
+  const loadedCountRef = useRef(0)
 
   const { compareList } = useCompareStore()
 
@@ -36,6 +37,7 @@ export default function ProductListPage() {
     pageRef.current = 1
     loadingRef.current = false
     hasMoreRef.current = true
+    loadedCountRef.current = 0
     setSpus([])
     setHasMore(true)
     setTotal(0)
@@ -77,9 +79,15 @@ export default function ProductListPage() {
 
       setTotal(currentTotal)
       
+      // 使用 ref 追踪已加载数量，避免闭包问题
+      if (isRefresh) {
+        loadedCountRef.current = newItems.length
+      } else {
+        loadedCountRef.current += newItems.length
+      }
+      
       // 判断是否还有更多数据
-      const loadedCount = isRefresh ? newItems.length : spus.length + newItems.length
-      const hasMoreData = newItems.length > 0 && loadedCount < currentTotal
+      const hasMoreData = newItems.length > 0 && loadedCountRef.current < currentTotal
       
       hasMoreRef.current = hasMoreData
       setHasMore(hasMoreData)
@@ -92,9 +100,11 @@ export default function ProductListPage() {
     }
   }
 
-  const handleScrollToLower = () => {
-    // 使用 ref 检查最新状态
-    if (!loadingRef.current && hasMoreRef.current) {
+  const handleScroll = (e: any) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.detail
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150
+    
+    if (isNearBottom && !loadingRef.current && hasMoreRef.current) {
       const nextPage = pageRef.current + 1
       loadSpus(nextPage, false)
     }
@@ -164,8 +174,8 @@ export default function ProductListPage() {
       <ScrollView
         className="flex-1"
         scrollY
-        onScrollToLower={handleScrollToLower}
-        lowerThreshold={100}
+        onScroll={handleScroll}
+        style={{ height: '100%' }}
       >
         <View className="px-4 pb-4 space-y-3">
           {spus.map((spu: any) => (
