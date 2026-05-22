@@ -8,15 +8,17 @@ import { checkLoginStatus } from '../../services/auth'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { Loading } from '../../components/Loading'
 
-function ProductDetailContent() {
+function SpuDetailContent() {
   const router = useRouter()
   const { id } = router.params
-  const [product, setProduct] = useState<any>(null)
+  const [spu, setSpu] = useState<any>(null)
+  const [listings, setListings] = useState<any[]>([])
   const [reviews, setReviews] = useState<any[]>([])
   const [isFavorited, setIsFavorited] = useState(false)
-  const [activeTab, setActiveTab] = useState<'pros_cons' | 'reviews'>('pros_cons')
+  const [activeTab, setActiveTab] = useState<'overview' | 'nutrition' | 'reviews'>('overview')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [, setShowPriceCompare] = useState(false)
 
   const { addToCompare, isInCompare } = useCompareStore()
   const { isLoggedIn } = useAuthStore()
@@ -25,9 +27,10 @@ function ProductDetailContent() {
   useEffect(() => {
     checkLoginStatus()
     if (id) {
-      fetchProductDetail()
+      fetchSpuDetail()
       fetchReviews()
       fetchFavoriteStatus()
+      fetchListings()
     }
   }, [id])
 
@@ -38,6 +41,16 @@ function ProductDetailContent() {
       setIsFavorited(res.is_favorited)
     } catch {
       // 静默处理
+    }
+  }
+
+  const fetchListings = async () => {
+    if (!id) return
+    try {
+      const res = await apiClient.get(`/spus/${id}/listings`)
+      setListings(res.items || [])
+    } catch (error) {
+      console.error('Failed to fetch listings:', error)
     }
   }
 
@@ -59,12 +72,12 @@ function ProductDetailContent() {
     }
   }
 
-  const fetchProductDetail = async () => {
+  const fetchSpuDetail = async () => {
     try {
       const res = await apiClient.get(`/spus/${id}`)
-      setProduct(res)
+      setSpu(res)
     } catch (error) {
-      console.error('Failed to fetch product:', error)
+      console.error('Failed to fetch SPU:', error)
     } finally {
       setLoading(false)
     }
@@ -84,51 +97,67 @@ function ProductDetailContent() {
   }
 
   const navigateToChat = () => {
-    Taro.navigateTo({ url: `/pages/chat/index?productId=${id}` })
+    Taro.navigateTo({ url: `/pages/chat/index?spuId=${id}` })
   }
 
-  const handleBuy = () => {
-    const url = product.source_url
-    if (!url) {
-      Taro.showToast({ title: '暂无购买链接', icon: 'none' })
-      return
+  const navigateToPriceCompare = () => {
+    setShowPriceCompare(true)
+  }
+
+  const getPetTypeLabel = (type: string) => {
+    const map: Record<string, string> = {
+      cat: '猫咪',
+      dog: '狗狗',
     }
-    Taro.setClipboardData({
-      data: url,
-      success: () => {
-        Taro.showToast({ title: '购买链接已复制，请在浏览器中打开', icon: 'none' })
-      },
-    })
+    return map[type] || type
+  }
+
+  const formatPrice = (price: number | null) => {
+    if (price === null || price === undefined) return '暂无报价'
+    return `¥${price.toFixed(2)}`
+  }
+
+  const getPriceRange = () => {
+    if (!spu) return '暂无报价'
+    if (spu.price_min && spu.price_max) {
+      if (spu.price_min === spu.price_max) {
+        return formatPrice(spu.price_min)
+      }
+      return `${formatPrice(spu.price_min)} ~ ${formatPrice(spu.price_max)}`
+    }
+    if (spu.price_min) return formatPrice(spu.price_min)
+    if (spu.price_max) return formatPrice(spu.price_max)
+    return '暂无报价'
   }
 
   // WeChat sharing
   useShareAppMessage(() => {
-    if (!product) return { title: '宠物用品推荐' }
+    if (!spu) return { title: '宠物用品推荐' }
     return {
-      title: `${product.name} - ${product.brand || '宠物用品'}`,
+      title: `${spu.name} - ${spu.brand || '宠物用品'}`,
       path: `/pages/product/detail?id=${id}`,
-      imageUrl: product.image_urls?.[0] || '',
+      imageUrl: spu.image_urls?.[0] || '',
     }
   })
 
   useShareTimeline(() => {
-    if (!product) return { title: '宠物用品推荐' }
+    if (!spu) return { title: '宠物用品推荐' }
     return {
-      title: `${product.name} - ${product.brand || '宠物用品'}`,
+      title: `${spu.name} - ${spu.brand || '宠物用品'}`,
       query: `id=${id}`,
-      imageUrl: product.image_urls?.[0] || '',
+      imageUrl: spu.image_urls?.[0] || '',
     }
   })
 
   if (loading) {
-    return <Loading fullScreen text="加载商品详情..." />
+    return <Loading fullScreen text="加载产品详情..." />
   }
 
-  if (!product) {
+  if (!spu) {
     return (
       <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <Text className="text-4xl mb-2">📦</Text>
-        <Text className="text-gray-500">商品不存在或已下架</Text>
+        <Text className="text-gray-500">产品不存在或已下架</Text>
       </View>
     )
   }
@@ -165,50 +194,82 @@ function ProductDetailContent() {
       </View>
 
       <ScrollView className="flex-1" scrollY>
-        {/* 商品图片 */}
+        {/* 产品图片 */}
         <View className="aspect-square bg-gray-100">
-          <Image src={product.image_urls?.[0] || ''} className="w-full h-full object-cover" />
+          <Image src={spu.image_urls?.[0] || ''} className="w-full h-full object-cover" />
         </View>
 
-        {/* 基本信息 */}
+        {/* SPU 基本信息 */}
         <View className="px-4 pt-4 pb-3">
-          <View className="flex items-start justify-between gap-2">
-            <Text className="text-lg font-bold text-gray-900 leading-tight">{product.name}</Text>
-          </View>
-          <Text className="text-sm text-gray-500 mt-1">{product.brand}</Text>
-
-          <View className="flex items-baseline gap-2 mt-2">
-            <Text className="text-2xl font-bold text-orange-600">
-              ¥{product.price_range?.min || product.price_min}
+          {/* 品牌标签 */}
+          <View className="flex items-center gap-2 mb-2">
+            <Text className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded font-medium">
+              {spu.brand}
             </Text>
-            {product.price_range?.max > product.price_range?.min && (
-              <>
-                <Text className="text-gray-400">~</Text>
-                <Text className="text-lg text-orange-500">¥{product.price_range?.max}</Text>
-              </>
+            <Text className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded font-medium">
+              {getPetTypeLabel(spu.pet_type)}
+            </Text>
+            {spu.model && (
+              <Text className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded font-medium">
+                型号: {spu.model}
+              </Text>
             )}
           </View>
 
+          <View className="flex items-start justify-between gap-2">
+            <Text className="text-lg font-bold text-gray-900 leading-tight">{spu.name}</Text>
+          </View>
+
+          {/* 价格区间 */}
+          <View className="flex items-baseline gap-2 mt-3">
+            <Text className="text-2xl font-bold text-orange-600">{getPriceRange()}</Text>
+            {listings.length > 0 && (
+              <Text className="text-xs text-gray-400">({listings.length}个平台在售)</Text>
+            )}
+          </View>
+
+          {/* 评分和评价 */}
           <View className="flex items-center gap-4 mt-3">
             <View className="flex items-center gap-1">
-              <Text className="text-sm font-bold text-gray-800">⭐ {product.ratings?.overall || 0}</Text>
+              <Text className="text-sm font-bold text-gray-800">⭐ {spu.rating || 0}</Text>
             </View>
-            <Text className="text-xs text-gray-400">{product.review_count || 0}条评价</Text>
-            <Text className="text-xs text-orange-500 font-medium">{recommendRate}%推荐</Text>
+            <Text className="text-xs text-gray-400">{spu.review_count || 0}条评价</Text>
+            {reviews.length > 0 && (
+              <Text className="text-xs text-orange-500 font-medium">{recommendRate}%推荐</Text>
+            )}
           </View>
+
+          {/* 分类信息 */}
+          {spu.category && (
+            <View className="mt-2">
+              <Text className="text-xs text-gray-400">
+                分类: {spu.category.name}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Tab切换 */}
         <View className="flex border-b border-gray-100 px-4">
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
-              activeTab === 'pros_cons'
+              activeTab === 'overview'
                 ? 'border-orange-500 text-orange-500'
                 : 'border-transparent text-gray-500'
             }`}
-            onClick={() => setActiveTab('pros_cons')}
+            onClick={() => setActiveTab('overview')}
           >
-            <Text>优缺点</Text>
+            <Text>产品概览</Text>
+          </View>
+          <View
+            className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
+              activeTab === 'nutrition'
+                ? 'border-orange-500 text-orange-500'
+                : 'border-transparent text-gray-500'
+            }`}
+            onClick={() => setActiveTab('nutrition')}
+          >
+            <Text>营养成分</Text>
           </View>
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
@@ -218,73 +279,147 @@ function ProductDetailContent() {
             }`}
             onClick={() => setActiveTab('reviews')}
           >
-            <Text>真实评价 ({product.review_count || 0})</Text>
+            <Text>真实评价 ({spu.review_count || 0})</Text>
           </View>
         </View>
 
-        {/* 优缺点内容 */}
-        {activeTab === 'pros_cons' && (
+        {/* 产品概览 */}
+        {activeTab === 'overview' && (
           <View className="px-4 py-4 space-y-4">
-            <View>
-              <Text className="text-sm font-bold text-green-700 mb-2">✅ 优点</Text>
-              <View className="flex flex-wrap gap-2">
-                {product.pros?.map((pro: string, i: number) => (
-                  <Text key={i} className="px-3 py-1.5 bg-green-50 text-green-700 text-xs rounded-full font-medium">
-                    {pro}
-                  </Text>
-                ))}
-              </View>
-            </View>
-
-            <View>
-              <Text className="text-sm font-bold text-red-600 mb-2">❌ 缺点</Text>
-              <View className="flex flex-wrap gap-2">
-                {product.cons?.map((con: string, i: number) => (
-                  <Text key={i} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs rounded-full font-medium">
-                    {con}
-                  </Text>
-                ))}
-              </View>
-            </View>
-
-            <View>
-              <Text className="text-sm font-bold text-gray-800 mb-3">评分详情</Text>
-              <View className="space-y-2.5">
-                {[
-                  { label: '综合评分', value: product.ratings?.overall || 0 },
-                  { label: '性价比', value: product.ratings?.cost_performance || 0 },
-                  { label: '产品质量', value: product.ratings?.quality || 0 },
-                  { label: '适口性', value: product.ratings?.taste || 0 },
-                ].map((item) => (
-                  <View key={item.label} className="flex items-center gap-3">
-                    <Text className="text-xs text-gray-500 w-16">{item.label}</Text>
-                    <View className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <View
-                        className="h-full bg-orange-400 rounded-full"
-                        style={{ width: `${(item.value / 5) * 100}%` }}
-                      />
-                    </View>
-                    <Text className="text-xs font-medium text-gray-700 w-8 text-right">
-                      {item.value}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {product.ingredients?.length > 0 && (
+            {/* 优点 */}
+            {spu.pros && spu.pros.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">成分</Text>
-                <Text className="text-xs text-gray-600 leading-relaxed">
-                  {product.ingredients.join('、')}
-                </Text>
+                <Text className="text-sm font-bold text-green-700 mb-2">✅ 优点</Text>
+                <View className="flex flex-wrap gap-2">
+                  {spu.pros.map((pro: string, i: number) => (
+                    <Text key={i} className="px-3 py-1.5 bg-green-50 text-green-700 text-xs rounded-full font-medium">
+                      {pro}
+                    </Text>
+                  ))}
+                </View>
               </View>
             )}
 
-            {product.description && (
+            {/* 缺点 */}
+            {spu.cons && spu.cons.length > 0 && (
               <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">商品描述</Text>
-                <Text className="text-xs text-gray-600 leading-relaxed">{product.description}</Text>
+                <Text className="text-sm font-bold text-red-600 mb-2">❌ 缺点</Text>
+                <View className="flex flex-wrap gap-2">
+                  {spu.cons.map((con: string, i: number) => (
+                    <Text key={i} className="px-3 py-1.5 bg-red-50 text-red-600 text-xs rounded-full font-medium">
+                      {con}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* 成分 */}
+            {spu.ingredients && spu.ingredients.length > 0 && (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-2">🥩 主要成分</Text>
+                <View className="flex flex-wrap gap-2">
+                  {spu.ingredients.map((ing: string, i: number) => (
+                    <Text key={i} className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs rounded-full">
+                      {ing}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* 产品描述 */}
+            {spu.description && (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-2">📝 产品描述</Text>
+                <Text className="text-xs text-gray-600 leading-relaxed">{spu.description}</Text>
+              </View>
+            )}
+
+            {/* 额外属性 */}
+            {spu.extra_attrs && Object.keys(spu.extra_attrs).length > 0 && (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-2">📋 产品参数</Text>
+                <View className="space-y-2">
+                  {Object.entries(spu.extra_attrs).map(([key, value]: [string, any]) => (
+                    <View key={key} className="flex justify-between py-2 border-b border-gray-50">
+                      <Text className="text-xs text-gray-500">{key}</Text>
+                      <Text className="text-xs text-gray-800 font-medium">{String(value)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* 多平台价格对比 */}
+            {listings.length > 0 && (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-2">💰 多平台价格</Text>
+                <View className="space-y-2">
+                  {listings.slice(0, 3).map((listing: any) => (
+                    <View key={listing.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <View className="flex items-center gap-2">
+                        <Text className="text-xs font-medium text-gray-700">{listing.platform}</Text>
+                        <Text className="text-xs text-gray-400">{listing.shop_name}</Text>
+                      </View>
+                      <View className="flex items-center gap-2">
+                        {listing.original_price && listing.original_price > listing.price && (
+                          <Text className="text-xs text-gray-400 line-through">
+                            ¥{listing.original_price}
+                          </Text>
+                        )}
+                        <Text className="text-sm font-bold text-orange-600">
+                          ¥{listing.price}
+                        </Text>
+                        {listing.sales_count && (
+                          <Text className="text-xs text-gray-400">已售{listing.sales_count}</Text>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                  {listings.length > 3 && (
+                    <View
+                      className="text-center py-2 text-xs text-orange-500 font-medium"
+                      onClick={navigateToPriceCompare}
+                    >
+                      <Text>查看全部 {listings.length} 个平台价格 →</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 营养成分 */}
+        {activeTab === 'nutrition' && (
+          <View className="px-4 py-4 space-y-4">
+            {spu.nutrition && Object.keys(spu.nutrition).length > 0 ? (
+              <View>
+                <Text className="text-sm font-bold text-gray-800 mb-3">🥗 营养成分表</Text>
+                <View className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
+                    <View key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                      <Text className="text-xs text-gray-600">{key}</Text>
+                      <Text className="text-xs font-medium text-gray-800">{String(value)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View className="flex flex-col items-center justify-center py-20">
+                <Text className="text-4xl mb-2">🥗</Text>
+                <Text className="text-gray-400 text-sm">暂无营养成分信息</Text>
+              </View>
+            )}
+
+            {/* 成分列表（再次展示） */}
+            {spu.ingredients && spu.ingredients.length > 0 && (
+              <View className="mt-4">
+                <Text className="text-sm font-bold text-gray-800 mb-2">🥩 成分说明</Text>
+                <Text className="text-xs text-gray-600 leading-relaxed">
+                  {spu.ingredients.join('、')}
+                </Text>
               </View>
             )}
           </View>
@@ -296,7 +431,7 @@ function ProductDetailContent() {
             <View className="bg-gray-50 rounded-xl p-3">
               <View className="flex items-center justify-between mb-2">
                 <Text className="text-lg font-bold text-gray-800">
-                  {product.ratings?.overall || 0}
+                  {spu.rating || 0}
                   <Text className="text-sm text-gray-400 font-normal">/5</Text>
                 </Text>
                 <Text className="text-xs text-orange-500 font-medium">
@@ -369,18 +504,27 @@ function ProductDetailContent() {
         >
           <Text>{inCompare ? '已加入对比' : '加入对比'}</Text>
         </View>
-        <View className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center" onClick={handleBuy}>
-          <Text>去购买</Text>
-        </View>
+        {listings.length > 0 ? (
+          <View 
+            className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center" 
+            onClick={navigateToPriceCompare}
+          >
+            <Text>查看价格 ({listings.length}个平台)</Text>
+          </View>
+        ) : (
+          <View className="flex-1 bg-gray-300 text-white text-sm font-medium py-2.5 rounded-full text-center">
+            <Text>暂无售卖</Text>
+          </View>
+        )}
       </View>
     </View>
   )
 }
 
-export default function ProductDetailPage() {
+export default function SpuDetailPage() {
   return (
     <ErrorBoundary>
-      <ProductDetailContent />
+      <SpuDetailContent />
     </ErrorBoundary>
   )
 }
