@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
@@ -16,13 +16,13 @@ export default function ProductListPage() {
   const [showSortMenu, setShowSortMenu] = useState(false)
   const [spus, setSpus] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
   
-  // 使用 ref 追踪最新 spus 长度，避免闭包问题
-  const spusRef = useRef(spus)
-  spusRef.current = spus
+  // 使用 ref 追踪分页状态，避免闭包问题
+  const pageRef = useRef(1)
+  const loadingRef = useRef(false)
+  const hasMoreRef = useRef(true)
 
   const { compareList } = useCompareStore()
 
@@ -31,19 +31,29 @@ export default function ProductListPage() {
   const category = decodeURIComponent(params?.category || '')
   const searchQuery = decodeURIComponent(params?.search || '')
 
-  // 当筛选条件变化时，重置分页并重新加载
+  // 当筛选条件变化时，重置并重新加载
   useEffect(() => {
-    setPage(1)
+    pageRef.current = 1
+    loadingRef.current = false
+    hasMoreRef.current = true
     setSpus([])
     setHasMore(true)
-    loadSpus(1, true)
+    setTotal(0)
+    
+    // 使用 setTimeout 确保状态重置后再加载
+    setTimeout(() => {
+      loadSpus(1, true)
+    }, 0)
   }, [petType, categoryId, category, searchQuery, sortBy])
 
-  const loadSpus = useCallback(async (targetPage: number, isRefresh: boolean = false) => {
-    if (loading && !isRefresh) return
-    if (!isRefresh && !hasMore) return
+  const loadSpus = async (targetPage: number, isRefresh: boolean = false) => {
+    // 使用 ref 检查状态，避免闭包问题
+    if (loadingRef.current && !isRefresh) return
+    if (!isRefresh && !hasMoreRef.current) return
 
+    loadingRef.current = true
     setLoading(true)
+    
     try {
       const query: any = { page: targetPage, page_size: PAGE_SIZE }
       if (petType) query.pet_type = petType
@@ -54,29 +64,39 @@ export default function ProductListPage() {
       const newItems = res.items || []
       const pagination = res.pagination || {}
 
+      const currentTotal = pagination.total || 0
+      
       if (isRefresh) {
         setSpus(newItems)
       } else {
-        setSpus(prev => [...prev, ...newItems])
+        setSpus(prev => {
+          const updated = [...prev, ...newItems]
+          return updated
+        })
       }
 
-      setTotal(pagination.total || 0)
+      setTotal(currentTotal)
       
-      // 判断是否有更多数据
-      const currentLoaded = isRefresh ? newItems.length : spusRef.current.length + newItems.length
-      const hasMoreData = newItems.length > 0 && currentLoaded < (pagination.total || 0)
+      // 判断是否还有更多数据
+      const loadedCount = isRefresh ? newItems.length : spus.length + newItems.length
+      const hasMoreData = newItems.length > 0 && loadedCount < currentTotal
+      
+      hasMoreRef.current = hasMoreData
       setHasMore(hasMoreData)
-      setPage(targetPage)
+      pageRef.current = targetPage
     } catch (error) {
       console.error('Failed to fetch SPUs:', error)
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
-  }, [petType, categoryId, sortBy, loading, hasMore])
+  }
 
   const handleScrollToLower = () => {
-    if (!loading && hasMore) {
-      loadSpus(page + 1, false)
+    // 使用 ref 检查最新状态
+    if (!loadingRef.current && hasMoreRef.current) {
+      const nextPage = pageRef.current + 1
+      loadSpus(nextPage, false)
     }
   }
 
