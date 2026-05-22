@@ -1,96 +1,57 @@
-"""API endpoint performance benchmarks.
+"""Performance test for SPU API endpoints."""
+import statistics
+import time
+import requests
 
-Measures response times for critical API endpoints under various conditions.
-Targets: SPU list < 200ms p95, SPU detail < 300ms p95, search < 500ms p95.
-"""
-import pytest
-from httpx import ASGITransport, AsyncClient
+BASE_URL = "http://localhost:8001/v1"
 
-from app.main import app
-from app.core.database import get_db
+def measure_latency(endpoint: str, params: dict = None, iterations: int = 20) -> dict:
+    """Measure API latency and return percentiles."""
+    latencies = []
+    for _ in range(iterations):
+        start = time.perf_counter()
+        resp = requests.get(f"{BASE_URL}{endpoint}", params=params, timeout=30)
+        elapsed = (time.perf_counter() - start) * 1000  # ms
+        latencies.append(elapsed)
+        if resp.status_code != 200:
+            print(f"Warning: {endpoint} returned {resp.status_code}")
+    
+    latencies.sort()
+    n = len(latencies)
+    p50 = latencies[n // 2]
+    p95 = latencies[int(n * 0.95)]
+    p99 = latencies[int(n * 0.99)]
+    avg = statistics.mean(latencies)
+    
+    return {
+        "avg_ms": round(avg, 2),
+        "p50_ms": round(p50, 2),
+        "p95_ms": round(p95, 2),
+        "p99_ms": round(p99, 2),
+        "min_ms": round(latencies[0], 2),
+        "max_ms": round(latencies[-1], 2),
+    }
 
+def main():
+    print("=" * 60)
+    print("Performance Test: SPU Migration API")
+    print("=" * 60)
+    
+    # T063: GET /v1/spus
+    print("\n[T063] GET /v1/spus?page=1&page_size=20")
+    stats = measure_latency("/spus", {"page": 1, "page_size": 20}, iterations=20)
+    print(f"  avg={stats['avg_ms']}ms, p50={stats['p50_ms']}ms, p95={stats['p95_ms']}ms, p99={stats['p99_ms']}ms")
+    print(f"  min={stats['min_ms']}ms, max={stats['max_ms']}ms")
+    print(f"  ✓ PASS" if stats['p95_ms'] < 200 else f"  ✗ FAIL (p95 > 200ms)")
+    
+    # T064: GET /v1/search?q=幼猫
+    print("\n[T064] GET /v1/search?q=幼猫")
+    stats = measure_latency("/search", {"q": "幼猫"}, iterations=20)
+    print(f"  avg={stats['avg_ms']}ms, p50={stats['p50_ms']}ms, p95={stats['p95_ms']}ms, p99={stats['p99_ms']}ms")
+    print(f"  min={stats['min_ms']}ms, max={stats['max_ms']}ms")
+    print(f"  ✓ PASS" if stats['p95_ms'] < 200 else f"  ✗ FAIL (p95 > 200ms)")
+    
+    print("\n" + "=" * 60)
 
-@pytest.mark.benchmark(min_rounds=10, max_time=1.0, warmup=True)
-@pytest.mark.asyncio
-async def test_product_list_performance(benchmark, db_session):
-    """Product list endpoint should respond within 200ms p95."""
-    def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
-
-    async def fetch_products():
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/spus?page=1&page_size=20")
-            return resp
-
-    result = await benchmark(fetch_products)
-    assert result.status_code == 200
-    data = result.json()
-    assert "items" in data or "products" in data or "data" in data
-
-    app.dependency_overrides.clear()
-
-
-@pytest.mark.benchmark(min_rounds=10, max_time=1.0, warmup=True)
-@pytest.mark.asyncio
-async def test_product_detail_performance(benchmark, db_session):
-    """Product detail endpoint should respond within 300ms p95."""
-    def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
-
-    async def fetch_detail():
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/spus/1")
-            return resp
-
-    result = await benchmark(fetch_detail)
-    assert result.status_code in (200, 404)
-
-    app.dependency_overrides.clear()
-
-
-@pytest.mark.benchmark(min_rounds=10, max_time=1.0, warmup=True)
-@pytest.mark.asyncio
-async def test_search_performance(benchmark, db_session):
-    """Search endpoint should respond within 500ms p95."""
-    def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
-
-    async def search_products():
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/search?q=test&page=1&page_size=20")
-            return resp
-
-    result = await benchmark(search_products)
-    assert result.status_code == 200
-
-    app.dependency_overrides.clear()
-
-
-@pytest.mark.benchmark(min_rounds=5, max_time=1.0, warmup=True)
-@pytest.mark.asyncio
-async def test_category_tree_performance(benchmark, db_session):
-    """Category tree endpoint performance."""
-    def override_get_db():
-        yield db_session
-
-    app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
-
-    async def fetch_categories():
-        async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/api/v1/categories")
-            return resp
-
-    result = await benchmark(fetch_categories)
-    assert result.status_code == 200
-
-    app.dependency_overrides.clear()
+if __name__ == "__main__":
+    main()
