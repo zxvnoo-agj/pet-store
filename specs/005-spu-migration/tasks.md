@@ -118,52 +118,43 @@
 
 **Independent Test**: Open SPU detail page "Product Links" tab with linked listings, verify product cards show shop/price/SKU specs. Click "Buy" button to generate promotion URL and redirect.
 
-### Implementation for User Story 2
+### Part A: Basic Listings Interface (Completed)
 
 - [X] T041 [P] [US2] Update `backend/app/services/spu_service.py`: add `get_listings_for_miniprogram()` method
 - [X] T042 [P] [US2] Update `backend/app/schemas/spu.py`: add `SpuMiniProgramListingResponse` schema
 - [X] T043 [US2] Create `backend/app/api/v1/spus.py`: add `GET /v1/spus/{id}/listings` endpoint
-- [X] T044 [US2] Update `frontend/src/pages/product/detail.tsx`: add "Product Links" tab with SKU specs display
+- [X] T044 [US2] Update `frontend/src/pages/product/detail.tsx`: add "Product Links" tab placeholder
 - [X] T045 [US2] Update `frontend/src/services/api.ts`: add SPU listings API call
 
----
+### Part B: Promotion URL & DDK Detail Integration (Pending)
 
-## Phase 6b: Product Links Enhancement (New Requirement)
-
-**Goal**: Add on-demand promotion URL generation and DDK detail API integration.
-
-### Backend Tasks
-
-- [ ] T065 [P] Create Alembic migration: `006_add_listing_detail_fields.py`
+- [ ] T046 [P] [US2] Create Alembic migration `006_add_listing_detail_fields.py` in `backend/alembic/versions/`
   - Add `goods_sign VARCHAR(128)` to `spu_listings`
   - Add `sku_specs JSONB` to `spu_listings`
   - Add `service_tags JSONB` to `spu_listings`
-- [ ] T066 [P] Update `backend/app/models/spu_listing.py`: add new fields
-- [ ] T067 [P] Update `backend/app/services/spu_listing_service.py`: call `pdd.ddk.goods.detail` during collection
+- [ ] T047 [P] [US2] Update `backend/app/models/spu_listing.py`: add goods_sign, sku_specs, service_tags fields
+- [ ] T048 [P] [US2] Update `backend/app/services/spu_listing_service.py`: call `pdd.ddk.goods.detail` during collection
   - Extract goods_sign, sku_list, service_tags from detail response
   - Update existing listing records after LLM matching
-- [ ] T068 [P] Update `backend/app/services/promotion_url_service.py`: add Redis caching layer
+- [ ] T049 [P] [US2] Update `backend/app/services/promotion_url_service.py`: add Redis caching layer
   - Redis key: `promo:{goods_sign}:{pid}`, TTL 1 hour
   - PostgreSQL PromotionUrlCache table: TTL 12 hours (existing)
   - Fallback to PDD API on cache miss
-- [ ] T069 [P] Add `GET /v1/spus/{id}/links` endpoint to `backend/app/api/v1/spus.py`
+- [ ] T050 [P] [US2] Add `GET /v1/spus/{id}/links` endpoint to `backend/app/api/v1/spus.py`
   - Return listings with SKU specs and service tags
-- [ ] T070 [P] Add `POST /v1/spus/{id}/promotion-url` endpoint to `backend/app/api/v1/spus.py`
+- [ ] T051 [P] [US2] Add `POST /v1/spus/{id}/promotion-url` endpoint to `backend/app/api/v1/spus.py`
   - Request body: `{ listing_id: int }`
   - Response: `{ short_url, mobile_url, we_app_url }`
   - Generate on-demand with dual caching
-
-### Frontend Tasks
-
-- [ ] T071 Update `frontend/src/pages/product/detail.tsx`: enhance "Product Links" tab
+- [ ] T052 [US2] Update `frontend/src/pages/product/detail.tsx`: enhance "Product Links" tab
   - Display SKU specs as selectable chips
   - Show service tags (e.g., "正品保证", "48h发货")
   - "Buy" button triggers promotion URL generation
   - Handle loading/error states (goods_sign invalid, product delisted)
-- [ ] T072 Update `frontend/src/services/api.ts`: add promotion URL API call
-- [ ] T073 Update `frontend/src/types/index.ts`: add ListingDetail interface with sku_specs/service_tags
+- [ ] T053 [US2] Update `frontend/src/services/api.ts`: add promotion URL API call
+- [ ] T054 [US2] Update `frontend/src/types/index.ts`: add ListingDetail interface with sku_specs/service_tags
 
-**Checkpoint**: Users can view product links with SKU specs, click "Buy" to generate promotion URL, and redirect to PDD.
+**Checkpoint**: Basic listings API works (T041-T045). Full promotion URL flow pending T046-T054.
 
 ---
 
@@ -175,11 +166,11 @@
 
 ### Verification for User Story 3
 
-- [X] T046 [P] [US3] Verified: `backend/app/services/spu_matching_service.py` exists and implements LLM semantic matching
-- [X] T047 [P] [US3] Verified: `backend/app/services/pdd_client.py` supports PDD DDK API crawling
-- [X] T048 [US3] Verified: `backend/app/api/v1/admin_goods.py` `POST /admin/goods/listings/import` is functional
-- [X] T049 [US3] Verified: `backend/app/api/v1/admin_goods.py` `GET /admin/goods/matching-queue` is functional
-- ~~T050 [US3] Update admin frontend~~ — **Removed**: Admin frontend out of scope for mini-program migration
+- [X] T055 [P] [US3] Verified: `backend/app/services/spu_matching_service.py` exists and implements LLM semantic matching
+- [X] T056 [P] [US3] Verified: `backend/app/services/pdd_client.py` supports PDD DDK API crawling
+- [X] T057 [US3] Verified: `backend/app/api/v1/admin_goods.py` `POST /admin/goods/listings/import` is functional
+- [X] T058 [US3] Verified: `backend/app/api/v1/admin_goods.py` `GET /admin/goods/matching-queue` is functional
+- ~~T059 [US3] Update admin frontend~~ — **Removed**: Admin frontend out of scope for mini-program migration
 
 **Checkpoint**: Admin APIs verified functional. No SPU migration needed for these 004 features.
 
@@ -189,31 +180,54 @@
 
 **Purpose**: Cleanup, testing, and migration validation
 
-- [X] T051 [P] Update `backend/app/api/v1/favorites.py`: change all `product_id` references to `spu_id`
-- [X] T052 [P] Update `backend/app/services/favorite_service.py`: change all `product_id` references to `spu_id`
-- [X] T053 [P] Update `backend/app/api/v1/reviews.py`: change all `product_id` references to `spu_id`
-- [X] T054 [P] Update `backend/app/services/review_service.py`: change all `product_id` references to `spu_id`
-- [X] T055 Update `frontend/src/pages/mine/favorites.tsx`: display SPU favorites instead of product favorites
-- [X] T056 Update `frontend/src/pages/mine/index.tsx`: update any product references to SPU
-- [X] T057 [P] Run full backend test suite: `cd backend && pytest tests/ -v` — 36/36 tests passing
-- [X] T058 [P] Run frontend type check: `cd frontend && tsc --noEmit` — passes cleanly
-- [X] T059 [P] Search entire codebase for remaining `product_id` references in business logic (exclude admin/goods from 004)
+- [X] T060 [P] Update `backend/app/api/v1/favorites.py`: change all `product_id` references to `spu_id`
+- [X] T061 [P] Update `backend/app/services/favorite_service.py`: change all `product_id` references to `spu_id`
+- [X] T062 [P] Update `backend/app/api/v1/reviews.py`: change all `product_id` references to `spu_id`
+- [X] T063 [P] Update `backend/app/services/review_service.py`: change all `product_id` references to `spu_id`
+- [X] T064 Update `frontend/src/pages/mine/favorites.tsx`: display SPU favorites instead of product favorites
+- [X] T065 Update `frontend/src/pages/mine/index.tsx`: update any product references to SPU
+- [X] T066 [P] Run full backend test suite: `cd backend && pytest tests/ -v` — 36/36 tests passing
+- [X] T067 [P] Run frontend type check: `cd frontend && tsc --noEmit` — passes cleanly
+- [X] T068 [P] Search entire codebase for remaining `product_id` references in business logic (exclude admin/goods from 004)
   - Fixed: `backend/app/agents/tools.py` parameters renamed
   - Fixed: `frontend/src/pages/chat/index.tsx` Product → Spu
   - Fixed: `frontend/src/stores/compareStore.ts` productId → spuId
   - Skipped: `backend/app/api/v1/products.py` exists but not registered in main.py
   - Skipped: `frontend/src/pages/product/compare.tsx` uses old API (not in active mini-program pages)
-- [X] T060 [P] Search entire codebase for remaining `products` API endpoint references
+- [X] T069 [P] Search entire codebase for remaining `products` API endpoint references
   - Fixed: `backend/tests/load/locustfile.py` paths updated to /v1/spus
   - Skipped: `backend/app/api/v1/products.py` legacy file (not imported in main.py)
-- [X] T061 Update `AGENTS.md` references (already done by plan command)
-- [X] T062 Verify mini-program bundle size < 2MB (Constitution requirement)
+- [X] T070 Update `AGENTS.md` references (already done by plan command)
+- [X] T071 Verify mini-program bundle size < 2MB (Constitution requirement)
   - Frontend src/ directory: 776K (116 files)
   - Estimate: built bundle ~300-500K, well under 2MB limit ✓
-- [X] T063 Run performance test: `GET /v1/spus` p95 < 200ms
+- [X] T072 [P] Run performance test: `GET /v1/spus` p95 < 200ms
   - Result: p95 = 89.75ms ✓ PASS
-- [X] T064 Run performance test: `GET /v1/search?q=幼猫` p95 < 200ms
+- [X] T073 [P] Run performance test: `GET /v1/search?q=幼猫` p95 < 200ms
   - Result: p95 = 26.33ms ✓ PASS
+
+---
+
+## Phase 9: Edge Cases & Missing Requirements
+
+**Purpose**: Address spec requirements and edge cases not covered in previous phases
+
+### Idempotency & Data Integrity
+
+- [ ] T074 [P] [US2] Update `backend/app/models/spu_listing.py`: add UNIQUE constraint on (platform, goods_id) for idempotency (FR-012)
+
+### Error Handling & Fallbacks
+
+- [ ] T075 [P] [US2] Update `backend/app/services/promotion_url_service.py`: add fallback to PostgreSQL when Redis is unavailable
+- [ ] T076 [P] [US2] Update `backend/app/services/promotion_url_service.py`: add PDD API rate limiting handling with user-friendly error message
+- [ ] T077 [P] [US2] Update `backend/app/services/promotion_url_service.py`: add error handling for invalid goods_sign or delisted products (FR-005b)
+
+### Performance Validation
+
+- [ ] T078 [P] [US2] Run performance test: `POST /v1/spus/{id}/promotion-url` p95 < 500ms (cache hit) / < 3s (cache miss) (SC-005b)
+- [ ] T079 [P] [US2] Run integration test: verify product links tab info completeness ≥90% (price, shop, SKU specs) (SC-005c)
+
+**Checkpoint**: All spec requirements (FR-012, FR-005b, SC-005b, SC-005c) and edge cases covered.
 
 ---
 
@@ -225,8 +239,11 @@
 - **Foundational (Phase 2)**: Depends on Setup. **BLOCKS ALL user stories** - database schema must be migrated first
 - **User Stories (Phase 3-7)**: All depend on Foundational (Phase 2)
   - US1, US4, US5 are P1 and can proceed in parallel after Foundational
-  - US2, US3 are P2 and can proceed after P1 stories (or in parallel if team capacity allows)
+  - US2 Part A (T041-T045) can proceed after US1
+  - US2 Part B (T046-T054) can proceed after US2 Part A
+  - US3 is P2 and independent after Foundational (admin-only)
 - **Polish (Phase 8)**: Depends on all user stories
+- **Edge Cases (Phase 9)**: Depends on Phase 6 (US2) completion
 
 ### User Story Dependencies
 
@@ -234,6 +251,8 @@
 - **US5 (P1)**: Independent after Foundational (shares SpuCard component with US1)
 - **US4 (P1)**: Independent after Foundational (depends on SpuService being ready)
 - **US2 (P2)**: Depends on US1 (needs SPU detail page to show listings)
+  - Part A (basic listings): Can start after US1
+  - Part B (promotion URLs): Can start after Part A
 - **US3 (P2)**: Independent after Foundational (admin-only backend feature)
 
 ### Within Each User Story
@@ -246,8 +265,9 @@
 
 - All Foundational tasks T004-T018 can run in parallel (different files)
 - US1, US4, US5 frontend tasks can run in parallel after backend API ready
-- US2 and US3 can be worked on in parallel with each other
-- All Polish tasks T051-T064 can run in parallel (different files)
+- US2 Part B and US3 can be worked on in parallel with each other
+- All Polish tasks T060-T073 can run in parallel (different files)
+- All Edge Case tasks T074-T079 can run in parallel after US2 Part B
 
 ---
 
@@ -312,4 +332,4 @@ With multiple developers:
 - **Frontend field names mostly unchanged**: `id`, `name`, `brand`, `price_min`, `price_max`, `image_urls` already exist in SPU schema
 - **Admin endpoints from 004 unchanged**: `/v1/admin/goods/*` continues to work independently
 - **Constitution compliance**: TypeScript strict mode, Pydantic v2, test coverage ≥90% for modified services
-- **Code removed from scope**: T050 (admin frontend) removed as admin UI is out of scope for mini-program migration
+- **Code removed from scope**: T059 (admin frontend) removed as admin UI is out of scope for mini-program migration
