@@ -26,7 +26,7 @@ class DataFetchJob(Base):
     job_type = Column(String(32), nullable=False)  # price, review, discovery
     collection_type = Column(String(16), default="full")  # full, incremental
     status = Column(String(16), default="pending")  # pending, running, completed, failed
-    params = Column(JSONB, default=dict)  # product_id, keywords, etc.
+    params = Column(JSONB, default=dict)  # spu_id, keywords, etc.
     result = Column(JSONB, nullable=True)  # fetched data summary
     error_message = Column(Text, nullable=True)
     spu_id = Column(Integer, ForeignKey("spus.id"), nullable=True)

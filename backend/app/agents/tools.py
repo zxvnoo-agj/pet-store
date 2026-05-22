@@ -35,8 +35,8 @@ class AgentTools:
             "image_urls": s.image_urls or [],
         } for s in spus]
 
-    async def get_product_detail(self, product_id: int) -> dict | None:
-        spu = await self.spu_service.get_spu_for_miniprogram(product_id)
+    async def get_product_detail(self, spu_id: int) -> dict | None:
+        spu = await self.spu_service.get_spu_for_miniprogram(spu_id)
         if spu:
             return {
                 "id": spu.id,
@@ -54,14 +54,14 @@ class AgentTools:
             }
         return None
 
-    async def get_reviews_summary(self, product_id: int) -> dict:
-        summary = await self.review_service.get_review_summary(product_id)
+    async def get_reviews_summary(self, spu_id: int) -> dict:
+        summary = await self.review_service.get_review_summary(spu_id)
         return summary.model_dump()
 
-    async def compare_products(self, product_ids: list[int]) -> list[dict]:
+    async def compare_products(self, spu_ids: list[int]) -> list[dict]:
         spus = []
-        for pid in product_ids:
-            spu = await self.spu_service.get_spu_for_miniprogram(pid)
+        for sid in spu_ids:
+            spu = await self.spu_service.get_spu_for_miniprogram(sid)
             if spu:
                 spus.append(spu)
         return [{
