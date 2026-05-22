@@ -126,6 +126,21 @@ class SpuMiniProgramListingResponse(BaseModel):
     image_url: str | None = None
     sales_count: int | None = None
     promotion_url: str | None = None
+    goods_sign: str | None = None
+    sku_specs: list[dict] = []
+    service_tags: list[str] = []
 
     class Config:
         from_attributes = True
+
+
+class PromotionUrlRequest(BaseModel):
+    listing_id: int
+
+
+class PromotionUrlResponse(BaseModel):
+    short_url: str
+    mobile_url: str
+    we_app_url: str
+    cached: bool = False
+    cache_layer: str | None = None

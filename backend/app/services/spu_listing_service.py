@@ -107,12 +107,15 @@ class SpuListingService:
                     platform=platform,
                     shop_name=item.get("shop_name", ""),
                     goods_id=item.get("goods_id"),
+                    goods_sign=item.get("goods_sign"),
                     title=item.get("title", ""),
                     price=item.get("price", 0),
                     original_price=item.get("original_price"),
                     url=item.get("url", ""),
                     image_url=item.get("image_url"),
                     sales_count=item.get("sales_count"),
+                    sku_specs=item.get("sku_specs"),
+                    service_tags=item.get("service_tags"),
                     match_status="unmatched",
                 )
                 self.db.add(listing)
@@ -150,7 +153,7 @@ class SpuListingService:
     async def _fetch_listings(
         self, keyword: str, max_results: int, platform: str
     ) -> list[dict]:
-        """Fetch listings from DDK API."""
+        """Fetch listings from DDK API and enrich with detail data."""
         from app.services.pdd_client import PDDClient
 
         client = PDDClient()
@@ -170,8 +173,34 @@ class SpuListingService:
 
                 for goods in goods_list:
                     parsed = client.parse_goods(goods)
+                    goods_id = parsed["external_id"]
+                    
+                    # Fetch detail to get goods_sign, sku_specs, service_tags
+                    goods_sign = goods.get("goods_sign", "")
+                    sku_specs = None
+                    service_tags = None
+                    
+                    if goods_sign:
+                        try:
+                            detail = await client.get_goods_detail(goods_sign)
+                            if detail:
+                                sku_list = detail.get("sku_list", [])
+                                sku_specs = [
+                                    {
+                                        "spec": sku.get("spec", ""),
+                                        "price": float(sku.get("group_price", 0)) / 100 if sku.get("group_price") else None,
+                                        "stock": sku.get("stock", 0),
+                                    }
+                                    for sku in sku_list
+                                ]
+                                service_tags = detail.get("service_tags", [])
+                                logger.debug(f"Fetched detail for goods_sign={goods_sign}: {len(sku_specs)} SKUs, {len(service_tags)} tags")
+                        except Exception as e:
+                            logger.warning(f"Failed to fetch detail for goods_sign={goods_sign}: {e}")
+                    
                     all_goods.append({
-                        "goods_id": parsed["external_id"],
+                        "goods_id": goods_id,
+                        "goods_sign": goods_sign,
                         "title": parsed["name"],
                         "shop_name": parsed["mall_name"],
                         "price": parsed["group_price"] or 0,
@@ -179,6 +208,8 @@ class SpuListingService:
                         "url": parsed["external_url"],
                         "image_url": parsed["image_urls"][0] if parsed["image_urls"] else None,
                         "sales_count": int(parsed["sales_tip"].replace("+", "").replace("万", "0000")) if parsed["sales_tip"] else None,
+                        "sku_specs": sku_specs,
+                        "service_tags": service_tags,
                     })
 
                 if len(goods_list) < page_size:

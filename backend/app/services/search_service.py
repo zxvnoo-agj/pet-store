@@ -16,7 +16,7 @@ class SearchService:
         if cached:
             return cached
 
-        # Search SPUs
+        # Search SPUs by name/brand/description/model
         search_term = f"%{query}%"
         spu_query = select(Spu).where(
             Spu.status == "active",
@@ -32,7 +32,7 @@ class SearchService:
             spu_query = spu_query.where(Spu.pet_type == pet_type)
 
         result = await self.db.execute(spu_query)
-        spus = result.scalars().all()
+        spus = list(result.scalars().all())
 
         # Search categories
         category_query = select(Category).where(
@@ -42,6 +42,30 @@ class SearchService:
 
         category_result = await self.db.execute(category_query)
         categories = category_result.scalars().all()
+
+        # If search matches category name, also include SPU from that category
+        matched_category_ids = [c.id for c in categories]
+        if matched_category_ids:
+            # Find child categories
+            child_result = await self.db.execute(
+                select(Category.id).where(Category.parent_id.in_(matched_category_ids))
+            )
+            child_ids = [row[0] for row in child_result.all()]
+            all_category_ids = matched_category_ids + child_ids
+
+            # Get SPUs from matched categories (excluding already found)
+            existing_ids = {s.id for s in spus}
+            category_spu_query = select(Spu).where(
+                Spu.status == "active",
+                Spu.category_id.in_(all_category_ids),
+                Spu.id.notin_(existing_ids) if existing_ids else True,
+            ).limit(10)
+
+            if pet_type:
+                category_spu_query = category_spu_query.where(Spu.pet_type == pet_type)
+
+            cat_spu_result = await self.db.execute(category_spu_query)
+            spus.extend(cat_spu_result.scalars().all())
 
         # Get brands matching the query
         brand_query = select(Spu.brand).where(

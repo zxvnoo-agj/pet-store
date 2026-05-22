@@ -8,6 +8,51 @@ import { checkLoginStatus } from '../../services/auth'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { Loading } from '../../components/Loading'
 
+function PurchaseButton({ listingId, spuId }: { listingId: number; spuId: number }) {
+  const [loading, setLoading] = useState(false)
+
+  const handlePurchase = async () => {
+    setLoading(true)
+    try {
+      const res = await apiClient.post(`/spus/${spuId}/promotion-url`, { listing_id: listingId })
+      if (res.short_url) {
+        Taro.setClipboardData({ data: res.short_url })
+        Taro.showModal({
+          title: '链接已复制',
+          content: '推广链接已复制到剪贴板，请在浏览器中打开',
+          showCancel: false,
+        })
+      } else {
+        Taro.showToast({ title: '链接生成失败', icon: 'none' })
+      }
+    } catch (error: any) {
+      const msg = error.message || '生成失败'
+      if (msg.includes('暂不可用')) {
+        Taro.showToast({ title: '商品暂不可用', icon: 'none' })
+      } else if (msg.includes('繁忙')) {
+        Taro.showToast({ title: '服务繁忙，请稍后重试', icon: 'none' })
+      } else {
+        Taro.showToast({ title: '生成推广链接失败', icon: 'none' })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <View
+      className={`w-full py-2.5 rounded-full text-center ${
+        loading ? 'bg-gray-300' : 'bg-orange-500'
+      }`}
+      onClick={loading ? undefined : handlePurchase}
+    >
+      <Text className="text-white text-sm font-medium">
+        {loading ? '生成中...' : '去购买'}
+      </Text>
+    </View>
+  )
+}
+
 function SpuDetailContent() {
   const router = useRouter()
   const { id } = router.params
@@ -409,10 +454,68 @@ function SpuDetailContent() {
         {/* 商品链接 */}
         {activeTab === 'links' && (
           <View className="px-4 py-4 space-y-4">
-            <View className="flex flex-col items-center justify-center py-20">
-              <Text className="text-gray-400 text-sm">商品链接功能开发中</Text>
-              <Text className="text-xs text-gray-300 mt-2">将展示各电商平台的价格和购买链接</Text>
-            </View>
+            {listings.length === 0 ? (
+              <View className="flex flex-col items-center justify-center py-20">
+                <Text className="text-gray-400 text-sm">暂无商品链接</Text>
+                <Text className="text-xs text-gray-300 mt-2">该商品暂无在售链接</Text>
+              </View>
+            ) : (
+              listings.map((listing: any) => (
+                <View key={listing.id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+                  {/* 店铺和平台信息 */}
+                  <View className="flex items-center justify-between">
+                    <View className="flex items-center gap-2">
+                      <Text className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded">{listing.platform}</Text>
+                      <Text className="text-sm font-medium text-gray-800">{listing.shop_name}</Text>
+                    </View>
+                    {listing.sales_count && (
+                      <Text className="text-xs text-gray-400">已售 {listing.sales_count}</Text>
+                    )}
+                  </View>
+                  
+                  {/* 标题和价格 */}
+                  <Text className="text-sm text-gray-700">{listing.title}</Text>
+                  <View className="flex items-baseline gap-2">
+                    <Text className="text-lg font-bold text-orange-500">¥{listing.price}</Text>
+                    {listing.original_price && (
+                      <Text className="text-sm text-gray-400 line-through">¥{listing.original_price}</Text>
+                    )}
+                  </View>
+                  
+                  {/* 服务标签 */}
+                  {listing.service_tags && listing.service_tags.length > 0 && (
+                    <View className="flex flex-wrap gap-1.5">
+                      {listing.service_tags.map((tag: string) => (
+                        <Text key={tag} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded">
+                          {tag}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+                  
+                  {/* SKU 规格 */}
+                  {listing.sku_specs && listing.sku_specs.length > 0 && (
+                    <View className="space-y-2">
+                      <Text className="text-xs text-gray-500">规格选择</Text>
+                      <View className="flex flex-wrap gap-2">
+                        {listing.sku_specs.map((sku: any, idx: number) => (
+                          <View 
+                            key={idx}
+                            className="px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+                          >
+                            <Text className="text-xs text-gray-700">{sku.spec}</Text>
+                            <Text className="text-xs text-orange-500">¥{sku.price}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                  
+                  {/* 购买按钮 */}
+                  <PurchaseButton listingId={listing.id} spuId={Number(id)} />
+                </View>
+              ))
+            )}
           </View>
         )}
 

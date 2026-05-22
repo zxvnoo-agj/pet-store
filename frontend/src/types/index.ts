@@ -33,6 +33,9 @@ export interface SpuListing {
   image_url: string | null;
   sales_count: number | null;
   promotion_url: string | null;
+  goods_sign: string | null;
+  sku_specs: Array<{ spec: string; price: number | null; stock: number }>;
+  service_tags: string[];
 }
 
 export interface Review {

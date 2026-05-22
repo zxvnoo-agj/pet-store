@@ -367,3 +367,9 @@ class SpuService:
             count += 1
         await self.db.commit()
         return count
+
+    async def get_listing_by_id(self, listing_id: int) -> SpuListing | None:
+        result = await self.db.execute(
+            select(SpuListing).where(SpuListing.id == listing_id)
+        )
+        return result.scalar_one_or_none()

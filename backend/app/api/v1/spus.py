@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.common import ApiResponse, Pagination
-from app.schemas.spu import SpuFilter, SpuMiniProgramListResponse, SpuMiniProgramDetailResponse
+from app.schemas.spu import SpuFilter, SpuMiniProgramListResponse, SpuMiniProgramDetailResponse, PromotionUrlRequest, PromotionUrlResponse
 from app.services.spu_service import SpuService
 from app.services.favorite_service import FavoriteService
 
@@ -124,3 +124,58 @@ async def get_spu_reviews(
             "pagination": pagination,
         },
     )
+
+
+@router.get("/spus/{spu_id}/links", response_model=ApiResponse[dict])
+async def get_spu_links(
+    spu_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get product links for an SPU with detailed SKU and service tag info."""
+    from app.services.spu_service import SpuService
+    service = SpuService(db)
+    listings = await service.get_listings_for_miniprogram(spu_id, platform=None, sort=None)
+    
+    from app.schemas.spu import SpuMiniProgramListingResponse
+    return ApiResponse(
+        data={
+            "items": [SpuMiniProgramListingResponse.model_validate(l) for l in listings],
+            "total": len(listings),
+        }
+    )
+
+
+@router.post("/spus/{spu_id}/promotion-url", response_model=ApiResponse[dict])
+async def generate_promotion_url(
+    spu_id: int,
+    request: PromotionUrlRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate on-demand promotion URL for a listing with dual caching."""
+    from app.services.spu_service import SpuService
+    from app.services.promotion_url_service import PromotionUrlService
+    
+    # Verify listing exists and belongs to this SPU
+    spu_service = SpuService(db)
+    listing = await spu_service.get_listing_by_id(request.listing_id)
+    if not listing or listing.spu_id != spu_id:
+        raise HTTPException(status_code=404, detail="Listing not found for this SPU")
+    
+    if not listing.goods_sign:
+        raise HTTPException(status_code=400, detail="商品暂不可用")
+    
+    promo_service = PromotionUrlService(db)
+    try:
+        result = await promo_service.generate(
+            goods_sign=listing.goods_sign,
+            spu_id=spu_id,
+        )
+        return ApiResponse(data=result)
+    except Exception as e:
+        error_msg = str(e)
+        if "暂不可用" in error_msg:
+            raise HTTPException(status_code=400, detail=error_msg)
+        elif "繁忙" in error_msg:
+            raise HTTPException(status_code=429, detail=error_msg)
+        else:
+            raise HTTPException(status_code=500, detail="生成推广链接失败，请稍后重试")

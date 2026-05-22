@@ -100,9 +100,20 @@ export default function ProductListPage() {
     }
   }
 
+  // 同时使用 onScrollToLower 和 onScroll 兜底
+  const handleScrollToLower = () => {
+    console.log('ScrollToLower triggered, hasMore:', hasMoreRef.current, 'loading:', loadingRef.current)
+    if (!loadingRef.current && hasMoreRef.current) {
+      const nextPage = pageRef.current + 1
+      loadSpus(nextPage, false)
+    }
+  }
+
   const handleScroll = (e: any) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.detail
-    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150
+    // Taro ScrollView onScroll 事件没有 clientHeight，使用 scrollTop + 视口估算值
+    const { scrollTop, scrollHeight } = e.detail
+    const estimatedViewportHeight = 700 // 小程序视口大约高度
+    const isNearBottom = scrollHeight - scrollTop - estimatedViewportHeight < 150
     
     if (isNearBottom && !loadingRef.current && hasMoreRef.current) {
       const nextPage = pageRef.current + 1
@@ -174,7 +185,9 @@ export default function ProductListPage() {
       <ScrollView
         className="flex-1"
         scrollY
+        onScrollToLower={handleScrollToLower}
         onScroll={handleScroll}
+        lowerThreshold={150}
         style={{ height: '100%' }}
       >
         <View className="px-4 pb-4 space-y-3">
