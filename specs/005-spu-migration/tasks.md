@@ -110,21 +110,60 @@
 
 ---
 
-## Phase 6: User Story 2 - SPU多平台价格对比 (Priority: P2)
+## Phase 6: User Story 2 - SPU商品链接展示与购买 (Priority: P2)
 
-**Goal**: SPU detail page shows multi-platform price comparison from spu_listings.
+**Goal**: SPU detail page shows product links (PDD only) with SKU specs, prices, and purchase buttons.
 
-**Independent Test**: Open SPU detail page with linked listings, verify price comparison table shows platform/shop/price/sales.
+**Note**: Multi-platform price comparison is NOT implemented in this phase. Only PDD product links are supported.
+
+**Independent Test**: Open SPU detail page "Product Links" tab with linked listings, verify product cards show shop/price/SKU specs. Click "Buy" button to generate promotion URL and redirect.
 
 ### Implementation for User Story 2
 
 - [X] T041 [P] [US2] Update `backend/app/services/spu_service.py`: add `get_listings_for_miniprogram()` method
 - [X] T042 [P] [US2] Update `backend/app/schemas/spu.py`: add `SpuMiniProgramListingResponse` schema
 - [X] T043 [US2] Create `backend/app/api/v1/spus.py`: add `GET /v1/spus/{id}/listings` endpoint
-- [X] T044 [US2] Update `frontend/src/pages/product/detail.tsx`: add listings price comparison section
+- [X] T044 [US2] Update `frontend/src/pages/product/detail.tsx`: add "Product Links" tab with SKU specs display
 - [X] T045 [US2] Update `frontend/src/services/api.ts`: add SPU listings API call
 
-**Checkpoint**: SPU detail page displays price comparison when listings exist; shows "暂无价格信息" when no listings.
+---
+
+## Phase 6b: Product Links Enhancement (New Requirement)
+
+**Goal**: Add on-demand promotion URL generation and DDK detail API integration.
+
+### Backend Tasks
+
+- [ ] T065 [P] Create Alembic migration: `006_add_listing_detail_fields.py`
+  - Add `goods_sign VARCHAR(128)` to `spu_listings`
+  - Add `sku_specs JSONB` to `spu_listings`
+  - Add `service_tags JSONB` to `spu_listings`
+- [ ] T066 [P] Update `backend/app/models/spu_listing.py`: add new fields
+- [ ] T067 [P] Update `backend/app/services/spu_listing_service.py`: call `pdd.ddk.goods.detail` during collection
+  - Extract goods_sign, sku_list, service_tags from detail response
+  - Update existing listing records after LLM matching
+- [ ] T068 [P] Update `backend/app/services/promotion_url_service.py`: add Redis caching layer
+  - Redis key: `promo:{goods_sign}:{pid}`, TTL 1 hour
+  - PostgreSQL PromotionUrlCache table: TTL 12 hours (existing)
+  - Fallback to PDD API on cache miss
+- [ ] T069 [P] Add `GET /v1/spus/{id}/links` endpoint to `backend/app/api/v1/spus.py`
+  - Return listings with SKU specs and service tags
+- [ ] T070 [P] Add `POST /v1/spus/{id}/promotion-url` endpoint to `backend/app/api/v1/spus.py`
+  - Request body: `{ listing_id: int }`
+  - Response: `{ short_url, mobile_url, we_app_url }`
+  - Generate on-demand with dual caching
+
+### Frontend Tasks
+
+- [ ] T071 Update `frontend/src/pages/product/detail.tsx`: enhance "Product Links" tab
+  - Display SKU specs as selectable chips
+  - Show service tags (e.g., "正品保证", "48h发货")
+  - "Buy" button triggers promotion URL generation
+  - Handle loading/error states (goods_sign invalid, product delisted)
+- [ ] T072 Update `frontend/src/services/api.ts`: add promotion URL API call
+- [ ] T073 Update `frontend/src/types/index.ts`: add ListingDetail interface with sku_specs/service_tags
+
+**Checkpoint**: Users can view product links with SKU specs, click "Buy" to generate promotion URL, and redirect to PDD.
 
 ---
 
