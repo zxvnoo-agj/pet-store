@@ -39,6 +39,24 @@
 
 ---
 
+### User Story 2b - SPU详情页商品链接栏 (Priority: P2)
+
+作为小程序用户，我希望在SPU详情页的"商品链接"栏中看到该商品在各电商平台的实时价格、规格信息和购买链接，以便直接跳转购买。
+
+**Why this priority**: 商品链接栏是SPU详情页的核心购买转化入口。用户浏览SPU详情后，需要清晰的购买路径。该功能依赖已抓取的spu_listings数据，但需要在详情接口中补充规格、服务标签等字段，并支持按需生成推广链接。
+
+**Independent Test**: 可以独立测试：为某个SPU创建linked状态的spu_listings记录（含goods_sign），访问详情页"商品链接"栏，验证展示价格、规格、店铺信息，点击"去购买"后生成推广链接并跳转。
+
+**Acceptance Scenarios**:
+
+1. **Given** 用户进入SPU详情页并切换到"商品链接"Tab，**When** 该SPU有关联的linked listings时，**Then** 展示各平台的商品卡片（含店铺名、价格、销量、规格选择）
+2. **Given** 用户查看商品链接列表，**When** 点击某个listing的"去购买"按钮时，**Then** 系统按需调用推广链接生成接口（Redis缓存1小时），返回短链后跳转至电商平台
+3. **Given** 用户再次点击同一listing的购买按钮，**When** 在缓存有效期内（1小时），**Then** 直接返回Redis缓存的推广链接，无需重复调用PDD API
+4. **Given** SPU没有关联listings，**When** 进入"商品链接"Tab时，**Then** 展示"暂无商品链接"提示，不报错
+5. **Given** listing的goods_sign无效或商品已下架，**When** 生成推广链接时，**Then** PDD API返回错误，系统提示"商品暂不可用"，不展示死链
+
+---
+
 ### User Story 3 - 自动抓取和匹配电商列表 (Priority: P2)
 
 作为系统，我希望自动从拼多多等电商平台抓取商品列表并匹配到正确的SPU，以便保持价格信息的实时性和准确性。
@@ -99,6 +117,9 @@
 - **分类变更**: SPU的category_id变更后，分类浏览应实时反映
 - **AI服务不可用**: 当AI服务繁忙或超时时，系统应提示用户"服务繁忙，请稍后重试"，并保留对话上下文
 - **AI推荐空结果**: AI助手查询SPU后无匹配结果时，应友好提示用户调整需求，并推荐相关热门SPU分类
+- **推广链接失效**: 当PDD API返回goods_sign无效或商品已下架时，系统提示"商品暂不可用"，不跳转
+- **Redis不可用**: 当Redis不可用时，系统降级至PostgreSQL查询PromotionUrlCache，确保功能可用
+- **PDD API限流**: 当触发PDD API限流时，系统提示"服务繁忙，请稍后重试"，不阻塞用户操作
 
 ## Requirements *(mandatory)*
 
@@ -109,7 +130,11 @@
 - **FR-003**: 系统必须支持按分类（三级分类体系）筛选SPU
 - **FR-004**: 系统必须支持按关键词搜索SPU（搜索范围：名称、品牌、描述、成分）
 - **FR-005**: 系统必须支持SPU详情页展示关联的spu_listings（多平台价格对比）
+- **FR-005a**: 系统必须支持SPU详情页"商品链接"Tab，展示各平台的实时价格、店铺、规格、服务标签和购买入口
+- **FR-005b**: 系统必须支持按需生成推广链接：用户点击"去购买"时调用PDD API生成推广短链，Redis缓存1小时，PostgreSQL缓存12小时
+- **FR-005c**: 系统必须支持推广链接的容错处理：goods_sign无效或商品下架时友好提示，不展示死链
 - **FR-006**: 系统必须支持从拼多多API抓取商品列表并存储为spu_listings
+- **FR-006a**: 系统采集流程必须调用pdd.ddk.goods.detail接口获取商品详情（sku规格、服务标签、goods_sign等），并存储至spu_listings表
 - **FR-007**: 系统必须支持基于LLM语义匹配的自动SPU-listing关联（相似度≥85%自动链接）
 - **FR-008**: 系统必须支持手动审核未匹配的listings（60%≤相似度<85%的候选记录）
 - **FR-009**: 小程序端首页、分类页、搜索页、详情页必须从products迁移到SPU体系
@@ -126,9 +151,10 @@
 ### Key Entities *(include if feature involves data)*
 
 - **SPU (Standard Product Unit)**: 标准化商品单元，包含品牌、名称、型号、成分、营养、优缺点等完整属性。身份键：UNIQUE(brand, category_id, name, model)
-- **SPU Listing**: 电商平台的商品列表，关联到SPU。包含平台、店铺、标题、价格、URL等信息。通过match_confidence和match_status追踪匹配状态
+- **SPU Listing**: 电商平台的商品列表，关联到SPU。包含平台、店铺、标题、价格、URL、goods_sign（用于生成推广链接）、sku_specs（规格信息）、service_tags（服务标签）等信息。通过match_confidence和match_status追踪匹配状态
 - **Product (Legacy)**: 旧商品表，将在本次迁移中删除。不再保留向后兼容，所有功能完全切换至SPU体系
 - **Chat Session**: 用户与AI助手的对话线程，包含消息记录（user/assistant/tool角色）及引用的SPU商品。迁移后对话中的商品引用需指向SPU而非products
+- **Promotion URL Cache**: 推广链接缓存，按goods_sign+PID维度存储短链、移动端链接、小程序链接。Redis缓存1小时，PostgreSQL缓存12小时
 
 ## Success Criteria *(mandatory)*
 
@@ -138,7 +164,10 @@
 - **SC-002**: SPU详情页展示完整信息（成分、营养、优缺点）的覆盖率100%
 - **SC-003**: 用户可以通过搜索在5秒内找到目标SPU（搜索结果相关性≥80%）
 - **SC-004**: 自动匹配准确率≥85%（基于标题语义相似度的人工抽样验证）
-- **SC-005**: 小程序端所有功能（浏览、搜索、AI推荐、收藏、评价）从products平滑迁移到SPU，无功能降级
+- **SC-005**: 小程序端所有功能（浏览、搜索、AI推荐、收藏、评价、商品链接）从products平滑迁移到SPU，无功能降级
+- **SC-005a**: SPU详情页"商品链接"Tab加载时间不超过2秒（含 listings 接口调用）
+- **SC-005b**: 用户点击"去购买"后，推广链接生成时间不超过500ms（缓存命中）或3秒（缓存未命中，含PDD API调用）
+- **SC-005c**: 商品链接栏展示的信息完整度≥90%（价格、店铺、规格中至少两项有值）
 - **SC-006**: 管理后台可以触发抓取任务，任务状态可追踪（进行中/完成/失败）
 - **SC-007**: AI助手在10秒内返回基于SPU数据的相关商品推荐（从用户提交问题到展示推荐结果）
 - **SC-008**: AI助手推荐的商品卡片点击后100%跳转到正确的SPU详情页（无404或错误页面）

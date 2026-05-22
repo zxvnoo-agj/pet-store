@@ -170,19 +170,20 @@ DROP TABLE IF EXISTS products CASCADE;
 │ brand             │         │ platform          │
 │ name              │         │ shop_name         │
 │ model             │         │ goods_id          │
-│ pet_type          │         │ title             │
-│ description       │         │ price             │
-│ ingredients       │         │ match_status      │
-│ nutrition         │         └───────────────────┘
-│ pros              │
-│ cons              │         ┌───────────────────┐
-│ extra_attrs       │◄────────┤    favorites      │
-│ price_min         │   1:N   ├───────────────────┤
-│ price_max         │         │ id (PK)           │
-│ status            │         │ user_id (FK)      │
-│ created_at        │         │ spu_id (FK)       │
-│ updated_at        │         └───────────────────┘
-└───────────────────┘
+│ pet_type          │         │ goods_sign        │
+│ description       │         │ title             │
+│ ingredients       │         │ price             │
+│ nutrition         │         │ sku_specs         │
+│ pros              │         │ match_status      │
+│ cons              │         └───────────────────┘
+│ extra_attrs       │
+│ price_min         │         ┌───────────────────┐
+│ price_max         │◄────────┤    favorites      │
+│ status            │   1:N   ├───────────────────┤
+│ created_at        │         │ id (PK)           │
+│ updated_at        │         │ user_id (FK)      │
+└───────────────────┘         │ spu_id (FK)       │
+                              └───────────────────┘
          │
          │ 1:N
          ▼
@@ -271,19 +272,87 @@ LIMIT 20 OFFSET 0;
 
 ---
 
+## Modified Table: spu_listings (商品链接栏增强)
+
+**Change**: 新增字段以支持商品链接栏的完整展示和推广链接生成。
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| id | INTEGER | PK, auto-increment | Primary key |
+| spu_id | INTEGER | NOT NULL, FK → spus.id ON DELETE CASCADE | Parent SPU |
+| platform | VARCHAR(32) | NOT NULL, indexed | Platform: 'pdd', 'jd', 'taobao' |
+| shop_name | VARCHAR(128) | NOT NULL | Seller shop name |
+| goods_id | VARCHAR(64) | nullable, indexed | Platform-specific goods ID |
+| **goods_sign** | **VARCHAR(128)** | **nullable** | **DDK goods_sign for promotion URL generation** |
+| title | VARCHAR(512) | NOT NULL | Listing title |
+| price | NUMERIC(10,2) | NOT NULL, CHECK ≥ 0 | Current price |
+| original_price | NUMERIC(10,2) | nullable | Original price before discount |
+| url | VARCHAR(2048) | NOT NULL | Product detail page URL |
+| image_url | VARCHAR(2048) | nullable | Product image URL |
+| sales_count | INTEGER | nullable | Sales volume |
+| **sku_specs** | **JSONB** | **nullable** | **SKU specifications: [{spec, price, stock}]** |
+| **service_tags** | **JSONB** | **nullable** | **Service tags: ['正品保证', '48h发货']** |
+| match_confidence | NUMERIC(5,4) | nullable, CHECK 0-1 | LLM matching confidence |
+| match_status | VARCHAR(16) | default='linked', indexed | 'linked' / 'candidate' / 'unmatched' / 'rejected' |
+| last_synced_at | TIMESTAMPTZ | nullable | Last data sync timestamp |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | Creation timestamp |
+| updated_at | TIMESTAMPTZ | DEFAULT NOW() | Last update |
+
+**Constraints**:
+- UNIQUE(platform, goods_id)
+- FK(spu_id) REFERENCES spus(id) ON DELETE CASCADE
+
+**Migration SQL**:
+```sql
+-- Step 1: Add new columns to spu_listings
+ALTER TABLE spu_listings 
+  ADD COLUMN goods_sign VARCHAR(128),
+  ADD COLUMN sku_specs JSONB DEFAULT NULL,
+  ADD COLUMN service_tags JSONB DEFAULT NULL;
+
+-- Step 2: Create index on goods_sign for promotion URL lookups
+CREATE INDEX ix_spu_listings_goods_sign ON spu_listings(goods_sign);
+```
+
+---
+
+## Modified Table: PromotionUrlCache
+
+**Change**: 缓存策略更新为 Redis 优先 + PostgreSQL 兜底的双层缓存。
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| id | INTEGER | PK, auto-increment | Primary key |
+| goods_sign | VARCHAR(64) | NOT NULL | DDK goods_sign |
+| pid | VARCHAR(64) | NOT NULL | Promotion PID |
+| short_url | VARCHAR(256) | NOT NULL | Short promotion URL |
+| mobile_url | VARCHAR(512) | nullable | Mobile promotion URL |
+| we_app_url | VARCHAR(512) | nullable | WeChat mini-program URL |
+| expires_at | TIMESTAMPTZ | NOT NULL | Cache expiration (12 hours) |
+| created_at | TIMESTAMPTZ | DEFAULT NOW() | Creation timestamp |
+
+**Cache Strategy**:
+1. **Redis (L1)**: `promo:{goods_sign}:{pid}` → TTL 1 hour
+2. **PostgreSQL (L2)**: PromotionUrlCache table → TTL 12 hours
+3. **Fallback**: Cache miss → Call PDD API → Write to both layers
+
+---
+
 ## Migration Plan
 
-**Alembic Migration**: `005_spu_migration.py`
+**Alembic Migration**: `005_spu_migration.py` + `006_add_listing_detail_fields.py`
 
 Operations in order:
 1. **favorites**: Rename `product_id` → `spu_id`, update FK, update unique constraint, update index
 2. **reviews**: Rename `product_id` → `spu_id`, update FK, update index
 3. **chat_messages**: Rename `referenced_products` → `referenced_spus`
 4. **products**: `DROP TABLE products CASCADE`
+5. **spu_listings**: Add `goods_sign`, `sku_specs`, `service_tags` columns + index
 
 **Rollback**:
 - Cannot rollback `products` table drop (data loss)
 - Can rollback column renames by reversing the ALTER operations
+- spu_listings new columns are nullable, safe to rollback by DROP COLUMN
 - **Recommendation**: Take database backup before migration
 
 ---
