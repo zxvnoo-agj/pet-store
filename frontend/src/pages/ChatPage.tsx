@@ -1,18 +1,80 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreHorizontal, Send, Sparkles, ShoppingBag, Loader2, User } from 'lucide-react';
-import { products, quickQuestions } from '../data/mockData';
+import { ArrowLeft, MoreHorizontal, Send, Sparkles, Loader2, User } from 'lucide-react';
+
+interface Spu {
+  id: number
+  name: string
+  brand: string
+  image_urls: string[]
+  price_min: number
+  price_max: number
+}
+
+interface ToolCall {
+  tool: string
+  status: 'started' | 'completed'
+}
 
 interface Message {
   id: number;
   role: 'user' | 'assistant';
   content: string;
   isComplete?: boolean;
-  referencedProducts?: typeof products;
+  referencedSpus?: Spu[];
+  toolCalls?: ToolCall[];
+}
+
+const QUICK_QUESTIONS = [
+  '3个月幼猫推荐什么猫粮？',
+  '皇家和渴望哪个好？',
+  '200元预算推荐',
+  '猫咪软便怎么办？',
+]
+
+const TOOL_NAMES: Record<string, string> = {
+  search_spus: '搜索产品',
+  get_spu_detail: '查看产品详情',
+  get_reviews_summary: '分析用户评价',
+  compare_spus: '对比产品',
+}
+
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:8001/v1'
+  : 'https://api.your-domain.com/v1'
+
+function parseSSEChunk(chunk: string): { type: string; data: any }[] {
+  const events: { type: string; data: any }[] = []
+  const lines = chunk.split('\n')
+  let currentEvent = ''
+  let currentData = ''
+
+  for (const line of lines) {
+    if (line.startsWith('event: ')) {
+      if (currentEvent || currentData) {
+        events.push({ type: currentEvent || 'message', data: currentData })
+      }
+      currentEvent = line.slice(7).trim()
+      currentData = ''
+    } else if (line.startsWith('data: ')) {
+      currentData = line.slice(6)
+    } else if (line === '' && (currentEvent || currentData)) {
+      events.push({ type: currentEvent || 'message', data: currentData })
+      currentEvent = ''
+      currentData = ''
+    }
+  }
+
+  if (currentEvent || currentData) {
+    events.push({ type: currentEvent || 'message', data: currentData })
+  }
+
+  return events
 }
 
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
+  const [sessionId, setSessionId] = useState<number | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 0,
@@ -24,8 +86,10 @@ const ChatPage: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStream, setCurrentStream] = useState('');
+  const [streamSpus, setStreamSpus] = useState<Spu[]>([])
+  const [activeTools, setActiveTools] = useState<ToolCall[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const initializedRef = useRef(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,72 +97,34 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, currentStream]);
+  }, [messages, currentStream, activeTools, streamSpus]);
 
-  // 模拟流式响应
-  const simulateStreamResponse = async (userMessage: string) => {
-    setIsLoading(true);
-    setCurrentStream('');
+  useEffect(() => {
+    if (initializedRef.current) return
+    initializedRef.current = true
+    createNewSession()
+  }, [])
 
-    // 模拟思考延迟
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // 根据用户问题生成回复
-    const responses = [
-      {
-        keywords: ['幼猫', '小猫', '3个月', '三个月'],
-        content: `对于3个月幼猫，建议选择专门的幼猫粮，营养配比更适合生长发育。\n\n根据您的预算和需求，我推荐以下几款：\n\n**🥇 皇家幼猫粮 K36** — ¥168起\n✅ 专为4-12月龄幼猫设计\n✅ 颗粒小，容易咀嚼\n✅ 营养均衡，适口性好\n⚠️ 香精味较重\n\n**🥈 渴望幼猫粮** — ¥189起\n✅ 高蛋白，天然无谷\n✅ 鲜肉含量高\n⚠️ 部分猫咪可能软便\n\n**🥉 网易严选幼猫粮** — ¥89起\n✅ 性价比之选\n✅ 第三方检测透明\n⚠️ 适口性因猫而异\n\n需要我详细对比某两款吗？`,
-        products: products.filter(p => p.id === 6 || p.id === 2),
-      },
-      {
-        keywords: ['皇家', '渴望', '对比', '哪个好'],
-        content: `**皇家猫粮 vs 渴望猫粮 对比分析：**\n\n📊 **核心数据对比**\n\n| 维度 | 皇家 Indoor 27 | 渴望六种鱼 |\n|------|----------------|------------|\n| 价格 | ¥128起 | ¥389起 |\n| 综合评分 | ⭐4.5 | ⭐4.7 |\n| 蛋白质 | 中等 | 极高 |\n| 适口性 | 4.3 | 4.6 |\n\n✅ **皇家优势：**\n• 价格亲民，多猫家庭友好\n• 适口性好，大部分猫接受\n• 营养均衡，品控稳定\n\n✅ **渴望优势：**\n• 天然无谷，食材优质\n• 高蛋白，毛发改善明显\n• 口碑顶级，品质有保障\n\n💡 **建议：**\n• 预算充足 + 追求高品质 → 渴望\n• 多猫家庭 / 性价比优先 → 皇家`,
-        products: products.filter(p => p.id === 1 || p.id === 2),
-      },
-      {
-        keywords: ['200', '预算', '便宜', '性价比'],
-        content: `200元预算内，推荐以下高性价比猫粮：\n\n**🏆 网易严选全价猫粮** — ¥69起\n⭐4.2  性价比之王\n✅ 动物性原料≥70%\n✅ 配方透明，检测报告公开\n✅ 1890+条真实评价\n\n**🥈 素力高金装猫粮** — ¥199起\n⭐4.3  老牌进口粮\n✅ 美国进口，肠道友好\n✅ 富含益生菌\n\n**🥉 皇家室内成猫粮** — ¥128起\n⭐4.5  经典之选\n✅ 品牌历史悠久\n✅ 适口性佳\n\n需要了解其中某款的详细评价吗？`,
-        products: products.filter(p => p.id === 3 || p.id === 10 || p.id === 1),
-      },
-    ];
-
-    let matchedResponse = responses.find(r =>
-      r.keywords.some(k => userMessage.includes(k))
-    );
-
-    if (!matchedResponse) {
-      matchedResponse = {
-        keywords: [],
-        content: `这个问题问得很好！让我来帮你分析一下。\n\n根据我的了解，选购猫粮主要需要考虑以下几个方面：\n\n1️⃣ **猫咪年龄** — 幼猫、成猫、老年猫营养需求不同\n2️⃣ **健康状况** — 是否有过敏、肥胖、泌尿系统等问题\n3️⃣ **预算范围** — 量力而行，贵的不一定最适合\n4️⃣ **适口性** — 再好的粮猫不吃也白搭\n\n你可以告诉我：\n• 你的猫咪多大了？\n• 有没有特殊健康需求？\n• 预算大概在什么范围？\n\n这样我可以给你更精准的推荐！`,
-        products: [],
-      };
+  const createNewSession = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/chat/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const body = await res.json()
+      setSessionId(body.data?.session_id)
+    } catch (error) {
+      console.error('Failed to create session:', error)
     }
-
-    // 模拟流式输出
-    const chars = matchedResponse.content.split('');
-    let accumulated = '';
-    for (const char of chars) {
-      accumulated += char;
-      setCurrentStream(accumulated);
-      await new Promise(resolve => setTimeout(resolve, 15));
-    }
-
-    const newMessage: Message = {
-      id: Date.now(),
-      role: 'assistant',
-      content: matchedResponse.content,
-      isComplete: true,
-      referencedProducts: matchedResponse.products,
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setCurrentStream('');
-    setIsLoading(false);
-  };
+  }
 
   const handleSend = async (text?: string) => {
     const content = text || inputValue.trim();
     if (!content || isLoading) return;
+    if (!sessionId) {
+      return
+    }
 
     const userMessage: Message = {
       id: Date.now(),
@@ -109,14 +135,110 @@ const ChatPage: React.FC = () => {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
-    await simulateStreamResponse(content);
+    setIsLoading(true);
+    setCurrentStream('');
+    setStreamSpus([]);
+    setActiveTools([]);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, content }),
+      })
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+      let accumulated = ''
+      let spus: Spu[] = []
+      let toolCalls: ToolCall[] = []
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          const chunk = decoder.decode(value)
+          const events = parseSSEChunk(chunk)
+
+          for (const event of events) {
+            switch (event.type) {
+              case 'message':
+                try {
+                  const data = JSON.parse(event.data)
+                  if (data.content) {
+                    accumulated += data.content
+                    setCurrentStream(accumulated)
+                  }
+                } catch {
+                  accumulated += event.data
+                  setCurrentStream(accumulated)
+                }
+                break
+
+              case 'tool_call':
+                try {
+                  const data = JSON.parse(event.data)
+                  toolCalls = [...toolCalls, { tool: data.tool, status: 'started' }]
+                  setActiveTools(toolCalls)
+                } catch {}
+                break
+
+              case 'tool_result':
+                try {
+                  const data = JSON.parse(event.data)
+                  toolCalls = toolCalls.map((t) =>
+                    t.tool === data.tool ? { ...t, status: 'completed' } : t
+                  )
+                  setActiveTools(toolCalls)
+                } catch {}
+                break
+
+              case 'spus':
+                try {
+                  const data = JSON.parse(event.data)
+                  spus = data.spus || []
+                  setStreamSpus(spus)
+                } catch {}
+                break
+            }
+          }
+        }
+      }
+
+      const newMessage: Message = {
+        id: Date.now(),
+        role: 'assistant',
+        content: accumulated,
+        isComplete: true,
+        referencedSpus: spus.length > 0 ? spus : undefined,
+        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      setCurrentStream('');
+      setStreamSpus([]);
+      setActiveTools([]);
+    } catch (error) {
+      console.error('Chat error:', error)
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // 解析消息内容中的markdown风格
+  const renderInline = (text: string): (string | JSX.Element)[] => {
+    const parts = text.split(/(\*\*.*?\*\*)/)
+    return parts.map((part, j) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={j} className="font-semibold text-gray-900">{part.slice(2, -2)}</strong>
+      }
+      return part
+    })
+  }
+
   const renderMessage = (content: string) => {
     const lines = content.split('\n');
     return lines.map((line, i) => {
-      // 标题
       if (line.startsWith('**') && line.endsWith('**')) {
         return (
           <p key={i} className="text-sm font-bold text-gray-800 mt-2 mb-1">
@@ -124,7 +246,6 @@ const ChatPage: React.FC = () => {
           </p>
         );
       }
-      // 粗体行
       if (line.startsWith('**') && line.includes('**')) {
         return (
           <p key={i} className="text-xs font-semibold text-gray-700 mt-1.5">
@@ -132,15 +253,13 @@ const ChatPage: React.FC = () => {
           </p>
         );
       }
-      // 列表项
       if (line.startsWith('• ') || line.startsWith('- ')) {
         return (
           <p key={i} className="text-xs text-gray-600 pl-1 py-0.5">
-            {line}
+            {renderInline(line)}
           </p>
         );
       }
-      // 编号项
       if (/^\d️⃣/.test(line) || /^\d\./.test(line)) {
         return (
           <p key={i} className="text-xs text-gray-700 font-medium mt-1.5 pl-1">
@@ -148,11 +267,9 @@ const ChatPage: React.FC = () => {
           </p>
         );
       }
-      // 分隔符
       if (line.startsWith('---')) {
         return <hr key={i} className="my-2 border-gray-200" />;
       }
-      // 表格
       if (line.startsWith('|')) {
         const cells = line.split('|').filter(c => c.trim());
         if (cells.length > 1 && !line.includes('---')) {
@@ -160,7 +277,7 @@ const ChatPage: React.FC = () => {
             <div key={i} className="flex gap-2 py-0.5 text-xs">
               {cells.map((cell, j) => (
                 <span key={j} className={`${j === 0 ? 'font-medium text-gray-600 w-20' : 'text-gray-700'}`}>
-                  {cell.trim()}
+                  {renderInline(cell.trim())}
                 </span>
               ))}
             </div>
@@ -168,18 +285,89 @@ const ChatPage: React.FC = () => {
         }
         return null;
       }
-      // 空行
       if (!line.trim()) {
         return <div key={i} className="h-1" />;
       }
-      // 普通文本
       return (
         <p key={i} className="text-xs text-gray-700 leading-relaxed py-0.5">
-          {line}
+          {renderInline(line)}
         </p>
       );
     });
   };
+
+  const renderToolStatus = (tools: ToolCall[], isHistory = false) => {
+    if (tools.length === 0) return null
+    const activeCount = tools.filter((t) => t.status === 'started').length
+    const completedCount = tools.filter((t) => t.status === 'completed').length
+
+    return (
+      <div className={`${isHistory ? 'mt-2 pt-2 border-t border-gray-100' : 'mb-2'}`}>
+        <div className="flex items-center gap-2 mb-1.5">
+          {activeCount > 0 ? (
+            <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span className="text-xs">✅</span>
+          )}
+          <span className="text-xs text-blue-700 font-medium">
+            {activeCount > 0
+              ? `正在${TOOL_NAMES[tools[tools.length - 1]?.tool] || '处理'}...`
+              : `已完成 ${completedCount} 个工具调用`}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {tools.map((tool, i) => (
+            <span
+              key={i}
+              className={`px-2 py-1 rounded-full text-[10px] ${
+                tool.status === 'completed'
+                  ? 'bg-green-50 text-green-600 border border-green-200'
+                  : 'bg-blue-50 text-blue-600 border border-blue-200'
+              }`}
+            >
+              {tool.status === 'completed' ? '✓' : '⏳'} {TOOL_NAMES[tool.tool] || tool.tool}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const renderProductCards = (spus: Spu[]) => {
+    if (!spus || spus.length === 0) return null
+    return (
+      <div className="mt-3">
+        <p className="text-xs text-gray-500 font-medium mb-2">推荐产品</p>
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {spus.map((spu) => (
+            <button
+              key={spu.id}
+              className="shrink-0 w-36 bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm text-left"
+              onClick={() => navigate(`/product/${spu.id}`)}
+            >
+              <div className="aspect-square overflow-hidden bg-gray-50">
+                <img
+                  src={spu.image_urls?.[0] || ''}
+                  alt={spu.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-2.5">
+                <p className="text-xs font-semibold text-gray-900 truncate">{spu.name}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{spu.brand}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-sm font-bold text-orange-600">
+                    ¥{spu.price_min}
+                    {spu.price_max > spu.price_min && <span className="text-xs font-normal">起</span>}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-100 flex justify-center items-start md:py-8">
@@ -227,30 +415,10 @@ const ChatPage: React.FC = () => {
                 {msg.role === 'user' ? (
                   <p className="text-xs leading-relaxed">{msg.content}</p>
                 ) : (
-                  <div>{renderMessage(msg.content)}</div>
-                )}
-
-                {/* 推荐商品卡片 */}
-                {msg.referencedProducts && msg.referencedProducts.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {msg.referencedProducts.map((product) => (
-                      <button
-                        key={product.id}
-                        className="w-full flex items-center gap-2.5 p-2 bg-gray-50 rounded-xl text-left hover:bg-orange-50 transition-colors"
-                        onClick={() => navigate(`/product/${product.id}`)}
-                      >
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-medium text-gray-800 truncate">{product.name}</p>
-                          <p className="text-[10px] text-orange-600 font-medium">¥{product.priceMin}起</p>
-                        </div>
-                        <ShoppingBag size={14} className="text-gray-400" />
-                      </button>
-                    ))}
+                  <div>
+                    {msg.toolCalls && msg.toolCalls.length > 0 && renderToolStatus(msg.toolCalls, true)}
+                    <div>{renderMessage(msg.content)}</div>
+                    {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
                   </div>
                 )}
               </div>
@@ -262,8 +430,26 @@ const ChatPage: React.FC = () => {
             </div>
           ))}
 
+          {/* 执行中状态 */}
+          {isLoading && activeTools.length > 0 && (
+            <div className="flex justify-start">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start mt-0.5">
+                <Sparkles size={13} className="text-white" />
+              </div>
+              <div className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
+                {renderToolStatus(activeTools)}
+                {streamSpus.length > 0 && renderProductCards(streamSpus)}
+                <div className="flex items-center gap-1 mt-2">
+                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
+                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-150" />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 流式输出 */}
-          {currentStream && (
+          {isLoading && currentStream && activeTools.length === 0 && (
             <div className="flex justify-start">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start mt-0.5">
                 <Sparkles size={13} className="text-white" />
@@ -280,7 +466,7 @@ const ChatPage: React.FC = () => {
           )}
 
           {/* 加载状态 */}
-          {isLoading && !currentStream && (
+          {isLoading && !currentStream && activeTools.length === 0 && (
             <div className="flex justify-start">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start">
                 <Sparkles size={13} className="text-white" />
@@ -288,7 +474,7 @@ const ChatPage: React.FC = () => {
               <div className="rounded-2xl px-4 py-3 bg-white border border-gray-100 rounded-bl-md shadow-sm">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Loader2 size={14} className="animate-spin text-orange-500" />
-                  <span>正在搜索相关产品...</span>
+                  <span>正在思考...</span>
                 </div>
               </div>
             </div>
@@ -298,11 +484,11 @@ const ChatPage: React.FC = () => {
         </div>
 
         {/* 快捷问题 */}
-        {messages.length <= 1 && (
+        {messages.length <= 1 && !isLoading && (
           <div className="shrink-0 px-4 pb-2">
             <p className="text-[10px] text-gray-400 mb-2">你可以这样问：</p>
             <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {quickQuestions.map((q, i) => (
+              {QUICK_QUESTIONS.map((q, i) => (
                 <button
                   key={i}
                   className="shrink-0 px-3 py-1.5 bg-white border border-orange-200 text-orange-600 text-xs rounded-full hover:bg-orange-50 transition-colors"
@@ -318,7 +504,6 @@ const ChatPage: React.FC = () => {
         {/* 输入栏 */}
         <div className="shrink-0 bg-white border-t border-gray-100 px-4 py-2.5 flex items-center gap-2 z-10">
           <input
-            ref={inputRef}
             className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-xs outline-none focus:ring-2 focus:ring-orange-200 transition-shadow"
             placeholder="请输入问题，如：幼猫吃什么粮好？"
             value={inputValue}

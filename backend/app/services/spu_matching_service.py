@@ -36,23 +36,15 @@ class SpuMatchingService:
             )
         return self.llm
 
-    async def match_listing_to_spu(
+    def match_listing_to_spu_sync(
         self,
         listing_title: str,
         spus: list[Spu],
     ) -> MatchingResult:
-        """Match a listing title to the best SPU using LLM.
-
-        Returns the best matching SPU with confidence score.
-        Confidence tiers:
-            - >= 0.85: Auto-link (high confidence)
-            - 0.60-0.84: Candidate (medium confidence, needs review)
-            - < 0.60: Unmatched (low confidence)
-        """
+        """Synchronous version to avoid greenlet conflicts with SQLAlchemy async session."""
         if not spus:
             return MatchingResult(spu_id=0, confidence=0.0, reason="No SPUs available")
 
-        # Build prompt with listing and candidate SPUs
         spu_descriptions = []
         for spu in spus:
             spu_descriptions.append(
@@ -65,10 +57,9 @@ class SpuMatchingService:
 
         try:
             llm = self._get_llm()
-            response = await llm.ainvoke(prompt)
+            response = llm.invoke(prompt)
             result = self._parse_matching_response(response.content)
 
-            # Validate that the suggested SPU exists
             matched_spu = next((s for s in spus if s.id == result.spu_id), None)
             if not matched_spu:
                 return MatchingResult(
@@ -82,6 +73,19 @@ class SpuMatchingService:
         except Exception as e:
             logger.warning(f"LLM matching failed: {e}")
             return MatchingResult(spu_id=0, confidence=0.0, reason=f"Matching error: {e}")
+
+    async def match_listing_to_spu(
+        self,
+        listing_title: str,
+        spus: list[Spu],
+    ) -> MatchingResult:
+        """Async wrapper around sync version."""
+        import asyncio
+        return await asyncio.to_thread(
+            self.match_listing_to_spu_sync,
+            listing_title,
+            spus,
+        )
 
     def _build_matching_prompt(self, listing_title: str, spu_descriptions: list[str]) -> str:
         """Build the LLM prompt for matching."""

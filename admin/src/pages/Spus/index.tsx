@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search, Plus, Download, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import { useToastStore } from '../../stores/toastStore'
 import { adminCategoryApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
+import ImportTrigger from './components/ImportTrigger'
 
 interface Category {
   id: number
@@ -15,10 +17,12 @@ interface Category {
 }
 
 export default function Spus() {
+  const navigate = useNavigate()
   const { spus, total, loading, error, filters, fetchSpus, deleteSpu, setFilters } = useSpuStore()
   const { addToast } = useToastStore()
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editSpu, setEditSpu] = useState<any>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showFilters, setShowFilters] = useState(false)
@@ -186,13 +190,26 @@ export default function Spus() {
               筛选
             </button>
             <button
+              onClick={() => setShowImport(!showImport)}
+              className={`px-6 py-3 rounded-pill text-sm font-medium flex items-center gap-2 transition-all ${
+                showImport
+                  ? 'bg-peach text-white'
+                  : 'bg-white/50 text-carbon border border-peach/10 hover:bg-white'
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              导入
+            </button>
+            <button
               onClick={() => { setEditSpu(null); setShowForm(true) }}
-              className="px-6 py-3 bg-deep-black text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 ml-auto"
+              className="px-6 py-3 bg-deep-black text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               新建 SPU
             </button>
           </div>
+
+          {showImport && <ImportTrigger />}
 
           {showFilters && (
             <div className="glass-card p-5 mb-6">
@@ -336,9 +353,10 @@ export default function Spus() {
                       {spus.map((spu: any, idx: number) => (
                         <tr
                           key={spu.id}
-                          className="border-b border-peach/5 table-row-hover"
+                          className="border-b border-peach/5 table-row-hover cursor-pointer"
                           onMouseEnter={() => setHoveredRow(idx)}
                           onMouseLeave={() => setHoveredRow(null)}
+                          onClick={() => navigate(`/spus/${spu.id}`)}
                         >
                           <td className="px-6 py-4">
                             <input
@@ -392,13 +410,13 @@ export default function Spus() {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-1">
                               <button
-                                onClick={() => { setEditSpu(spu); setShowForm(true) }}
+                                onClick={(e) => { e.stopPropagation(); setEditSpu(spu); setShowForm(true) }}
                                 className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(spu.id)}
+                                onClick={(e) => { e.stopPropagation(); handleDelete(spu.id) }}
                                 className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
                               >
                                 <Trash2 className="w-4 h-4" />

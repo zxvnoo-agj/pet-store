@@ -22,7 +22,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     }
   }, [content])
 
-  const renderTokens = (tokens: MarkdownIt.Token[], level = 0): JSX.Element[] => {
+  const renderTokens = (tokens: MarkdownIt.Token[], level = 0, compact = false): JSX.Element[] => {
     const result: JSX.Element[] = []
     let i = 0
 
@@ -32,8 +32,8 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       switch (token.type) {
         case 'paragraph_open':
           result.push(
-            <View key={`${level}-${i}`} className="my-2">
-              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1)}
+            <View key={`${level}-${i}`} className={compact ? '' : 'my-2'}>
+              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1, compact)}
             </View>
           )
           i += 2
@@ -58,32 +58,62 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         case 'ordered_list_open':
           result.push(
             <View key={`${level}-${i}`} className="my-2 ml-2">
-              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1)}
+              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1, compact)}
             </View>
           )
           i += 2
           break
 
         case 'list_item_open':
+          // Find matching list_item_close to process all content tokens
+          let endIdx = i + 1
+          let itemDepth = 1
+          while (endIdx < tokens.length && itemDepth > 0) {
+            if (tokens[endIdx].type === 'list_item_open') itemDepth++
+            else if (tokens[endIdx].type === 'list_item_close') itemDepth--
+            endIdx++
+          }
+          // Find inline token within the list item content
+          let inlineToken = null
+          for (let k = i + 1; k < endIdx - 1; k++) {
+            if (tokens[k].type === 'inline') {
+              inlineToken = tokens[k]
+              break
+            }
+          }
           result.push(
-            <View key={`${level}-${i}`} className="flex items-start gap-2 mb-1.5">
-              <Text className="text-sm text-orange-500 mt-0.5 shrink-0">•</Text>
-              <View className="flex-1">{renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1)}</View>
+            <View key={`${level}-${i}`} className="flex items-start gap-1.5 mb-1">
+              <View className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0 mt-1.5" />
+              <View className="flex-1 min-w-0">
+                {inlineToken
+                  ? <Text className="text-sm text-gray-800 leading-relaxed">{renderInline(inlineToken.children || [])}</Text>
+                  : renderTokens(tokens.slice(i + 1, endIdx - 1), level + 1, true)}
+              </View>
             </View>
           )
-          i += 2
+          i = endIdx
           break
 
         case 'blockquote_open':
           result.push(
-            <View key={`${level}-${i}`} className="my-2 pl-3 border-l-4 border-orange-300 bg-orange-50 py-2 px-3 rounded-r-lg">
-              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1)}
+            <View key={`${level}-${i}`} className={compact ? 'pl-3 border-l-4 border-orange-300 bg-orange-50 py-2 px-3 rounded-r-lg' : 'my-2 pl-3 border-l-4 border-orange-300 bg-orange-50 py-2 px-3 rounded-r-lg'}>
+              {renderTokens(tokens.slice(i + 1, i + 1 + token.nesting), level + 1, compact)}
             </View>
           )
           i += 2
           break
 
         case 'code_block':
+          result.push(
+            <View key={`${level}-${i}`} className="my-2 bg-gray-900 rounded-lg p-3 overflow-x-auto">
+              {token.info && <Text className="text-[10px] text-gray-500 mb-1">{token.info}</Text>}
+              <Text className="text-xs text-green-400 font-mono whitespace-pre">{token.content}</Text>
+            </View>
+          )
+          i++
+          break
+
+        case 'fence':
           result.push(
             <View key={`${level}-${i}`} className="my-2 bg-gray-900 rounded-lg p-3 overflow-x-auto">
               {token.info && <Text className="text-[10px] text-gray-500 mb-1">{token.info}</Text>}
@@ -182,9 +212,8 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         )
         rowIdx++
       } else if (token.type === 'th_open' || token.type === 'td_open') {
-        // Find the corresponding inline token
+        // Find the corresponding inline token and render its children for bold/italic support
         const inlineToken = tokens[tIdx + 1]
-        const cellContent = inlineToken?.type === 'inline' ? inlineToken.content : ''
 
         currentRow.push(
           <View
@@ -194,7 +223,9 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             <Text
               className={`text-xs ${isHeader ? 'font-bold text-gray-900' : 'text-gray-700'}`}
             >
-              {cellContent}
+              {inlineToken?.type === 'inline'
+                ? renderInline(inlineToken.children || [])
+                : inlineToken?.content || ''}
             </Text>
           </View>
         )
@@ -246,7 +277,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
           return ''
 
         case 'softbreak':
-          return '\n'
+          return ' '
 
         case 'hardbreak':
           return '\n'
@@ -258,7 +289,6 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
         case 'image':
           {
             const src = token.attrGet('src') || ''
-            const alt = token.content || ''
             return (
               <Image
                 key={idx}
@@ -275,5 +305,5 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     })
   }
 
-  return <View>{renderTokens(tokens)}</View>
+  return <View>{renderTokens(tokens, 0, false)}</View>
 }

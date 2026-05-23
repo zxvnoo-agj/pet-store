@@ -53,6 +53,13 @@ function PurchaseButton({ listingId, spuId }: { listingId: number; spuId: number
   )
 }
 
+const SERVICE_TAG_MAP: Record<number, string> = {
+  2: '包邮',
+  13: '官方店铺',
+  15: '品牌好货',
+  24: '隔日达',
+}
+
 function SpuDetailContent() {
   const router = useRouter()
   const { id } = router.params
@@ -63,7 +70,8 @@ function SpuDetailContent() {
   const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'reviews'>('overview')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [, setShowPriceCompare] = useState(false)
+
+  const [imageExpanded, setImageExpanded] = useState(false)
 
   const { addToCompare, isInCompare } = useCompareStore()
   const { isLoggedIn } = useAuthStore()
@@ -146,7 +154,7 @@ function SpuDetailContent() {
   }
 
   const navigateToPriceCompare = () => {
-    setShowPriceCompare(true)
+    setActiveTab('links')
   }
 
   const getPetTypeLabel = (type: string) => {
@@ -240,8 +248,19 @@ function SpuDetailContent() {
 
       <ScrollView className="flex-1" scrollY>
         {/* 产品图片 */}
-        <View className="aspect-square bg-gray-100">
-          <Image src={spu.image_urls?.[0] || ''} className="w-full h-full object-cover" />
+        <View
+          className="bg-gray-100 relative"
+          style={{ height: imageExpanded ? 'auto' : '50vh', overflow: imageExpanded ? 'visible' : 'hidden' }}
+          onClick={() => !imageExpanded && setImageExpanded(true)}
+        >
+          <Image src={spu.image_urls?.[0] || ''} className="w-full h-auto" mode="widthFix" />
+          {!imageExpanded && (
+            <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent py-4 flex items-center justify-center">
+              <View className="px-4 py-1.5 bg-white/20 backdrop-blur rounded-full">
+                <Text className="text-white text-xs font-medium">展开查看完整图片</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* SPU 基本信息 */}
@@ -485,9 +504,9 @@ function SpuDetailContent() {
                   {/* 服务标签 */}
                   {listing.service_tags && listing.service_tags.length > 0 && (
                     <View className="flex flex-wrap gap-1.5">
-                      {listing.service_tags.map((tag: string) => (
+                      {listing.service_tags.map((tag: number | string) => (
                         <Text key={tag} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded">
-                          {tag}
+                          {SERVICE_TAG_MAP[tag as number] || tag}
                         </Text>
                       ))}
                     </View>
@@ -603,7 +622,7 @@ function SpuDetailContent() {
             className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full text-center" 
             onClick={navigateToPriceCompare}
           >
-            <Text>查看价格 ({listings.length}个平台)</Text>
+            <Text>查看价格</Text>
           </View>
         ) : (
           <View className="flex-1 bg-gray-300 text-white text-sm font-medium py-2.5 rounded-full text-center">

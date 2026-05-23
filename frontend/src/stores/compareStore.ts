@@ -6,13 +6,16 @@ interface CompareProduct {
   id: number
   name: string
   brand: string
+  pet_type: string
+  description: string | null
+  ingredients: string[]
+  nutrition: Record<string, any>
   price_range: { min: number; max: number }
   image_urls: string[]
-  ratings: Record<string, number>
+  rating: number
   pros: string[]
   cons: string[]
   review_count: number
-  specifications?: Record<string, string>
 }
 
 interface CompareState {
@@ -70,7 +73,7 @@ export const useCompareStore = create<CompareState>((set, get) => ({
     set({ loading: true })
     try {
       const ids = compareList.join(',')
-      const res = await apiClient.get('/products/compare', { ids })
+      const res = await apiClient.get('/spus/compare', { ids })
       set({
         products: res.products || [],
         dimensions: res.comparison?.dimensions || [],

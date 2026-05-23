@@ -130,7 +130,7 @@ export const useSpuStore = create<SpuState>((set, get) => ({
     set({ detailLoading: true })
     try {
       const res = await spuApi.get(id)
-      set({ currentSpu: res.data.data, detailLoading: false })
+      set({ currentSpu: res.data.data?.spu, detailLoading: false })
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch SPU', detailLoading: false })
     }
@@ -138,14 +138,14 @@ export const useSpuStore = create<SpuState>((set, get) => ({
 
   createSpu: async (data) => {
     const res = await spuApi.create(data)
-    const spu = res.data.data
+    const spu = res.data.data?.spu || res.data.data
     set((state) => ({ spus: [spu, ...state.spus], total: state.total + 1 }))
     return spu
   },
 
   updateSpu: async (id, data) => {
     const res = await spuApi.update(id, data)
-    const spu = res.data.data
+    const spu = res.data.data?.spu || res.data.data
     set((state) => ({
       spus: state.spus.map((s) => (s.id === id ? spu : s)),
       currentSpu: state.currentSpu?.id === id ? spu : state.currentSpu,
@@ -164,7 +164,7 @@ export const useSpuStore = create<SpuState>((set, get) => ({
   fetchListings: async (spuId, matchStatus) => {
     try {
       const res = await spuApi.getListings(spuId, matchStatus ? { match_status: matchStatus } : undefined)
-      set({ currentListings: res.data.data || [] })
+      set({ currentListings: res.data.data?.items || [] })
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch listings' })
     }

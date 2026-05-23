@@ -36,23 +36,23 @@ class AIAgent:
         return [
             StructuredTool.from_function(
                 coroutine=self.tools.search_products,
-                name="search_products",
-                description="Search products by pet type, category, brand, or price range",
+                name="search_spus",
+                description="Search SPUs (products) by pet type, category, brand, or price range",
             ),
             StructuredTool.from_function(
-                coroutine=self.tools.get_product_detail,
-                name="get_product_detail",
-                description="Get detailed information about a specific product by ID",
+                coroutine=self.tools.get_spu_detail,
+                name="get_spu_detail",
+                description="Get detailed information about a specific SPU (product) by ID",
             ),
             StructuredTool.from_function(
                 coroutine=self.tools.get_reviews_summary,
                 name="get_reviews_summary",
-                description="Get review summary for a product including ratings and top tags",
+                description="Get review summary for a SPU (product) including ratings and top tags",
             ),
             StructuredTool.from_function(
                 coroutine=self.tools.compare_products,
-                name="compare_products",
-                description="Compare multiple products by their IDs",
+                name="compare_spus",
+                description="Compare multiple SPUs (products) by their IDs",
             ),
         ]
 
@@ -77,7 +77,7 @@ class AIAgent:
                 elif msg["role"] == "assistant":
                     chat_history.append(AIMessage(content=msg["content"]))
 
-        referenced_products = []
+        referenced_spus = []
 
         async for event in agent_executor.astream_events(
             {"input": message, "chat_history": chat_history},
@@ -94,21 +94,21 @@ class AIAgent:
             elif event["event"] == "on_tool_end":
                 tool_name = event["name"]
                 tool_result = event["data"].get("output")
-                # Extract product IDs from search_products and compare_products results
-                if tool_name in ("search_products", "compare_products") and tool_result:
+                # Extract spu IDs from search_spus and compare_spus results
+                if tool_name in ("search_spus", "compare_spus") and tool_result:
                     import json
                     try:
-                        products = tool_result if isinstance(tool_result, list) else json.loads(tool_result)
-                        for p in products:
-                            if isinstance(p, dict) and "id" in p:
-                                referenced_products.append(p)
+                        spu_list = tool_result if isinstance(tool_result, list) else json.loads(tool_result)
+                        for s in spu_list:
+                            if isinstance(s, dict) and "id" in s:
+                                referenced_spus.append(s)
                     except (json.JSONDecodeError, TypeError):
                         pass
                 yield f"event: tool_result\ndata: {{\"tool\": \"{tool_name}\", \"status\": \"completed\"}}\n\n"
 
-        # Send referenced products as a final event
-        if referenced_products:
+        # Send referenced spus as a final event
+        if referenced_spus:
             import json
-            yield f"event: products\ndata: {json.dumps({'products': referenced_products}, ensure_ascii=False)}\n\n"
+            yield f"event: spus\ndata: {json.dumps({'spus': referenced_spus}, ensure_ascii=False)}\n\n"
 
         yield "event: done\ndata: {\"status\": \"completed\"}\n\n"

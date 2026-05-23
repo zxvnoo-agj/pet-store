@@ -1,16 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, FolderTree, MessageSquare, Database, Search, ClipboardList, LogOut, PawPrint, Boxes, GitPullRequest } from 'lucide-react'
+import { LayoutDashboard, FolderTree, MessageSquare, LogOut, PawPrint, Boxes, GitPullRequest } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 
 const menuItems = [
   { path: '/dashboard', label: '运营总览', icon: LayoutDashboard },
-  { path: '/products', label: '商品管理', icon: Package },
+  { path: '/spus', label: 'SPU管理', icon: Boxes },
   { path: '/categories', label: '分类管理', icon: FolderTree },
   { path: '/reviews', label: '评价审核', icon: MessageSquare },
-  { path: '/collection', label: '商品采集', icon: Database },
-  { path: '/strategies', label: '搜索策略', icon: Search },
-  { path: '/collection-logs', label: '采集日志', icon: ClipboardList },
-  { path: '/spus', label: 'SPU管理', icon: Boxes },
   { path: '/matching-queue', label: '匹配审核', icon: GitPullRequest },
 ]
 

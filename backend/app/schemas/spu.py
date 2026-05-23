@@ -128,7 +128,7 @@ class SpuMiniProgramListingResponse(BaseModel):
     promotion_url: str | None = None
     goods_sign: str | None = None
     sku_specs: list[dict] = []
-    service_tags: list[str] = []
+    service_tags: list[int | str] = []
 
     class Config:
         from_attributes = True

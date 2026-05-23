@@ -9,7 +9,7 @@ class SpuListing(Base):
     __tablename__ = "spu_listings"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=False)
+    spu_id = Column(Integer, ForeignKey("spus.id", ondelete="CASCADE"), nullable=True)
     platform = Column(String(32), nullable=False, index=True)
     shop_name = Column(String(128), nullable=False)
     goods_id = Column(String(64), nullable=True, index=True)

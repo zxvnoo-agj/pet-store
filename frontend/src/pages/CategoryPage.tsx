@@ -1,18 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import { petTypes, categories } from '../data/mockData';
+import apiClient from '../services/api';
 
-const CategoryPage: React.FC = () => {
+interface CategoryItem {
+  id: number
+  name: string
+  pet_type: string
+  parent_id: number | null
+  level: number
+  children: CategoryItem[]
+}
+
+const petTypes = [
+  { id: 'cat', name: '猫咪', icon: '🐱' },
+  { id: 'dog', name: '狗狗', icon: '🐶' },
+]
+
+const categoryIcons: Record<string, string> = {
+  '猫粮': '🍖',
+  '狗粮': '🍖',
+  '干粮': '🌾',
+  '湿粮': '🥫',
+}
+
+export default function CategoryPage() {
   const navigate = useNavigate();
   const [activePet, setActivePet] = useState('cat');
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCategories = categories.filter(c => c.petType === activePet);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const data = await apiClient.get<{ categories: CategoryItem[] }>('/categories');
+      setCategories(data.categories || []);
+    } catch (e) {
+      console.error('Failed to fetch categories', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const petTypeMap: Record<string, string> = {
+    cat: '猫咪',
+    dog: '狗狗',
+  };
+
+  const filteredCategories = categories.filter(c => c.pet_type === activePet);
 
   return (
     <MobileLayout activeTab="category" className="bg-white">
-      {/* 搜索栏 */}
       <div className="px-4 py-2.5 border-b border-gray-100">
         <div
           className="flex items-center gap-2 bg-gray-100 rounded-full px-3.5 py-2"
@@ -23,9 +66,7 @@ const CategoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 分类布局：左侧宠物类型 + 右侧品类 */}
       <div className="flex flex-1 overflow-hidden">
-        {/* 左侧：宠物类型 */}
         <div className="w-20 bg-gray-50 flex flex-col items-center py-3 gap-1 shrink-0 overflow-y-auto">
           {petTypes.map((pet) => (
             <button
@@ -46,47 +87,68 @@ const CategoryPage: React.FC = () => {
           ))}
         </div>
 
-        {/* 右侧：品类列表 */}
         <div className="flex-1 p-4 overflow-y-auto">
-          <div className="mb-4">
-            <h2 className="text-base font-bold text-gray-800">
-              {petTypes.find(p => p.id === activePet)?.name}用品
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">共 {filteredCategories.length} 个分类</p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {filteredCategories.map((cat) => (
-              <button
-                key={cat.id}
-                className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50 active:scale-95 transition-all"
-                onClick={() => navigate(`/products?petType=${activePet}&category=${cat.name}`)}
-              >
-                <span className="text-3xl">{cat.icon}</span>
-                <span className="text-xs text-gray-700 font-medium">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* 品牌推荐 */}
-          <div className="mt-6">
-            <h3 className="text-sm font-bold text-gray-800 mb-3">热门品牌</h3>
-            <div className="flex flex-wrap gap-2">
-              {['皇家', '渴望', '爱肯拿', '巅峰', '网易严选', '素力高', 'Now Fresh', 'K9'].map((brand) => (
-                <span
-                  key={brand}
-                  className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full font-medium"
-                  onClick={() => navigate(`/products?brand=${brand}`)}
-                >
-                  {brand}
-                </span>
-              ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <h2 className="text-base font-bold text-gray-800">
+                  {petTypeMap[activePet] || '宠物'}用品
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">共 {filteredCategories.length} 个分类</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {filteredCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50 active:scale-95 transition-all"
+                    onClick={() => navigate(`/products?category_id=${cat.id}`)}
+                  >
+                    <span className="text-3xl">{categoryIcons[cat.name] || '📦'}</span>
+                    <span className="text-xs text-gray-700 font-medium">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {filteredCategories.map((cat) => cat.children.length > 0 && (
+                <div key={`sub-${cat.id}`} className="mt-6">
+                  <h3 className="text-sm font-bold text-gray-800 mb-3">{cat.name}分类</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {cat.children.map((child) => (
+                      <span
+                        key={child.id}
+                        className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full font-medium"
+                        onClick={() => navigate(`/products?category_id=${child.id}`)}
+                      >
+                        {child.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="mt-6">
+                <h3 className="text-sm font-bold text-gray-800 mb-3">热门品牌</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['皇家(Royal Canin)', '渴望', '爱肯拿', '巅峰', '网易严选', '素力高', 'Now Fresh', 'K9'].map((brand) => (
+                    <span
+                      key={brand}
+                      className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full font-medium"
+                      onClick={() => navigate(`/products?brand=${encodeURIComponent(brand)}`)}
+                    >
+                      {brand}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </MobileLayout>
   );
-};
-
-export default CategoryPage;
+}

@@ -73,14 +73,19 @@ async def chat_stream(
         full_response = ""
         referenced_spus = []
         async for chunk in agent.chat_stream(data.content, history):
-            if chunk.startswith("data: "):
-                content = chunk[6:].strip()
-                full_response += content
-            elif chunk.startswith("event: products\ndata: "):
+            if chunk.startswith("event: message\ndata: "):
                 import json
                 try:
-                    spus_data = json.loads(chunk[len("event: products\ndata: "):])
-                    referenced_spus = spus_data.get("products", [])
+                    msg_data = json.loads(chunk[len("event: message\ndata: "):])
+                    if msg_data.get("content"):
+                        full_response += msg_data["content"]
+                except json.JSONDecodeError:
+                    pass
+            elif chunk.startswith("event: spus\ndata: "):
+                import json
+                try:
+                    spus_data = json.loads(chunk[len("event: spus\ndata: "):])
+                    referenced_spus = spus_data.get("spus", [])
                 except json.JSONDecodeError:
                     pass
             yield chunk

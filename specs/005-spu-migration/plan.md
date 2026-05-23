@@ -200,3 +200,29 @@ See [quickstart.md](quickstart.md).
 6. **Update frontend product detail page**: Add "Product Links" tab with SKU specs and purchase buttons
 7. Update AI assistant AgentTools to use SpuService
 8. Run tests and verify against spec acceptance criteria
+
+## Phase 3: Bug Fixes & UX Polish
+
+### Issue: 商品链接 API 返回 500（`service_tags` 类型不匹配）
+
+**根因**: `SpuMiniProgramListingResponse.service_tags: list[str]` 与 DB 中存储的整数数组（如 `[2, 13, 15]`）类型冲突，Pydantic v2 校验抛异常。
+
+**修复**: `backend/app/schemas/spu.py:131` — 将 `service_tags: list[str] = []` 改为 `service_tags: list[int | str] = []`。
+
+### Issue: 小程序详情页图片占比过大
+
+**文件**: `frontend/src/pages/product/detail.tsx:243-245`
+
+**当前**: `<View className="aspect-square">` — 全宽正方形大图，信息密度低。
+
+**修复**: 改为默认 `max-h-[50vh] overflow-hidden`，底部叠加"展开查看完整图片"按钮，点击后显示全图。
+
+### Issue (可选): Service Tags 友好显示
+
+`service_tags` 当前显示整型 ID（如 `2,13,15`）不直观。如需要可加映射表转换：
+- 2 → "包邮"
+- 13 → "官方店铺"  
+- 15 → "品牌好货"
+- 24 → "隔日达"
+
+**文件**: `frontend/src/pages/product/detail.tsx` — listings 卡片渲染处将 ID 映射为中文标签。

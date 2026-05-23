@@ -1,104 +1,111 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { GitPullRequest, Loader2 } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
+import Sidebar from '../../components/Sidebar'
 import CandidateList from './components/CandidateList'
 import UnmatchedList from './components/UnmatchedList'
 
 export default function MatchingQueue() {
   const [activeTab, setActiveTab] = useState<'candidate' | 'unmatched'>('candidate')
-  const navigate = useNavigate()
 
-  const queueTotal = useSpuStore((s: any) => s.queueTotal)
-  const queueLoading = useSpuStore((s: any) => s.queueLoading)
-  const fetchMatchingQueue = useSpuStore((s: any) => s.fetchMatchingQueue)
-  const confirmCandidates = useSpuStore((s: any) => s.confirmCandidates)
-  const rejectCandidates = useSpuStore((s: any) => s.rejectCandidates)
+  const queueTotal = useSpuStore((s) => s.queueTotal)
+  const queueListings = useSpuStore((s) => s.queueListings)
+  const queueLoading = useSpuStore((s) => s.queueLoading)
+  const fetchMatchingQueue = useSpuStore((s) => s.fetchMatchingQueue)
+  const confirmCandidates = useSpuStore((s) => s.confirmCandidates)
+  const rejectCandidates = useSpuStore((s) => s.rejectCandidates)
 
   useEffect(() => {
-    fetchMatchingQueue({ match_status: activeTab })
+    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
   }, [activeTab])
 
   const handleConfirm = async (listingIds: number[]) => {
     await confirmCandidates(listingIds)
-    fetchMatchingQueue({ match_status: activeTab })
+    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
   }
 
   const handleReject = async (listingIds: number[]) => {
     await rejectCandidates(listingIds)
-    fetchMatchingQueue({ match_status: activeTab })
+    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
   }
 
-  const handleLinkToSpu = async (listingId: number, spuId: number) => {
-    const { spuApi } = await import('../../services/spuApi')
-    await spuApi.linkListing(listingId, { spu_id: spuId })
-    fetchMatchingQueue({ match_status: activeTab })
-  }
-
-  const handleCreateSpu = (listing: any) => {
-    // Navigate to SPU creation with pre-filled data
-    navigate('/spus', {
-      state: {
-        prefill: {
-          brand: listing.title.split(' ')[0] || '',
-          name: listing.title,
-        },
-      },
-    })
+  const handleRefresh = () => {
+    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">匹配审核队列</h1>
-          <p className="text-gray-600 mt-1">
-            审核自动匹配的候选结果，处理未匹配的商品链接
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-rose-gray/30 via-white to-rose-gray/20">
+      <Sidebar />
+      <main className="ml-[260px] min-h-screen p-8">
+        <div className="page-enter max-w-[1200px] mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1 h-5 bg-peach rounded-full" />
+              <h1 className="font-serif-display text-2xl font-bold text-deep-black">匹配审核</h1>
+            </div>
+            <p className="text-sm text-carbon/60 ml-3">
+              审核自动匹配的候选结果，处理未匹配的商品链接
+            </p>
+          </div>
 
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="flex border-b border-gray-200">
+          <div className="flex gap-1 mb-6 border-b border-peach/10">
             <button
               onClick={() => setActiveTab('candidate')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-5 py-3 text-sm font-medium transition-all border-b-2 ${
                 activeTab === 'candidate'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'text-peach border-peach'
+                  : 'text-carbon/60 border-transparent hover:text-deep-black'
               }`}
             >
               候选匹配
-              <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                {activeTab === 'candidate' ? queueTotal : 0}
-              </span>
+              {queueTotal > 0 && activeTab === 'candidate' && (
+                <span className="ml-2 px-2 py-0.5 bg-amber-50 text-amber-600 text-xs rounded-full">
+                  {queueTotal}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('unmatched')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-5 py-3 text-sm font-medium transition-all border-b-2 ${
                 activeTab === 'unmatched'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'text-peach border-peach'
+                  : 'text-carbon/60 border-transparent hover:text-deep-black'
               }`}
             >
               未匹配
-              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
-                {activeTab === 'unmatched' ? queueTotal : 0}
-              </span>
+              {queueTotal > 0 && activeTab === 'unmatched' && (
+                <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  {queueTotal}
+                </span>
+              )}
             </button>
           </div>
+
+          {queueLoading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              <Loader2 className="w-5 h-5 animate-spin text-peach" />
+              <span className="ml-2 text-sm text-carbon/60">加载中...</span>
+            </div>
+          ) : !queueListings?.length ? (
+            <div className="flex flex-col items-center justify-center h-[300px] text-carbon/40">
+              <GitPullRequest className="w-12 h-12 mb-3" />
+              <p className="text-sm">
+                {activeTab === 'candidate' ? '暂无候选匹配' : '暂无未匹配商品'}
+              </p>
+              <button
+                onClick={handleRefresh}
+                className="mt-3 text-sm text-peach hover:underline"
+              >
+                刷新
+              </button>
+            </div>
+          ) : activeTab === 'candidate' ? (
+            <CandidateList onConfirm={handleConfirm} onReject={handleReject} />
+          ) : (
+            <UnmatchedList />
+          )}
         </div>
-
-        {activeTab === 'candidate' ? (
-          <CandidateList onConfirm={handleConfirm} onReject={handleReject} />
-        ) : (
-          <UnmatchedList onLinkToSpu={handleLinkToSpu} onCreateSpu={handleCreateSpu} />
-        )}
-
-        {queueLoading && (
-          <div className="text-center py-4">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          </div>
-        )}
-      </div>
+      </main>
     </div>
   )
 }

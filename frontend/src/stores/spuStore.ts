@@ -7,10 +7,12 @@ interface SpuState {
   selectedCategory: number | null
   filters: {
     pet_type?: string
+    category_id?: number
     brand?: string
     min_price?: number
     max_price?: number
     sort?: string
+    search?: string
   }
   loading: boolean
   error: string | null
@@ -37,10 +39,12 @@ export const useSpuStore = create<SpuState>((set, get) => ({
       const filters = { ...currentFilters, ...overrideFilters }
       const query: any = { page: 1, page_size: 20 }
       if (filters.pet_type) query.pet_type = filters.pet_type
+      if (filters.category_id) query.category_id = filters.category_id
       if (filters.brand) query.brand = filters.brand
       if (filters.min_price) query.min_price = filters.min_price
       if (filters.max_price) query.max_price = filters.max_price
       if (filters.sort) query.sort = filters.sort
+      if (filters.search) query.search = filters.search
 
       const res = await apiClient.get('/spus', query)
       set({ spus: res.items || [], loading: false })

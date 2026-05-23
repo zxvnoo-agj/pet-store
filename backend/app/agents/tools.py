@@ -35,7 +35,7 @@ class AgentTools:
             "image_urls": s.image_urls or [],
         } for s in spus]
 
-    async def get_product_detail(self, spu_id: int) -> dict | None:
+    async def get_spu_detail(self, spu_id: int) -> dict | None:
         spu = await self.spu_service.get_spu_for_miniprogram(spu_id)
         if spu:
             return {

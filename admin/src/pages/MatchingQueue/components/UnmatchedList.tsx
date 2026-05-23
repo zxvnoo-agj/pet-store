@@ -1,82 +1,102 @@
 import { useState } from 'react'
+import { ExternalLink, Link } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
+import { spuApi } from '../../../services/spuApi'
 
-interface UnmatchedListProps {
-  onLinkToSpu: (listingId: number, spuId: number) => void
-  onCreateSpu: (listing: any) => void
-}
+export default function UnmatchedList() {
+  const queueListings = useSpuStore((s) => s.queueListings)
+  const fetchMatchingQueue = useSpuStore((s) => s.fetchMatchingQueue)
+  const [spuInputs, setSpuInputs] = useState<Record<number, string>>({})
+  const [linking, setLinking] = useState<Record<number, boolean>>({})
 
-export default function UnmatchedList({ onLinkToSpu, onCreateSpu }: UnmatchedListProps) {
-  const queueListings = useSpuStore((s: any) => s.queueListings)
-  const queueLoading = useSpuStore((s: any) => s.queueLoading)
-  const [selectedSpuId, setSelectedSpuId] = useState<Record<string, string>>({})
-
-  if (queueLoading) {
-    return <div className="p-8 text-center text-gray-500">加载中...</div>
-  }
-
-  if (!queueListings?.length) {
-    return <div className="p-8 text-center text-gray-500">暂无未匹配商品</div>
+  const handleLink = async (listingId: number) => {
+    const spuId = parseInt(spuInputs[listingId])
+    if (!spuId) return
+    setLinking((prev) => ({ ...prev, [listingId]: true }))
+    try {
+      await spuApi.linkListing(listingId, { spu_id: spuId })
+      fetchMatchingQueue({ match_status: 'unmatched', page: 1, page_size: 50 })
+    } catch (e) {
+      console.error('Link failed', e)
+    } finally {
+      setLinking((prev) => ({ ...prev, [listingId]: false }))
+    }
   }
 
   return (
-    <div className="space-y-4">
-      {queueListings.map((listing: any) => (
-        <div key={listing.id} className="bg-white rounded-lg shadow p-4 border border-gray-200">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
-                  未匹配
-                </span>
-                {listing.match_confidence > 0 && (
-                  <span className="text-sm text-gray-500">
-                    置信度: {(listing.match_confidence * 100).toFixed(1)}%
+    <div className="glass-card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-peach/10">
+              <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">商品</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">平台 / 店铺</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">价格</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">关联 SPU</th>
+            </tr>
+          </thead>
+          <tbody>
+            {queueListings.map((listing) => (
+              <tr key={listing.id} className="border-b border-peach/5 hover:bg-white/30 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    {listing.image_url && (
+                      <img src={listing.image_url} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    )}
+                    <div>
+                      <span className="text-sm text-deep-black font-medium truncate max-w-[240px] block">
+                        {listing.title}
+                      </span>
+                      {listing.url && (
+                        <a
+                          href={listing.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-peach hover:underline inline-flex items-center gap-1 mt-0.5"
+                        >
+                          <ExternalLink className="w-3 h-3" /> 查看链接
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-xs px-2 py-1 bg-peach/5 text-peach rounded-full">
+                    {listing.platform}
                   </span>
-                )}
-              </div>
-              <h4 className="font-medium text-gray-900 mb-1">{listing.title}</h4>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p>平台: {listing.platform} | 店铺: {listing.shop_name}</p>
-                <p>价格: ¥{listing.price}</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 ml-4 min-w-[200px]">
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="SPU ID"
-                  value={selectedSpuId[listing.id] || ''}
-                  onChange={(e) =>
-                    setSelectedSpuId((prev) => ({
-                      ...prev,
-                      [listing.id]: e.target.value,
-                    }))
-                  }
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-                <button
-                  onClick={() => {
-                    const spuId = parseInt(selectedSpuId[listing.id])
-                    if (spuId) {
-                      onLinkToSpu(listing.id, spuId)
-                    }
-                  }}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                >
-                  关联
-                </button>
-              </div>
-              <button
-                onClick={() => onCreateSpu(listing)}
-                className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
-              >
-                创建新 SPU
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
+                  <p className="text-xs text-carbon/50 mt-0.5">{listing.shop_name}</p>
+                </td>
+                <td className="px-4 py-3 text-sm text-deep-black font-medium">¥{listing.price}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="输入 SPU ID"
+                      value={spuInputs[listing.id] || ''}
+                      onChange={(e) =>
+                        setSpuInputs((prev) => ({ ...prev, [listing.id]: e.target.value }))
+                      }
+                      className="w-24 px-3 py-1.5 bg-white/50 border border-peach/10 rounded-pill text-sm text-deep-black placeholder:text-carbon/40 focus:outline-none focus:border-peach/40"
+                    />
+                    <button
+                      onClick={() => handleLink(listing.id)}
+                      disabled={!spuInputs[listing.id] || linking[listing.id]}
+                      className="p-1.5 rounded-lg text-peach hover:bg-peach/10 transition-colors disabled:opacity-40"
+                      title="关联"
+                    >
+                      {linking[listing.id] ? (
+                        <span className="inline-block w-4 h-4 border-2 border-peach border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Link className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

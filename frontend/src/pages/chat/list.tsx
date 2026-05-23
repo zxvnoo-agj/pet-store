@@ -27,13 +27,16 @@ export default function ChatListPage() {
   }
 
   const navigateToChat = (sessionId: number) => {
-    Taro.navigateTo({ url: `/pages/chat/index?sessionId=${sessionId}` })
+    // tab 页无法通过 navigateTo 传参，用 storage 中转
+    Taro.setStorageSync('pendingSessionId', sessionId)
+    Taro.switchTab({ url: '/pages/chat/index' })
   }
 
   const createNewSession = async () => {
     try {
       const res = await apiClient.post('/chat/sessions', {})
-      Taro.navigateTo({ url: `/pages/chat/index?sessionId=${res.session_id}` })
+      Taro.setStorageSync('pendingSessionId', res.session_id)
+      Taro.switchTab({ url: '/pages/chat/index' })
     } catch (error) {
       console.error('Failed to create session:', error)
     }

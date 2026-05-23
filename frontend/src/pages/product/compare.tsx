@@ -3,17 +3,20 @@ import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useCompareStore } from '../../stores/compareStore'
 
-interface CompareProduct {
-  id: number
-  name: string
-  brand: string
-  price_range?: { min: number; max: number }
-  image_urls?: string[]
-  ratings?: Record<string, number>
-  pros?: string[]
-  cons?: string[]
-  review_count?: number
-  specifications?: Record<string, string>
+const PET_TYPE_LABELS: Record<string, string> = {
+  cat: '猫咪',
+  dog: '狗狗',
+}
+
+const NUTRITION_LABELS: Record<string, string> = {
+  protein: '蛋白质',
+  fat: '脂肪',
+  fiber: '粗纤维',
+  ash: '粗灰分',
+  moisture: '水分',
+  calcium: '钙',
+  phosphorus: '磷',
+  taurine: '牛磺酸',
 }
 
 export default function ComparePage() {
@@ -44,43 +47,92 @@ export default function ComparePage() {
     Taro.navigateTo({ url: `/pages/product/detail?id=${id}` })
   }
 
-  const getRatingValue = (product: CompareProduct, key: string) => {
-    return product.ratings?.[key] ?? 0
+  const getPetTypeLabel = (petType: string) => {
+    return PET_TYPE_LABELS[petType] || petType
   }
 
-  const renderRatingBar = (value: number) => (
-    <View className="flex items-center gap-2">
-      <View className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <View
-          className="h-full bg-orange-400 rounded-full"
-          style={{ width: `${(value / 5) * 100}%` }}
-        />
-      </View>
-      <Text className="text-xs font-medium text-gray-700 w-6 text-right">{value}</Text>
-    </View>
-  )
-
-  const getAttributeValue = (product: CompareProduct, dimension: string) => {
+  const getAttributeValue = (product: any, dimension: string) => {
     switch (dimension) {
       case '品牌':
-        return product.brand || '-'
+        return <Text className="text-xs text-gray-700">{product.brand || '-'}</Text>
+      case '适用宠物':
+        return <Text className="text-xs text-gray-700">{getPetTypeLabel(product.pet_type) || '-'}</Text>
       case '价格区间':
-        return product.price_range
-          ? `¥${product.price_range.min} ~ ¥${product.price_range.max}`
-          : '-'
-      case '适口性':
-        return renderRatingBar(getRatingValue(product, 'taste'))
-      case '营养均衡':
-        return renderRatingBar(getRatingValue(product, 'nutrition') || getRatingValue(product, 'overall'))
-      case '性价比':
-        return renderRatingBar(getRatingValue(product, 'cost_performance'))
+        return (
+          <Text className="text-xs text-gray-700">
+            {product.price_range
+              ? `¥${product.price_range.min} ~ ¥${product.price_range.max}`
+              : '-'}
+          </Text>
+        )
+      case '主要成分':
+        return (
+          <View className="flex flex-wrap gap-1">
+            {(product.ingredients || []).length > 0 ? (
+              product.ingredients.map((ing: string, i: number) => (
+                <Text
+                  key={i}
+                  className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full"
+                >
+                  {ing}
+                </Text>
+              ))
+            ) : (
+              <Text className="text-xs text-gray-400">-</Text>
+            )}
+          </View>
+        )
+      case '营养分析':
+        return (
+          <View className="flex flex-col gap-1">
+            {product.nutrition && Object.keys(product.nutrition).length > 0 ? (
+              Object.entries(product.nutrition).map(([key, value]: [string, any]) => (
+                <Text key={key} className="text-[10px] text-gray-600">
+                  {NUTRITION_LABELS[key] || key}: {typeof value === 'number' ? `${value}%` : String(value)}
+                </Text>
+              ))
+            ) : (
+              <Text className="text-xs text-gray-400">-</Text>
+            )}
+          </View>
+        )
+      case '优点':
+        return (
+          <View className="flex flex-wrap gap-1">
+            {product.pros?.length > 0 ? (
+              product.pros.map((pro: string, i: number) => (
+                <Text
+                  key={i}
+                  className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full"
+                >
+                  {pro}
+                </Text>
+              ))
+            ) : (
+              <Text className="text-xs text-gray-400">-</Text>
+            )}
+          </View>
+        )
+      case '缺点':
+        return (
+          <View className="flex flex-wrap gap-1">
+            {product.cons?.length > 0 ? (
+              product.cons.map((con: string, i: number) => (
+                <Text
+                  key={i}
+                  className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full"
+                >
+                  {con}
+                </Text>
+              ))
+            ) : (
+              <Text className="text-xs text-gray-400">-</Text>
+            )}
+          </View>
+        )
       default:
-        return product.specifications?.[dimension] || '-'
+        return <Text className="text-xs text-gray-400">-</Text>
     }
-  }
-
-  const isRatingDimension = (dimension: string) => {
-    return ['适口性', '营养均衡', '性价比'].includes(dimension)
   }
 
   if (loading) {
@@ -158,7 +210,7 @@ export default function ComparePage() {
         <View className="bg-white overflow-x-auto">
           <View className="flex min-w-full">
             {/* 空角落 */}
-            <View className="w-20 shrink-0 p-3 border-b border-r border-gray-100 bg-gray-50" />
+            <View className="w-24 shrink-0 p-3 border-b border-r border-gray-100 bg-gray-50" />
 
             {/* 产品列 */}
             {products.map((product) => (
@@ -194,7 +246,7 @@ export default function ComparePage() {
         <View className="bg-white mt-2">
           {/* 综合评分行 */}
           <View className="flex border-b border-gray-100">
-            <View className="w-20 shrink-0 p-3 bg-gray-50 flex items-center">
+            <View className="w-24 shrink-0 p-3 bg-gray-50 flex items-center">
               <Text className="text-xs text-gray-500">综合评分</Text>
             </View>
             {products.map((product) => (
@@ -204,7 +256,7 @@ export default function ComparePage() {
               >
                 <View className="flex items-center gap-1">
                   <Text className="text-sm font-bold text-orange-500">
-                    {product.ratings?.overall || 0}
+                    {product.rating || 0}
                   </Text>
                   <Text className="text-xs text-gray-400">/5</Text>
                 </View>
@@ -213,7 +265,7 @@ export default function ComparePage() {
                     <Text
                       key={i}
                       className={`text-[10px] ${
-                        i < Math.round(product.ratings?.overall || 0)
+                        i < Math.round(product.rating || 0)
                           ? 'text-orange-400'
                           : 'text-gray-200'
                       }`}
@@ -228,7 +280,7 @@ export default function ComparePage() {
 
           {/* 评价数行 */}
           <View className="flex border-b border-gray-100">
-            <View className="w-20 shrink-0 p-3 bg-gray-50 flex items-center">
+            <View className="w-24 shrink-0 p-3 bg-gray-50 flex items-center">
               <Text className="text-xs text-gray-500">评价数</Text>
             </View>
             {products.map((product) => (
@@ -244,7 +296,7 @@ export default function ComparePage() {
           {/* 动态维度行 */}
           {dimensions.map((dimension) => (
             <View key={dimension} className="flex border-b border-gray-100">
-              <View className="w-20 shrink-0 p-3 bg-gray-50 flex items-center">
+              <View className="w-24 shrink-0 p-3 bg-gray-50 flex items-center">
                 <Text className="text-xs text-gray-500">{dimension}</Text>
               </View>
               {products.map((product) => (
@@ -252,69 +304,11 @@ export default function ComparePage() {
                   key={product.id}
                   className="flex-1 min-w-[140px] p-3 border-l border-gray-100"
                 >
-                  {isRatingDimension(dimension) ? (
-                    getAttributeValue(product, dimension)
-                  ) : (
-                    <Text className="text-xs text-gray-700">{getAttributeValue(product, dimension)}</Text>
-                  )}
+                  {getAttributeValue(product, dimension)}
                 </View>
               ))}
             </View>
           ))}
-
-          {/* 优点行 */}
-          <View className="flex border-b border-gray-100">
-            <View className="w-20 shrink-0 p-3 bg-gray-50">
-              <Text className="text-xs text-gray-500">优点</Text>
-            </View>
-            {products.map((product) => (
-              <View
-                key={product.id}
-                className="flex-1 min-w-[140px] p-3 border-l border-gray-100"
-              >
-                <View className="flex flex-wrap gap-1">
-                  {product.pros?.slice(0, 3).map((pro, i) => (
-                    <Text
-                      key={i}
-                      className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full"
-                    >
-                      {pro}
-                    </Text>
-                  ))}
-                  {(!product.pros || product.pros.length === 0) && (
-                    <Text className="text-xs text-gray-400">-</Text>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {/* 缺点行 */}
-          <View className="flex border-b border-gray-100">
-            <View className="w-20 shrink-0 p-3 bg-gray-50">
-              <Text className="text-xs text-gray-500">缺点</Text>
-            </View>
-            {products.map((product) => (
-              <View
-                key={product.id}
-                className="flex-1 min-w-[140px] p-3 border-l border-gray-100"
-              >
-                <View className="flex flex-wrap gap-1">
-                  {product.cons?.slice(0, 3).map((con, i) => (
-                    <Text
-                      key={i}
-                      className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full"
-                    >
-                      {con}
-                    </Text>
-                  ))}
-                  {(!product.cons || product.cons.length === 0) && (
-                    <Text className="text-xs text-gray-400">-</Text>
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
         </View>
 
         {/* 继续添加按钮 */}

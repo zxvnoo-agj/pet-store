@@ -40,7 +40,11 @@ class SpuService:
         return result.scalar_one_or_none()
 
     async def update_spu(self, spu_id: int, data: SpuUpdate) -> Spu | None:
-        result = await self.db.execute(select(Spu).where(Spu.id == spu_id))
+        result = await self.db.execute(
+            select(Spu)
+            .where(Spu.id == spu_id)
+            .options(selectinload(Spu.category))
+        )
         spu = result.scalar_one_or_none()
         if not spu:
             return None
@@ -373,3 +377,29 @@ class SpuService:
             select(SpuListing).where(SpuListing.id == listing_id)
         )
         return result.scalar_one_or_none()
+
+    async def compare_spus(self, spu_ids: list[int]) -> list[Spu]:
+        from app.models.review import Review
+
+        review_stats = (
+            select(
+                Review.spu_id,
+                func.count(Review.id).label("review_count"),
+                func.avg(Review.rating).label("avg_rating"),
+            )
+            .where(Review.spu_id.in_(spu_ids), Review.status == "approved")
+            .group_by(Review.spu_id)
+        ).subquery()
+
+        result = await self.db.execute(
+            select(Spu, review_stats.c.review_count, review_stats.c.avg_rating)
+            .outerjoin(review_stats, Spu.id == review_stats.c.spu_id)
+            .where(Spu.id.in_(spu_ids), Spu.status == "active")
+        )
+        spus = []
+        for row in result:
+            spu, review_count, avg_rating = row
+            spu.review_count = review_count or 0
+            spu.avg_rating = round(float(avg_rating), 1) if avg_rating else 0.0
+            spus.append(spu)
+        return spus

@@ -1,12 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import Products from './pages/Products'
 import Categories from './pages/Categories'
 import Reviews from './pages/Reviews'
-import Collection from './pages/Collection'
-import Strategies from './pages/Strategies'
-import CollectionLogs from './pages/CollectionLogs'
+
 import Spus from './pages/Spus'
 import SpuDetail from './pages/Spus/Detail'
 import MatchingQueue from './pages/MatchingQueue'
@@ -34,14 +31,6 @@ function App() {
           }
         />
         <Route
-          path="/products"
-          element={
-            <PrivateRoute>
-              <Products />
-            </PrivateRoute>
-          }
-        />
-        <Route
           path="/categories"
           element={
             <PrivateRoute>
@@ -54,30 +43,6 @@ function App() {
           element={
             <PrivateRoute>
               <Reviews />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/collection"
-          element={
-            <PrivateRoute>
-              <Collection />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/strategies"
-          element={
-            <PrivateRoute>
-              <Strategies />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/collection-logs"
-          element={
-            <PrivateRoute>
-              <CollectionLogs />
             </PrivateRoute>
           }
         />

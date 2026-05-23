@@ -7,6 +7,7 @@ from typing import Any
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.models.spu import Spu
@@ -66,6 +67,37 @@ class SpuListingService:
         self.db = db
         self.matching_service = SpuMatchingService()
 
+    @staticmethod
+    def _parse_sales_count(sales_tip: str | None) -> int | None:
+        """Parse sales count from PDD sales_tip string.
+        
+        Handles formats like:
+        - '6400' -> 6400
+        - '6.4万' -> 64000
+        - '6.4万+' -> 64000
+        - '1.2万' -> 12000
+        - '' -> None
+        """
+        if not sales_tip:
+            return None
+        
+        # Remove '+' suffix
+        cleaned = sales_tip.replace('+', '').strip()
+        
+        # Handle '万' (ten thousand)
+        if '万' in cleaned:
+            num_str = cleaned.replace('万', '').strip()
+            try:
+                return int(float(num_str) * 10000)
+            except ValueError:
+                return None
+        
+        # Plain number
+        try:
+            return int(cleaned)
+        except ValueError:
+            return None
+
     async def import_and_match(
         self,
         keyword: str,
@@ -103,7 +135,7 @@ class SpuListingService:
                     continue  # Skip duplicates
 
                 listing = SpuListing(
-                    spu_id=0,  # Will be updated after matching
+                    spu_id=None,  # Will be updated after matching
                     platform=platform,
                     shop_name=item.get("shop_name", ""),
                     goods_id=item.get("goods_id"),
@@ -207,7 +239,7 @@ class SpuListingService:
                         "original_price": parsed["single_price"],
                         "url": parsed["external_url"],
                         "image_url": parsed["image_urls"][0] if parsed["image_urls"] else None,
-                        "sales_count": int(parsed["sales_tip"].replace("+", "").replace("万", "0000")) if parsed["sales_tip"] else None,
+                        "sales_count": self._parse_sales_count(parsed["sales_tip"]),
                         "sku_specs": sku_specs,
                         "service_tags": service_tags,
                     })
@@ -222,6 +254,8 @@ class SpuListingService:
 
     async def _run_matching_for_unmatched(self) -> None:
         """Run LLM matching for all unmatched listings."""
+        import asyncio
+
         result = await self.db.execute(
             select(SpuListing).where(SpuListing.match_status == "unmatched")
         )
@@ -230,9 +264,11 @@ class SpuListingService:
         if not unmatched_listings:
             return
 
-        # Fetch all active SPUs for matching
+        # Fetch all active SPUs with categories eagerly loaded
         spu_result = await self.db.execute(
-            select(Spu).where(Spu.status == "active")
+            select(Spu)
+            .where(Spu.status == "active")
+            .options(selectinload(Spu.category))
         )
         spus = spu_result.scalars().all()
 
@@ -244,9 +280,11 @@ class SpuListingService:
 
         for listing in unmatched_listings:
             try:
-                match_result = await self.matching_service.match_listing_to_spu(
-                    listing_title=listing.title,
-                    spus=spus,
+                # Use asyncio.to_thread to avoid greenlet conflicts with SQLAlchemy async session
+                match_result = await asyncio.to_thread(
+                    self.matching_service.match_listing_to_spu_sync,
+                    listing.title,
+                    spus,
                 )
 
                 if match_result.confidence >= 0.85:
@@ -299,18 +337,35 @@ class SpuListingService:
         )
         listings = result.scalars().all()
 
-        details = []
+        # Collect data before any async DB operations to avoid greenlet conflicts
+        listing_data = []
+        spu_ids_to_update = set()
         for listing in listings:
-            listing.match_status = "linked"
-            await update_spu_price_range(self.db, listing.spu_id)
-            details.append({
-                "listing_id": listing.id,
-                "status": "linked",
+            listing_data.append({
+                "id": listing.id,
                 "spu_id": listing.spu_id,
             })
+            if listing.spu_id:
+                spu_ids_to_update.add(listing.spu_id)
 
-        await self.db.commit()
-        return details
+        # Batch update via SQL to avoid ORM flush issues
+        if listing_data:
+            from sqlalchemy import update
+            await self.db.execute(
+                update(SpuListing)
+                .where(SpuListing.id.in_([d["id"] for d in listing_data]))
+                .values(match_status="linked")
+            )
+            await self.db.commit()
+
+        # Update price ranges for affected SPUs (outside of ORM object iteration)
+        for spu_id in spu_ids_to_update:
+            await update_spu_price_range(self.db, spu_id)
+
+        return [
+            {"listing_id": d["id"], "status": "linked", "spu_id": d["spu_id"]}
+            for d in listing_data
+        ]
 
     async def reject_listings(self, listing_ids: list[int]) -> list[dict]:
         """Reject candidate listings."""
@@ -322,14 +377,23 @@ class SpuListingService:
         )
         listings = result.scalars().all()
 
-        details = []
+        listing_data = []
         for listing in listings:
-            listing.match_status = "rejected"
-            details.append({
-                "listing_id": listing.id,
-                "status": "rejected",
+            listing_data.append({
+                "id": listing.id,
                 "spu_id": listing.spu_id,
             })
 
-        await self.db.commit()
-        return details
+        if listing_data:
+            from sqlalchemy import update
+            await self.db.execute(
+                update(SpuListing)
+                .where(SpuListing.id.in_([d["id"] for d in listing_data]))
+                .values(match_status="rejected")
+            )
+            await self.db.commit()
+
+        return [
+            {"listing_id": d["id"], "status": "rejected", "spu_id": d["spu_id"]}
+            for d in listing_data
+        ]

@@ -53,6 +53,47 @@ async def get_spus(
     )
 
 
+@router.get("/spus/compare", response_model=ApiResponse[dict])
+async def compare_spus(
+    ids: str = Query(..., description="Comma-separated SPU IDs"),
+    db: AsyncSession = Depends(get_db),
+):
+    spu_ids = [int(i) for i in ids.split(",")]
+    if len(spu_ids) < 2:
+        raise HTTPException(status_code=400, detail="Must compare at least 2 SPUs")
+    if len(spu_ids) > 4:
+        raise HTTPException(status_code=400, detail="Can compare at most 4 SPUs")
+
+    service = SpuService(db)
+    spus = await service.compare_spus(spu_ids)
+
+    return ApiResponse(
+        data={
+            "products": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "brand": s.brand,
+                    "pet_type": s.pet_type,
+                    "description": s.description,
+                    "ingredients": s.ingredients or [],
+                    "nutrition": s.nutrition or {},
+                    "price_range": {"min": float(s.price_min) if s.price_min else 0, "max": float(s.price_max) if s.price_max else 0},
+                    "image_urls": s.image_urls or [],
+                    "rating": getattr(s, "avg_rating", 0),
+                    "pros": s.pros or [],
+                    "cons": s.cons or [],
+                    "review_count": getattr(s, "review_count", 0),
+                }
+                for s in spus
+            ],
+            "comparison": {
+                "dimensions": ["品牌", "适用宠物", "价格区间", "主要成分", "营养分析", "优点", "缺点"],
+            },
+        }
+    )
+
+
 @router.get("/spus/{spu_id}", response_model=ApiResponse[dict])
 async def get_spu_detail(
     spu_id: int,
