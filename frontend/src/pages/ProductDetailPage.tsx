@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Heart, Share2, ThumbsUp, Check, X, Bot } from 'lucide-react';
+import { ArrowLeft, Star, ThumbsUp, Check, X } from 'lucide-react';
 import { webApi } from '../services/webApi';
+import { FavoriteIcon, FavoriteFilledIcon, ShareIcon, AiAssistantIcon } from '../components/Icons';
 
 interface SpuDetail {
   id: number
@@ -119,10 +120,10 @@ const ProductDetailPage: React.FC = () => {
                 } catch {}
               }}
             >
-              <Heart size={18} className={isFavorited ? 'text-red-400 fill-red-400' : 'text-white'} />
+              {isFavorited ? <FavoriteFilledIcon size={18} color="#f87171" /> : <FavoriteIcon size={18} color="white" />}
             </button>
             <button className="w-9 h-9 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-              <Share2 size={18} className="text-white" />
+              <ShareIcon size={18} color="white" />
             </button>
           </div>
         </div>
@@ -364,7 +365,7 @@ const ProductDetailPage: React.FC = () => {
             className="flex flex-col items-center gap-0.5 px-2"
             onClick={() => navigate('/chat', { state: { spuId: spu.id } })}
           >
-            <Bot size={20} className="text-orange-500" />
+            <AiAssistantIcon size={20} color="#f97316" />
             <span className="text-[10px] text-gray-500">问AI</span>
           </button>
           <button className="flex-1 bg-orange-500 text-white text-sm font-medium py-2.5 rounded-full active:bg-orange-600 transition-colors">

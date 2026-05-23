@@ -1,9 +1,11 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.admin_deps import get_current_admin
-from app.core.database import get_db
+from app.core.database import AsyncSessionLocal, get_db
 from app.schemas.common import ApiResponse, Pagination
 from app.schemas.spu import SpuCreate, SpuFilter, SpuResponse, SpuUpdate
 from app.schemas.spu_listing import SpuListingResponse, LinkListingRequest
@@ -245,7 +247,7 @@ async def admin_reject_candidates(
     )
 
 
-@router.post("/admin/goods/listings/import", response_model=ApiResponse[dict], summary="Import Listings", description="Import new listings from external data source and run auto-matching.")
+@router.post("/admin/goods/listings/import", response_model=ApiResponse[dict], summary="Import Listings", description="Import new listings from external data source and run auto-matching asynchronously.")
 async def admin_import_listings(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -258,12 +260,10 @@ async def admin_import_listings(
     if not keyword:
         raise HTTPException(status_code=400, detail="Keyword is required")
 
-    service = SpuListingService(db)
-    job = await service.import_and_match(
-        keyword=keyword,
-        max_results=max_results,
-        platform=platform,
-    )
+    job = ImportJobManager.create_job(keyword)
+    await db.commit()
+
+    asyncio.create_task(_run_import_job(job.job_id, keyword, max_results, platform))
 
     return ApiResponse(
         data={
@@ -273,6 +273,18 @@ async def admin_import_listings(
             "estimated_duration": "2-5 minutes",
         }
     )
+
+
+async def _run_import_job(job_id: str, keyword: str, max_results: int, platform: str) -> None:
+    """Background task to import listings and run auto-matching."""
+    async with AsyncSessionLocal() as db:
+        service = SpuListingService(db)
+        await service.import_and_match(
+            job_id=job_id,
+            keyword=keyword,
+            max_results=max_results,
+            platform=platform,
+        )
 
 
 @router.get("/admin/goods/jobs/{job_id}", response_model=ApiResponse[dict], summary="Get Import Job Status", description="Get the status of an import and matching job.")

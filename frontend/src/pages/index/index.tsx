@@ -5,6 +5,7 @@ import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
 import { useSpuStore } from '../../stores/spuStore'
 import { useAuthStore } from '../../stores/authStore'
+import { AiAssistantIcon } from '../../components/Icons'
 
 const defaultPetChoices = [
   { id: 'cat', name: '猫咪', icon: '🐱' },
@@ -195,7 +196,7 @@ export default function HomePage() {
 
           <View className="relative flex items-center gap-3">
             <View className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
-              <Text className="text-white text-xl">✨</Text>
+              <AiAssistantIcon size={24} color="white" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-bold text-white">问问 AI 助手</Text>
@@ -203,7 +204,7 @@ export default function HomePage() {
                 不知道选什么？直接问我
               </Text>
             </View>
-            <Text className="text-white/70 text-xl">💬</Text>
+            <Text className="text-white/70 text-xl">→</Text>
           </View>
         </View>
       </View>

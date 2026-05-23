@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
+import { FavoriteFilledIcon } from '../../components/Icons'
 
 export default function FavoritesPage() {
   const [spus, setSpus] = useState([])
@@ -46,6 +47,7 @@ export default function FavoritesPage() {
     <View className="flex flex-col h-screen bg-gray-50">
       <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
         <Text className="text-gray-600" onClick={goBack}>←</Text>
+        <FavoriteFilledIcon size={18} color="#f97316" />
         <Text className="flex-1 text-sm font-bold text-gray-800">我的收藏</Text>
       </View>
 

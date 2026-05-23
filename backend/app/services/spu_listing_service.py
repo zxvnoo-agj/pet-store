@@ -100,27 +100,26 @@ class SpuListingService:
 
     async def import_and_match(
         self,
+        job_id: str,
         keyword: str,
         max_results: int = 100,
         platform: str = "pdd",
-    ) -> ImportJob:
+    ) -> None:
         """Import listings from DDK API and run auto-matching.
 
         Steps:
-            1. Create job record
-            2. Fetch listings from DDK API
-            3. Save new listings to database
-            4. Run LLM matching against all SPUs
-            5. Classify into auto-linked/candidate/unmatched
-            6. Update job status
+            1. Fetch listings from DDK API
+            2. Save new listings to database
+            3. Run LLM matching against all SPUs
+            4. Classify into auto-linked/candidate/unmatched
+            5. Update job status
         """
-        job = ImportJobManager.create_job(keyword)
-        ImportJobManager.update_job(job.job_id, status="running")
+        ImportJobManager.update_job(job_id, status="running")
 
         try:
             # Step 1: Fetch listings from DDK API
             listings_data = await self._fetch_listings(keyword, max_results, platform)
-            logger.info(f"Import job {job.job_id}: fetched {len(listings_data)} listings")
+            logger.info(f"Import job {job_id}: fetched {len(listings_data)} listings")
 
             # Step 2: Save listings and deduplicate
             imported_count = 0
@@ -154,7 +153,7 @@ class SpuListingService:
                 imported_count += 1
 
             await self.db.commit()
-            logger.info(f"Import job {job.job_id}: saved {imported_count} new listings")
+            logger.info(f"Import job {job_id}: saved {imported_count} new listings")
 
             # Step 3: Run matching for new unmatched listings
             await self._run_matching_for_unmatched()
@@ -162,7 +161,7 @@ class SpuListingService:
             # Step 4: Count results by tier
             stats = await self._get_matching_stats()
             ImportJobManager.update_job(
-                job.job_id,
+                job_id,
                 status="completed",
                 total_imported=imported_count,
                 auto_linked=stats["auto_linked"],
@@ -172,15 +171,13 @@ class SpuListingService:
             )
 
         except Exception as e:
-            logger.error(f"Import job {job.job_id} failed: {e}")
+            logger.error(f"Import job {job_id} failed: {e}")
             ImportJobManager.update_job(
-                job.job_id,
+                job_id,
                 status="failed",
                 error=str(e),
                 completed_at=__import__("datetime").datetime.utcnow().isoformat(),
             )
-
-        return job
 
     async def _fetch_listings(
         self, keyword: str, max_results: int, platform: str
@@ -278,6 +275,8 @@ class SpuListingService:
 
         logger.info(f"Running matching for {len(unmatched_listings)} listings against {len(spus)} SPUs")
 
+        auto_linked_spu_ids: set[int] = set()
+
         for listing in unmatched_listings:
             try:
                 # Use asyncio.to_thread to avoid greenlet conflicts with SQLAlchemy async session
@@ -292,6 +291,11 @@ class SpuListingService:
                     listing.spu_id = match_result.spu_id
                     listing.match_confidence = match_result.confidence
                     listing.match_status = "linked"
+                    auto_linked_spu_ids.add(match_result.spu_id)
+                    # If SPU has no images, copy from listing
+                    matched_spu = next((s for s in spus if s.id == match_result.spu_id), None)
+                    if matched_spu is not None and not matched_spu.image_urls and listing.image_url:
+                        matched_spu.image_urls = [listing.image_url]
                     logger.debug(f"Auto-linked listing {listing.id} to SPU {match_result.spu_id} (confidence={match_result.confidence:.2f})")
                 elif match_result.confidence >= 0.60:
                     # Candidate for review
@@ -309,6 +313,11 @@ class SpuListingService:
                 listing.match_status = "unmatched"
 
         await self.db.commit()
+
+        # Update price ranges for auto-linked SPUs
+        for spu_id in auto_linked_spu_ids:
+            from app.utils.price_utils import update_spu_price_range
+            await update_spu_price_range(self.db, spu_id)
 
     async def _get_matching_stats(self) -> dict[str, int]:
         """Get counts of listings by match status."""
@@ -344,6 +353,7 @@ class SpuListingService:
             listing_data.append({
                 "id": listing.id,
                 "spu_id": listing.spu_id,
+                "image_url": listing.image_url,
             })
             if listing.spu_id:
                 spu_ids_to_update.add(listing.spu_id)
@@ -357,6 +367,17 @@ class SpuListingService:
                 .values(match_status="linked")
             )
             await self.db.commit()
+
+        # Sync image URLs to SPUs that lack images
+        for d in listing_data:
+            if d["image_url"] and d["spu_id"]:
+                spu_result = await self.db.execute(
+                    select(Spu).where(Spu.id == d["spu_id"])
+                )
+                spu = spu_result.scalar_one_or_none()
+                if spu and not spu.image_urls:
+                    spu.image_urls = [d["image_url"]]
+        await self.db.commit()
 
         # Update price ranges for affected SPUs (outside of ORM object iteration)
         for spu_id in spu_ids_to_update:

@@ -125,9 +125,9 @@ class SpuMatchingService:
         try:
             data = json.loads(content)
             return MatchingResult(
-                spu_id=int(data.get("spu_id", 0)),
-                confidence=float(data.get("confidence", 0)),
-                reason=data.get("reason", ""),
+                spu_id=int(data.get("spu_id") or 0),
+                confidence=float(data.get("confidence") or 0),
+                reason=data.get("reason") or "",
             )
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"Failed to parse matching response: {e}")

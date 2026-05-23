@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 对话气泡主体 -->
+  <path d="M20 10c0-3.31-3.58-6-8-6S4 6.69 4 10c0 1.89 1.08 3.56 2.78 4.66L6 20l3.87-2.71c.66.13 1.34.2 2.03.21.34 0 .67-.02 1-.06"/>
+  <!-- 星星/闪光：AI元素 -->
+  <path d="M17.5 14l.5-1.5.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5z"/>
+  <!-- 猫耳装饰（对话气泡顶部） -->
+  <path d="M8 4.5L6.5 2"/>
+  <path d="M10 4.2L9.5 1.5"/>
+  <path d="M14 4.2L14.5 1.5"/>
+  <path d="M16 4.5L17.5 2"/>
+  <!-- 脸部表情 -->
+  <circle cx="9" cy="10" r=".8" fill="currentColor" stroke="none"/>
+  <circle cx="15" cy="10" r=".8" fill="currentColor" stroke="none"/>
+  <path d="M9.5 12.5c.6.5 1.4.8 2.25.8s1.65-.3 2.25-.8"/>
+</svg>

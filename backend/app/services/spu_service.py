@@ -300,6 +300,11 @@ class SpuService:
             return None
         listing.spu_id = spu_id
         listing.match_status = "linked"
+        if listing.image_url:
+            spu_result = await self.db.execute(select(Spu).where(Spu.id == spu_id))
+            linked_spu = spu_result.scalar_one_or_none()
+            if linked_spu is not None and not linked_spu.image_urls:
+                linked_spu.image_urls = [listing.image_url]
         await self.db.commit()
         await self.db.refresh(listing)
         await update_spu_price_range(self.db, spu_id)

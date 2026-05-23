@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, BookOpen, Sparkles, ChevronRight } from 'lucide-react';
+import { Search, MessageCircle, BookOpen, ChevronRight } from 'lucide-react';
+import { AiAssistantIcon } from '../components/Icons';
 import MobileLayout from '../components/MobileLayout';
 import ProductCard from '../components/ProductCard';
 import { products } from '../data/mockData';
@@ -147,7 +148,7 @@ const HomePage: React.FC = () => {
 
           <div className="relative flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
-              <Sparkles size={20} className="text-white" />
+              <AiAssistantIcon size={20} color="white" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-white">问问 AI 助手</p>

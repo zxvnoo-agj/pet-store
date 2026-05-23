@@ -7,6 +7,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { checkLoginStatus } from '../../services/auth'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { Loading } from '../../components/Loading'
+import { FavoriteIcon, FavoriteFilledIcon, ShareIcon, AiAssistantIcon } from '../../components/Icons'
 
 function PurchaseButton({ listingId, spuId }: { listingId: number; spuId: number }) {
   const [loading, setLoading] = useState(false)
@@ -236,11 +237,13 @@ function SpuDetailContent() {
             className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center"
             onClick={toggleFavorite}
           >
-            <Text className={isFavorited ? 'text-red-400' : 'text-white'}>{isFavorited ? '已收藏' : '收藏'}</Text>
+            <Text className={isFavorited ? 'text-red-400' : 'text-white'}>
+              {isFavorited ? <FavoriteFilledIcon size={18} color="#f87171" /> : <FavoriteIcon size={18} color="white" />}
+            </Text>
           </View>
           <View className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center">
-            <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent text-white text-sm">
-              分享
+            <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent">
+              <ShareIcon size={16} color="white" />
             </Button>
           </View>
         </View>
@@ -606,7 +609,7 @@ function SpuDetailContent() {
           className="flex flex-col items-center gap-0.5 px-2"
           onClick={navigateToChat}
         >
-          <Text className="text-orange-500 text-lg">AI</Text>
+          <AiAssistantIcon size={22} color="#f97316" />
           <Text className="text-[10px] text-gray-500">问AI</Text>
         </View>
         <View

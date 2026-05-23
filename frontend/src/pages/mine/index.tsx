@@ -3,6 +3,7 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { wechatLogin } from '../../services/auth'
+import { FavoriteIcon } from '../../components/Icons'
 
 export default function MinePage() {
   const { user, isLoggedIn, logout } = useAuthStore()
@@ -63,7 +64,10 @@ export default function MinePage() {
           className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
           onClick={navigateToFavorites}
         >
-          <Text className="text-sm text-gray-800">我的收藏</Text>
+          <View className="flex items-center gap-2">
+            <FavoriteIcon size={18} color="#6b7280" />
+            <Text className="text-sm text-gray-800">我的收藏</Text>
+          </View>
           <Text className="text-gray-400">→</Text>
         </View>
 

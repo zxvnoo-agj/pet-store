@@ -1,9 +1,10 @@
 import React from 'react';
-import { Settings, Heart, Clock, MessageSquare, ChevronRight, Star, HelpCircle, Shield } from 'lucide-react';
+import { Settings, Clock, MessageSquare, ChevronRight, Star, HelpCircle, Shield } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
+import { FavoriteIcon } from '../components/Icons';
 
 const menuItems = [
-  { icon: Heart, label: '我的收藏', desc: '12个商品', color: 'text-red-500', bg: 'bg-red-50' },
+  { icon: 'favorite', label: '我的收藏', desc: '12个商品', color: 'text-red-500', bg: 'bg-red-50' },
   { icon: Clock, label: '浏览历史', desc: '', color: 'text-blue-500', bg: 'bg-blue-50' },
   { icon: MessageSquare, label: '我的评价', desc: '3条评价', color: 'text-green-500', bg: 'bg-green-50' },
   { icon: Star, label: '我的关注', desc: '关注的品牌', color: 'text-orange-500', bg: 'bg-orange-50' },
@@ -66,14 +67,17 @@ const MinePage: React.FC = () => {
       <div className="px-4 mt-4">
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           {menuItems.map((item, i) => {
-            const Icon = item.icon;
             return (
               <button
                 key={i}
                 className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 text-left"
               >
                 <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>
-                  <Icon size={18} className={item.color} />
+                  {item.icon === 'favorite' ? (
+                    <FavoriteIcon size={18} color="#ef4444" />
+                  ) : (
+                    <item.icon size={18} className={item.color} />
+                  )}
                 </div>
                 <span className="flex-1 text-sm text-gray-800">{item.label}</span>
                 {item.desc && <span className="text-xs text-gray-400">{item.desc}</span>}

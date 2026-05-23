@@ -3,6 +3,7 @@ import { View, Text, Input, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
+import { AiAssistantIcon } from '../../components/Icons'
 
 interface Spu {
   id: number
@@ -379,7 +380,7 @@ export default function ChatPage() {
       <View style={{ flexShrink: 0 }} className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100 z-20">
         <View className="flex items-center gap-2.5">
           <View className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
-            <Text className="text-white text-base">🐾</Text>
+            <AiAssistantIcon size={20} color="white" />
           </View>
           <View>
             <Text className="text-sm font-bold text-gray-800">AI宠物顾问</Text>
@@ -412,15 +413,10 @@ export default function ChatPage() {
             <View
               key={msg.id}
               id={`msg-${msg.id}`}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-5`}
+              className="mb-5"
             >
-              {msg.role === 'assistant' && (
-                <View className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2.5 self-start mt-1 shadow-sm">
-                  <Text className="text-white text-sm">🐾</Text>
-                </View>
-              )}
               <View
-                className={`max-w-[80%] ${
+                className={`${
                   msg.role === 'user'
                     ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3'
                     : 'bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
@@ -436,20 +432,12 @@ export default function ChatPage() {
                   </View>
                 )}
               </View>
-              {msg.role === 'user' && (
-                <View className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 ml-2.5 self-start mt-1">
-                  <Text className="text-gray-500 text-sm">👤</Text>
-                </View>
-              )}
             </View>
           ))}
 
           {isLoading && activeTools.length > 0 && (
-            <View className="flex justify-start mb-5">
-              <View className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2.5 self-start shadow-sm">
-                <Text className="text-white text-sm">🐾</Text>
-              </View>
-              <View className="max-w-[80%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+            <View className="mb-5">
+              <View className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                 {renderToolStatus(activeTools)}
                 {streamProducts.length > 0 && renderProductCards(streamProducts)}
                 <View className="flex items-center gap-1 mt-2">
@@ -462,10 +450,7 @@ export default function ChatPage() {
           )}
 
           {isLoading && activeTools.length === 0 && (
-            <View className="flex justify-start mb-5">
-              <View className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2.5 self-start shadow-sm">
-                <Text className="text-white text-sm">🐾</Text>
-              </View>
+            <View className="mb-5">
               <View className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                 <View className="flex items-center gap-2">
                   <View className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />

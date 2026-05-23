@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreHorizontal, Send, Sparkles, Loader2, User } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Send, Loader2 } from 'lucide-react';
+import { AiAssistantIcon } from '../components/Icons';
 
 interface Spu {
   id: number
@@ -381,7 +382,7 @@ const ChatPage: React.FC = () => {
           </button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
+              <AiAssistantIcon size={16} color="white" />
             </div>
             <div>
               <h1 className="text-sm font-bold text-gray-800">AI宠物顾问</h1>
@@ -399,14 +400,9 @@ const ChatPage: React.FC = () => {
         {/* 消息区域 */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.role === 'assistant' && (
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start mt-0.5">
-                  <Sparkles size={13} className="text-white" />
-                </div>
-              )}
+            <div key={msg.id}>
               <div
-                className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
+                className={`rounded-2xl px-3.5 py-2.5 ${
                   msg.role === 'user'
                     ? 'bg-orange-500 text-white rounded-br-md'
                     : 'bg-white border border-gray-100 rounded-bl-md shadow-sm'
@@ -422,21 +418,13 @@ const ChatPage: React.FC = () => {
                   </div>
                 )}
               </div>
-              {msg.role === 'user' && (
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center shrink-0 ml-2 self-start mt-0.5">
-                  <User size={13} className="text-gray-500" />
-                </div>
-              )}
             </div>
           ))}
 
           {/* 执行中状态 */}
           {isLoading && activeTools.length > 0 && (
-            <div className="flex justify-start">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start mt-0.5">
-                <Sparkles size={13} className="text-white" />
-              </div>
-              <div className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
+            <div>
+              <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
                 {renderToolStatus(activeTools)}
                 {streamSpus.length > 0 && renderProductCards(streamSpus)}
                 <div className="flex items-center gap-1 mt-2">
@@ -450,11 +438,8 @@ const ChatPage: React.FC = () => {
 
           {/* 流式输出 */}
           {isLoading && currentStream && activeTools.length === 0 && (
-            <div className="flex justify-start">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start mt-0.5">
-                <Sparkles size={13} className="text-white" />
-              </div>
-              <div className="max-w-[75%] rounded-2xl px-3.5 py-2.5 bg-white border border-gray-100 rounded-bl-md shadow-sm">
+            <div>
+              <div className="rounded-2xl px-3.5 py-2.5 bg-white border border-gray-100 rounded-bl-md shadow-sm">
                 <div>{renderMessage(currentStream)}</div>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="w-1 h-1 bg-orange-400 rounded-full animate-pulse" />
@@ -467,10 +452,7 @@ const ChatPage: React.FC = () => {
 
           {/* 加载状态 */}
           {isLoading && !currentStream && activeTools.length === 0 && (
-            <div className="flex justify-start">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shrink-0 mr-2 self-start">
-                <Sparkles size={13} className="text-white" />
-              </div>
+            <div>
               <div className="rounded-2xl px-4 py-3 bg-white border border-gray-100 rounded-bl-md shadow-sm">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Loader2 size={14} className="animate-spin text-orange-500" />
