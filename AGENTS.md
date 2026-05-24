@@ -4,10 +4,16 @@ Entire design of this project:
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/005-spu-migration/plan.md
+specs/006-pet-profiles-ai/plan.md
 
 Also refer to:
-- Feature specification: specs/005-spu-migration/spec.md
+- Feature specification: specs/006-pet-profiles-ai/spec.md
+- Feature 006 data model: specs/006-pet-profiles-ai/data-model.md
+- Feature 006 API contracts: specs/006-pet-profiles-ai/contracts/api-contracts.md
+- Feature 006 quickstart: specs/006-pet-profiles-ai/quickstart.md
+- Feature 006 research notes: specs/006-pet-profiles-ai/research.md
+- Feature 005 plan: specs/005-spu-migration/plan.md
+- Feature 005 specification: specs/005-spu-migration/spec.md
 - Feature 005 data model: specs/005-spu-migration/data-model.md
 - Feature 005 API contracts: specs/005-spu-migration/contracts/api-contracts.md
 - Feature 005 quickstart: specs/005-spu-migration/quickstart.md
