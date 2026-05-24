@@ -19,8 +19,8 @@
 
 **Purpose**: Database migration for new tables and seed data
 
-- [ ] T001 Run Alembic migration to create `pets` + `pet_breeds` tables in `backend/alembic/versions/007_pet_profiles.py`, seed ~80 breeds per data-model.md
-- [ ] T002 Verify migration: `psql $DATABASE_URL -c "SELECT COUNT(*) FROM pet_breeds"` returns ~80
+- [X] T001 Run Alembic migration to create `pets` + `pet_breeds` tables in `backend/alembic/versions/007_pet_profiles.py`, seed ~80 breeds per data-model.md
+- [X] T002 Verify migration: `psql $DATABASE_URL -c "SELECT COUNT(*) FROM pet_breeds"` returns ~80
 
 ---
 
@@ -30,13 +30,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 [P] Create `Pet` model in `backend/app/models/pet.py` with fields (id, user_id, species, breed_id, nickname, age_months, weight_kg, notes, timestamps) per data-model.md
-- [ ] T004 [P] Create `PetBreed` model in `backend/app/models/pet_breed.py` with fields (id, species, name, description, is_active, sort_order, timestamps) per data-model.md
-- [ ] T005 [P] Add `pets` relationship + reverse relationship on `User` model in `backend/app/models/user.py`
-- [ ] T006 [P] Create Pydantic schemas in `backend/app/schemas/pet.py`: PetCreate, PetUpdate, PetResponse, PetBreedResponse per contracts/api-contracts.md
-- [ ] T007 [P] Add TypeScript interfaces `Pet` and `PetBreed` in `frontend/src/types/index.ts` matching backend schemas
-- [ ] T008 [P] Create `PetService` in `backend/app/services/pet_service.py` with CRUD operations, breed list query, last-selected-pet read/write, max-5-pets enforcement, uniqueness check
-- [ ] T009 Register pets router in `backend/app/main.py` — `app.include_router(pets.router, prefix="/api/v1")`
+- [X] T003 [P] Create `Pet` model in `backend/app/models/pet.py` with fields (id, user_id, species, breed_id, nickname, age_months, weight_kg, notes, timestamps) per data-model.md
+- [X] T004 [P] Create `PetBreed` model in `backend/app/models/pet_breed.py` with fields (id, species, name, description, is_active, sort_order, timestamps) per data-model.md
+- [X] T005 [P] Add `pets` relationship + reverse relationship on `User` model in `backend/app/models/user.py`
+- [X] T006 [P] Create Pydantic schemas in `backend/app/schemas/pet.py`: PetCreate, PetUpdate, PetResponse, PetBreedResponse per contracts/api-contracts.md
+- [X] T007 [P] Add TypeScript interfaces `Pet` and `PetBreed` in `frontend/src/types/index.ts` matching backend schemas
+- [X] T008 [P] Create `PetService` in `backend/app/services/pet_service.py` with CRUD operations, breed list query, last-selected-pet read/write, max-5-pets enforcement, uniqueness check
+- [X] T009 Register pets router in `backend/app/main.py` — `app.include_router(pets.router, prefix="/api/v1")`
 
 **Checkpoint**: Foundation ready — all models, schemas, and shared types in place. User story implementation can now begin.
 
@@ -50,12 +50,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Implement `POST /api/v1/pets` endpoint in `backend/app/api/v1/pets.py` — create pet with validation (max 5, duplicate check, breed-species match)
-- [ ] T011 [P] [US1] Implement `GET /api/v1/pets` endpoint in `backend/app/api/v1/pets.py` — list current user's pets
-- [ ] T012 [US1] Implement `GET /api/v1/pet-breeds?species=` endpoint in `backend/app/api/v1/pets.py` — return active breeds for dropdown (public, no auth required)
-- [ ] T013 [US1] Create pet API client functions in `frontend/src/services/petApi.ts` — `createPet()`, `getMyPets()`, `getBreeds(species)`
-- [ ] T014 [US1] Build "添加你的宠物" wizard page component: species picker → breed picker (cascading) → optional fields (nickname, age, weight, notes) → submit button, integrated into post-login flow in `frontend/src/pages/index/index.tsx` (or new `frontend/src/pages/mine/pets-create.tsx` and invoke from registration)
-- [ ] T015 [US1] Add `is_new_user` detection: if user's pets list is empty on first API load, redirect to pet-adding wizard; store `has_added_pet` flag to skip on subsequent logins
+- [X] T010 [P] [US1] Implement `POST /api/v1/pets` endpoint in `backend/app/api/v1/pets.py` — create pet with validation (max 5, duplicate check, breed-species match)
+- [X] T011 [P] [US1] Implement `GET /api/v1/pets` endpoint in `backend/app/api/v1/pets.py` — list current user's pets
+- [X] T012 [US1] Implement `GET /api/v1/pet-breeds?species=` endpoint in `backend/app/api/v1/pets.py` — return active breeds for dropdown (public, no auth required)
+- [X] T013 [US1] Create pet API client functions in `frontend/src/services/petApi.ts` — `createPet()`, `getMyPets()`, `getBreeds(species)`
+- [X] T014 [US1] Build "添加你的宠物" wizard page component: species picker → breed picker (cascading) → optional fields (nickname, age, weight, notes) → submit button, integrated into post-login flow in `frontend/src/pages/index/index.tsx` (or new `frontend/src/pages/mine/pets-create.tsx` and invoke from registration)
+- [X] T015 [US1] Add `is_new_user` detection: if user's pets list is empty on first API load, redirect to pet-adding wizard; store `has_added_pet` flag to skip on subsequent logins
 
 **Checkpoint**: New users can add pet info during registration flow; existing users skip the wizard
 
@@ -69,13 +69,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Implement `PUT /api/v1/pets/{pet_id}` endpoint in `backend/app/api/v1/pets.py` — update pet (ownership check, duplicate check on species+nickname change)
-- [ ] T017 [P] [US2] Implement `DELETE /api/v1/pets/{pet_id}` endpoint in `backend/app/api/v1/pets.py` — delete pet (ownership check, invalidate suggested-questions cache)
-- [ ] T018 [US2] Add `updatePet()`, `deletePet()` to `frontend/src/services/petApi.ts`
-- [ ] T019 [US2] Create pet management list page in `frontend/src/pages/mine/pets.tsx` — display pet cards (species icon, breed name, nickname, age, weight), "添加宠物" button, edit/delete actions per card
-- [ ] T020 [US2] Create add/edit pet form page in `frontend/src/pages/mine/pets-create.tsx` — species picker → breed picker (cascading from `getBreeds`) → nickname/age/weight/notes fields → submit. Reuse for both add and edit (pass pet_id for edit mode)
-- [ ] T021 [US2] Add "宠物管理" entry in `frontend/src/pages/mine/index.tsx` — display pet count, navigate to pets page
-- [ ] T022 [US2] Add `pets` and `pet_count` to user info in `GET /api/v1/users/me` response (modify `backend/app/api/v1/auth.py` or user-profile endpoint) per contracts Section 5.1
+- [X] T016 [P] [US2] Implement `PUT /api/v1/pets/{pet_id}` endpoint in `backend/app/api/v1/pets.py` — update pet (ownership check, duplicate check on species+nickname change)
+- [X] T017 [P] [US2] Implement `DELETE /api/v1/pets/{pet_id}` endpoint in `backend/app/api/v1/pets.py` — delete pet (ownership check, invalidate suggested-questions cache)
+- [X] T018 [US2] Add `updatePet()`, `deletePet()` to `frontend/src/services/petApi.ts`
+- [X] T019 [US2] Create pet management list page in `frontend/src/pages/mine/pets.tsx` — display pet cards (species icon, breed name, nickname, age, weight), "添加宠物" button, edit/delete actions per card
+- [X] T020 [US2] Create add/edit pet form page in `frontend/src/pages/mine/pets-create.tsx` — species picker → breed picker (cascading from `getBreeds`) → nickname/age/weight/notes fields → submit. Reuse for both add and edit (pass pet_id for edit mode)
+- [X] T021 [US2] Add "宠物管理" entry in `frontend/src/pages/mine/index.tsx` — display pet count, navigate to pets page
+- [X] T022 [US2] Add `pets` and `pet_count` to user info in `GET /api/v1/users/me` response (modify `backend/app/api/v1/auth.py` or user-profile endpoint) per contracts Section 5.1
 
 **Checkpoint**: Full pet management lifecycle functional from "我的" page
 
@@ -89,13 +89,13 @@
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Implement `GET /api/v1/pets/last-selected` endpoint in `backend/app/api/v1/pets.py` — return `last_selected_pet_id` from `user.profile`
-- [ ] T024 [P] [US3] Implement `PUT /api/v1/pets/last-selected` endpoint in `backend/app/api/v1/pets.py` — set `last_selected_pet_id` in `user.profile` (ownership validation)
-- [ ] T025 [US3] Add `getLastSelectedPet()`, `setLastSelectedPet()` to `frontend/src/services/petApi.ts`
-- [ ] T026 [US3] Modify `frontend/src/pages/index/index.tsx` — conditional rendering: if user has pets → render pet cards (species icon, breed, nickname) replacing `defaultPetChoices` tab bar. If no pets → keep existing default tab bar
-- [ ] T027 [US3] Implement pet card selection: tap card → set as active, persist via `setLastSelectedPet()`, load recommendations filtered by `pet.species`. Default selection: read `last_selected_pet_id`, fallback to first pet
-- [ ] T028 [US3] Implement "选择其他" button at end of pet cards — tap → show species picker overlay (cat/dog/bird/fish), select species → temporarily filter by that species (don't persist). Show indicator that browsing for non-bound species
-- [ ] T029 [US3] Update recommendation title to include pet nickname: "给【团子】的推荐" when viewing own pet, show species name when viewing "其他" selection
+- [X] T023 [P] [US3] Implement `GET /api/v1/pets/last-selected` endpoint in `backend/app/api/v1/pets.py` — return `last_selected_pet_id` from `user.profile`
+- [X] T024 [P] [US3] Implement `PUT /api/v1/pets/last-selected` endpoint in `backend/app/api/v1/pets.py` — set `last_selected_pet_id` in `user.profile` (ownership validation)
+- [X] T025 [US3] Add `getLastSelectedPet()`, `setLastSelectedPet()` to `frontend/src/services/petApi.ts`
+- [X] T026 [US3] Modify `frontend/src/pages/index/index.tsx` — conditional rendering: if user has pets → render pet cards (species icon, breed, nickname) replacing `defaultPetChoices` tab bar. If no pets → keep existing default tab bar
+- [X] T027 [US3] Implement pet card selection: tap card → set as active, persist via `setLastSelectedPet()`, load recommendations filtered by `pet.species`. Default selection: read `last_selected_pet_id`, fallback to first pet
+- [X] T028 [US3] Implement "选择其他" button at end of pet cards — tap → show species picker overlay (cat/dog/bird/fish/reptile/small_pet), select species → temporarily filter by that species (don't persist). Show indicator that browsing for non-bound species
+- [X] T029 [US3] Update recommendation title to include pet nickname: "给【团子】的推荐" when viewing own pet, show species name when viewing "其他" selection
 
 **Checkpoint**: Homepage personalized for pet owners; non-pet-owners unaffected
 
@@ -109,10 +109,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Modify `SYSTEM_PROMPT` in `backend/app/agents/prompts.py` — add `{pet_context}` placeholder at end of system prompt, with instruction: "If pet_context is not empty, use the user's pet information to personalize your recommendations"
-- [ ] T031 [US4] Modify `AIAgent.chat_stream()` in `backend/app/agents/agent.py` — before building system prompt, query user's pets via `PetService`, format into structured text block per research.md R3 format (only include fields with values, truncate notes to 50 chars), inject into system prompt
-- [ ] T032 [US4] Modify `POST /api/v1/chat/stream` handler in `backend/app/api/v1/chat.py` — extract `user_id` from auth context, pass to `AIAgent` for pet context injection. Handle anonymous users (no pets, no context)
-- [ ] T033 [US4] Verify context injection works via manual test: create pet, send chat message, check server logs for `## 用户宠物信息` block in system prompt
+- [X] T030 [US4] Modify `SYSTEM_PROMPT` in `backend/app/agents/prompts.py` — add `{pet_context}` placeholder at end of system prompt, with instruction: "If pet_context is not empty, use the user's pet information to personalize your recommendations"
+- [X] T031 [US4] Modify `AIAgent.chat_stream()` in `backend/app/agents/agent.py` — before building system prompt, query user's pets via `PetService`, format into structured text block per research.md R3 format (only include fields with values, truncate notes to 50 chars), inject into system prompt
+- [X] T032 [US4] Modify `POST /api/v1/chat/stream` handler in `backend/app/api/v1/chat.py` — extract `user_id` from auth context, pass to `AIAgent` for pet context injection. Handle anonymous users (no pets, no context)
+- [X] T033 [US4] Verify context injection works via manual test: create pet, send chat message, check server logs for `## 用户宠物信息` block in system prompt
 
 **Checkpoint**: AI assistant gives personalized recommendations based on user's pet profiles
 
@@ -126,12 +126,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T034 [US5] Create `SuggestedQuestionsService` in `backend/app/services/suggested_questions.py` — implement `get_questions(user_id, pets)`: check Redis cache key `suggested_questions:{user_id}`, cache hit → return cached; cache miss → call LLM with prompt from research.md R1 → cache result → return. On any failure → return hardcoded defaults silently
-- [ ] T035 [US5] Implement `GET /api/v1/chat/suggested-questions` endpoint in `backend/app/api/v1/chat.py` — extract user from auth (optional, anonymous allowed), query pets if logged in, delegate to `SuggestedQuestionsService`, return `{ "questions": [...], "source": "ai"|"cache"|"default" }`
-- [ ] T036 [US5] Implement cache invalidation: on pet add/edit/delete in `PetService`, call `delete(f"suggested_questions:{user_id}")` on Redis
-- [ ] T037 [US5] Add `getSuggestedQuestions()` to `frontend/src/services/petApi.ts`
-- [ ] T038 [US5] Modify `frontend/src/pages/chat/index.tsx` — replace hardcoded `quickQuestions` array with `fetchSuggestedQuestions()` call on mount; show loading skeleton while fetching; render returned questions as tappable buttons; if fetch fails or returns defaults, show them silently (no error toast)
-- [ ] T039 [US5] Add polling/refresh: reload suggested questions when chat page re-focuses (useDidShow), but debounce to 60s minimum interval to avoid repeated fetches
+- [X] T034 [US5] Create `SuggestedQuestionsService` in `backend/app/services/suggested_questions.py` — implement `get_questions(user_id, pets)`: check Redis cache key `suggested_questions:{user_id}`, cache hit → return cached; cache miss → call LLM with prompt from research.md R1 → cache result → return. On any failure → return hardcoded defaults silently
+- [X] T035 [US5] Implement `GET /api/v1/chat/suggested-questions` endpoint in `backend/app/api/v1/chat.py` — extract user from auth (optional, anonymous allowed), query pets if logged in, delegate to `SuggestedQuestionsService`, return `{ "questions": [...], "source": "ai"|"cache"|"default" }`
+- [X] T036 [US5] Implement cache invalidation: on pet add/edit/delete in `PetService`, call `delete(f"suggested_questions:{user_id}")` on Redis
+- [X] T037 [US5] Add `getSuggestedQuestions()` to `frontend/src/services/petApi.ts`
+- [X] T038 [US5] Modify `frontend/src/pages/chat/index.tsx` — replace hardcoded `quickQuestions` array with `fetchSuggestedQuestions()` call on mount; show loading skeleton while fetching; render returned questions as tappable buttons; if fetch fails or returns defaults, show them silently (no error toast)
+- [X] T039 [US5] Add polling/refresh: reload suggested questions when chat page re-focuses (useDidShow), but debounce to 60s minimum interval to avoid repeated fetches
 
 **Checkpoint**: Suggested questions are personalized per user's pets, with caching and silent fallback
 
@@ -141,12 +141,12 @@
 
 **Purpose**: Admin breed management, tests, and final validation
 
-- [ ] T040 [P] Add admin API endpoints for breed CRUD in `backend/app/api/v1/admin_pet_breeds.py` — GET list (paginated), POST create, PUT update, DELETE (soft: set `is_active=false`). Auth: admin only per contracts Section 6
-- [ ] T041 [P] Build admin breed management page in `admin/src/pages/PetBreeds/index.tsx` — table with species filter, add/edit modal, toggle active/inactive. Add route in `admin/src/App.tsx`
-- [ ] T042 [P] Write unit tests for `PetService` in `backend/tests/unit/test_pet_service.py` — test create (valid, duplicate, max-5), update, delete, breed-query
-- [ ] T043 [P] Write integration tests for pet CRUD API in `backend/tests/integration/test_pet_api.py` — full CRUD cycle via HTTP
-- [ ] T044 Run quickstart.md validation — execute all manual test checklist items, verify each user story independently
-- [ ] T045 Update `AGENTS.md` SPECKIT block to reflect 006 as current feature (already done in plan phase; verify)
+- [X] T040 [P] Add admin API endpoints for breed CRUD in `backend/app/api/v1/admin_pet_breeds.py` — GET list (paginated), POST create, PUT update, DELETE (soft: set `is_active=false`). Auth: admin only per contracts Section 6
+- [X] T041 [P] Build admin breed management page in `admin/src/pages/PetBreeds/index.tsx` — table with species filter, add/edit modal, toggle active/inactive. Add route in `admin/src/App.tsx`
+- [X] T042 [P] Write unit tests for `PetService` in `backend/tests/unit/test_pet_service.py` — test create (valid, duplicate, max-5), update, delete, breed-query
+- [X] T043 [P] Write integration tests for pet CRUD API in `backend/tests/integration/test_pet_api.py` — full CRUD cycle via HTTP
+- [X] T044 Run quickstart.md validation — execute all manual test checklist items, verify each user story independently
+- [X] T045 Update `AGENTS.md` SPECKIT block to reflect 006 as current feature (already done in plan phase; verify)
 
 ---
 

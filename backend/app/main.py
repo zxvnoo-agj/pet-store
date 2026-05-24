@@ -16,12 +16,13 @@ from app.api.v1 import (
     admin_categories,
     admin_data_sources,
     admin_goods,
+    admin_pet_breeds,
     admin_reviews,
     auth,
     categories,
     chat,
     favorites,
-    reviews,
+    pets,
     search,
     spus,
 )
@@ -185,10 +186,11 @@ async def metrics():
 
 app.include_router(categories.router, prefix="/v1")
 app.include_router(spus.router, prefix="/v1")
-app.include_router(reviews.router, prefix="/v1")
+# app.include_router(reviews.router, prefix="/v1")  # Deprecated: table dropped
 app.include_router(chat.router, prefix="/v1")
 app.include_router(auth.router, prefix="/v1")
 app.include_router(favorites.router, prefix="/v1")
+app.include_router(pets.router, prefix="/v1")
 app.include_router(search.router, prefix="/v1")
 
 # Admin routes
@@ -200,3 +202,4 @@ app.include_router(admin_reviews.router, prefix="/v1")
 # app.include_router(admin_crawled.router, prefix="/v1")  # TODO: Update to use spus
 app.include_router(admin_data_sources.router, prefix="/v1")
 app.include_router(admin_goods.router, prefix="/v1")
+app.include_router(admin_pet_breeds.router, prefix="/v1")

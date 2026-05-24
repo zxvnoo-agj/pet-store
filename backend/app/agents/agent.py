@@ -9,6 +9,11 @@ from app.agents.prompts import SYSTEM_PROMPT
 from app.agents.tools import AgentTools
 from app.core.config import settings
 
+SPECIES_CN = {
+    "cat": "猫", "dog": "狗", "bird": "鸟",
+    "fish": "鱼", "reptile": "爬宠", "small_pet": "小宠", "other": "宠物",
+}
+
 
 class AIAgent:
     def __init__(self, db):
@@ -30,6 +35,42 @@ class AIAgent:
                 temperature=0.7,
                 streaming=True,
             )
+
+    async def _build_pet_context(self, user_id: int) -> str:
+        from app.models.pet import Pet
+        from app.models.pet_breed import PetBreed
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        result = await self.db.execute(
+            select(Pet)
+            .options(selectinload(Pet.breed))
+            .where(Pet.user_id == user_id)
+            .order_by(Pet.created_at.asc())
+        )
+        pets = list(result.scalars().all())
+        if not pets:
+            return ""
+
+        lines = ["## 用户宠物信息"]
+        for i, pet in enumerate(pets, 1):
+            parts = []
+            if pet.breed:
+                parts.append(f"{pet.breed.name}{SPECIES_CN.get(pet.species, pet.species)}")
+            else:
+                parts.append(SPECIES_CN.get(pet.species, pet.species))
+            if pet.nickname:
+                parts.append(f'昵称"{pet.nickname}"')
+            if pet.age_months is not None:
+                parts.append(f"{pet.age_months}个月大")
+            if pet.weight_kg is not None:
+                parts.append(f"体重{float(pet.weight_kg)}kg")
+            if pet.notes:
+                notes = pet.notes[:50]
+                parts.append(f"备注: {notes}")
+            lines.append(f"- 宠物{i}: {', '.join(parts)}")
+
+        return "\n".join(lines)
 
     def _get_tools(self):
         from langchain_core.tools import StructuredTool
@@ -56,11 +97,19 @@ class AIAgent:
             ),
         ]
 
-    async def chat_stream(self, message: str, history: list[dict] | None = None) -> AsyncIterator[str]:
+    async def chat_stream(
+        self, message: str, history: list[dict] | None = None, user_id: int | None = None
+    ) -> AsyncIterator[str]:
         tools = self._get_tools()
 
+        pet_context = ""
+        if user_id is not None:
+            pet_context = await self._build_pet_context(user_id)
+
+        system_prompt = SYSTEM_PROMPT.replace("{pet_context}", pet_context)
+
         prompt = ChatPromptTemplate.from_messages([
-            ("system", SYSTEM_PROMPT),
+            ("system", system_prompt),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),

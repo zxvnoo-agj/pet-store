@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { View, Text, Input, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
+import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon } from '../../components/Icons'
 
@@ -31,19 +32,19 @@ interface Message {
   toolCalls?: ToolCall[]
 }
 
-const quickQuestions = [
-  '3个月幼猫推荐什么猫粮？',
-  '皇家和渴望哪个好？',
-  '200元预算推荐',
-  '猫咪软便怎么办？',
-]
-
 const TOOL_NAMES: Record<string, string> = {
   search_spus: '搜索产品',
   get_spu_detail: '查看产品详情',
   get_reviews_summary: '分析用户评价',
   compare_spus: '对比产品',
 }
+
+const DEFAULT_QUESTIONS = [
+  '3个月幼猫推荐什么猫粮？',
+  '皇家和渴望哪个好？',
+  '200元预算推荐',
+  '猫咪软便怎么办？',
+]
 
 export default function ChatPage() {
   const router = useRouter()
@@ -61,10 +62,18 @@ export default function ChatPage() {
   const [currentStream, setCurrentStream] = useState('')
   const [streamProducts, setStreamProducts] = useState<Spu[]>([])
   const [activeTools, setActiveTools] = useState<ToolCall[]>([])
+  const [quickQuestions, setQuickQuestions] = useState<string[]>(DEFAULT_QUESTIONS)
+  const [questionsLoading, setQuestionsLoading] = useState(false)
+  const lastFetchRef = useRef(0)
   const scrollViewRef = useRef(null)
   const initializedRef = useRef(false)
 
   useDidShow(() => {
+    const now = Date.now()
+    if (now - lastFetchRef.current > 60000) {
+      fetchQuestions()
+    }
+
     const pendingSessionId = Taro.getStorageSync('pendingSessionId')
     if (pendingSessionId) {
       Taro.removeStorageSync('pendingSessionId')
@@ -115,6 +124,21 @@ export default function ChatPage() {
 
   const navigateToSessions = () => {
     Taro.navigateTo({ url: '/pages/chat/list' })
+  }
+
+  const fetchQuestions = async () => {
+    lastFetchRef.current = Date.now()
+    setQuestionsLoading(true)
+    try {
+      const res = await getSuggestedQuestions()
+      if (res.questions && res.questions.length > 0) {
+        setQuickQuestions(res.questions)
+      }
+    } catch {
+      setQuickQuestions(DEFAULT_QUESTIONS)
+    } finally {
+      setQuestionsLoading(false)
+    }
   }
 
   const parseSSEChunk = (chunk: string): { type: string; data: any }[] => {
@@ -472,15 +496,24 @@ export default function ChatPage() {
           <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">
             <Text className="text-xs text-gray-400 mb-2 font-medium">你可以这样问</Text>
             <View className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {quickQuestions.map((q, i) => (
-                <View
-                  key={i}
-                  className="shrink-0 px-4 py-2 bg-white border border-orange-200 text-orange-600 text-sm rounded-full shadow-sm active:bg-orange-50"
-                  onClick={() => handleSend(q)}
-                >
-                  <Text>{q}</Text>
-                </View>
-              ))}
+              {questionsLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <View
+                      key={i}
+                      className="shrink-0 px-4 py-2 bg-gray-100 rounded-full animate-pulse"
+                    >
+                      <Text className="text-sm text-transparent">加载中...</Text>
+                    </View>
+                  ))
+                : quickQuestions.map((q, i) => (
+                    <View
+                      key={i}
+                      className="shrink-0 px-4 py-2 bg-white border border-orange-200 text-orange-600 text-sm rounded-full shadow-sm active:bg-orange-50"
+                      onClick={() => handleSend(q)}
+                    >
+                      <Text>{q}</Text>
+                    </View>
+                  ))}
             </View>
           </View>
         )}

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Image } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import { View, Text } from '@tarojs/components'
+import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
-import { useSpuStore } from '../../stores/spuStore'
 import { useAuthStore } from '../../stores/authStore'
 import { AiAssistantIcon } from '../../components/Icons'
+import { getMyPets, getLastSelectedPet, setLastSelectedPet } from '../../services/petApi'
+import type { Pet } from '../../types'
 
 const defaultPetChoices = [
   { id: 'cat', name: '猫咪', icon: '🐱' },
@@ -19,91 +20,135 @@ const PET_TYPE_MAP: Record<string, { name: string; icon: string }> = {
   dog: { name: '狗狗', icon: '🐶' },
   bird: { name: '鸟类', icon: '🐦' },
   fish: { name: '水族', icon: '🐟' },
+  reptile: { name: '爬宠', icon: '🦎' },
+  small_pet: { name: '小宠', icon: '🐹' },
+  other: { name: '其他', icon: '🐾' },
 }
 
-export default function HomePage() {
-  const { isLoggedIn, user } = useAuthStore()
-  const [activePetId, setActivePetId] = useState('cat')
-  const [recommendedSpus, setRecommendedSpus] = useState([])
+const SPECIES_LABELS: Record<string, string> = {
+  cat: '猫咪', dog: '狗狗', bird: '鸟类', fish: '水族',
+  reptile: '爬宠', small_pet: '小宠', other: '其他',
+}
 
-  const getUserPets = () => {
-    if (!isLoggedIn || !user?.pet_types || user.pet_types.length === 0) {
-      return []
+const SPECIES_OPTIONS = ['cat', 'dog', 'bird', 'fish', 'reptile', 'small_pet']
+
+export default function HomePage() {
+  const { isLoggedIn } = useAuthStore()
+  const [pets, setPets] = useState<Pet[]>([])
+  const [activePetId, setActivePetId] = useState<number | string>('cat')
+  const [recommendedSpus, setRecommendedSpus] = useState([])
+  const [petsLoaded, setPetsLoaded] = useState(false)
+  const [showSpeciesPicker, setShowSpeciesPicker] = useState(false)
+  const [browsingOther, setBrowsingOther] = useState(false)
+  const [browsingSpecies, setBrowsingSpecies] = useState<string | null>(null)
+
+  const loadPetsAndSelection = async () => {
+    try {
+      const result = await getMyPets()
+      const myPets = result.pets || []
+      setPets(myPets)
+      setPetsLoaded(true)
+
+      if (myPets.length > 0) {
+        try {
+          const lastSelected = await getLastSelectedPet()
+          const lastPetId = lastSelected?.pet_id
+          if (lastPetId && myPets.some(p => p.id === lastPetId)) {
+            setActivePetId(lastPetId)
+          } else {
+            setActivePetId(myPets[0].id)
+          }
+        } catch {
+          setActivePetId(myPets[0].id)
+        }
+      }
+    } catch {
+      setPetsLoaded(true)
     }
-    return user.pet_types.map((type: string, index: number) => ({
-      id: `my-${type}-${index}`,
-      name: PET_TYPE_MAP[type]?.name || type,
-      type,
-      icon: PET_TYPE_MAP[type]?.icon || '🐾',
-    }))
   }
 
-  const myPets = getUserPets()
-
   useEffect(() => {
-    if (myPets.length > 0) {
-      setActivePetId(myPets[0].id)
+    if (isLoggedIn) {
+      loadPetsAndSelection()
     } else {
+      setPets([])
       setActivePetId('cat')
+      setPetsLoaded(true)
     }
-  }, [isLoggedIn, user])
+  }, [isLoggedIn])
+
+  useDidShow(() => {
+    if (isLoggedIn) {
+      loadPetsAndSelection()
+    }
+  })
 
   useEffect(() => {
     fetchRecommendedSpus()
   }, [activePetId])
 
-  const fetchRecommendedSpus = async () => {
-    const activeUserPet = myPets.find(p => p.id === activePetId)
-    const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
-    const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
+  const getActiveSpecies = (): string => {
+    if (browsingSpecies) return browsingSpecies
+    if (typeof activePetId === 'number') {
+      const pet = pets.find(p => p.id === activePetId)
+      return pet?.species || 'cat'
+    }
+    return activePetId as string
+  }
 
+  const fetchRecommendedSpus = async () => {
+    const species = getActiveSpecies()
     try {
       const res = await apiClient.get('/spus', {
-        pet_type: petTypeKey,
+        pet_type: species,
         page_size: 3,
       })
       setRecommendedSpus(res.items || [])
     } catch (error) {
-      console.error('Failed to fetch SPUs:', error)
+      setRecommendedSpus([])
     }
   }
 
-  const getPetDisplayList = () => {
-    const list: Array<{ id: string; name: string; icon: string; subtitle?: string; isMine?: boolean }> = []
+  const handlePetClick = async (petId: number | string) => {
+    if (petId === 'other') {
+      setShowSpeciesPicker(true)
+      return
+    }
 
-    myPets.forEach(pet => {
-      list.push({
-        id: pet.id,
-        name: pet.name,
-        icon: pet.icon,
-        subtitle: '宠物',
-        isMine: true,
-      })
-    })
-
-    const userPetTypes = new Set(myPets.map(p => p.type))
-    defaultPetChoices.forEach(p => {
-      if (!userPetTypes.has(p.id)) {
-        list.push({
-          id: p.id,
-          name: p.name,
-          icon: p.icon,
-          isMine: false,
-        })
-      }
-    })
-
-    list.push({ id: 'other', name: '其他', icon: '•••', subtitle: '' })
-
-    return list
-  }
-
-  const petDisplayList = getPetDisplayList()
-
-  const handlePetClick = (petId: string) => {
-    if (petId === 'other') return
     setActivePetId(petId)
+    setBrowsingOther(false)
+    setBrowsingSpecies(null)
+
+    if (typeof petId === 'number') {
+      try {
+        await setLastSelectedPet(petId)
+      } catch {}
+    }
   }
+
+  const handleSpeciesSelect = (species: string) => {
+    setBrowsingOther(true)
+    setBrowsingSpecies(species)
+    setActivePetId(species)
+    setShowSpeciesPicker(false)
+  }
+
+  const getActivePetName = () => {
+    if (typeof activePetId === 'number') {
+      const pet = pets.find(p => p.id === activePetId)
+      if (pet) return pet.nickname || PET_TYPE_MAP[pet.species]?.name || pet.species
+    }
+    if (browsingSpecies) {
+      return SPECIES_LABELS[browsingSpecies] || browsingSpecies
+    }
+    if (typeof activePetId === 'string') {
+      const dp = defaultPetChoices.find(p => p.id === activePetId)
+      if (dp) return dp.name
+    }
+    return '毛孩子'
+  }
+
+  const hasPets = pets.length > 0 && petsLoaded
 
   const navigateToSearch = () => {
     Taro.navigateTo({ url: '/pages/search/index' })
@@ -117,15 +162,8 @@ export default function HomePage() {
     Taro.navigateTo({ url: `/pages/product/list?petType=${petType}` })
   }
 
-  const activeUserPet = myPets.find(p => p.id === activePetId)
-  const activeDefaultPet = defaultPetChoices.find(p => p.id === activePetId)
-  const petTypeKey = activeUserPet?.type || activeDefaultPet?.id || 'cat'
-
-  const getActivePetName = () => {
-    if (activeUserPet) return activeUserPet.name
-    if (activeDefaultPet) return activeDefaultPet.name
-    return '毛孩子'
-  }
+  const activeSpecies = getActiveSpecies()
+  const isBrowsingOther = browsingOther && browsingSpecies
 
   return (
     <View className="bg-gray-50 min-h-screen">
@@ -147,43 +185,127 @@ export default function HomePage() {
         </View>
       </View>
 
-      {/* 我的宠物 */}
+      {/* 宠物卡片/种类选择 */}
       <View className="px-5 pt-4 pb-2">
         <View className="flex items-center gap-3 overflow-x-auto py-1">
-          {petDisplayList.map((pet) => {
-            const isActive = activePetId === pet.id
-            const isOther = pet.id === 'other'
-
-            return (
+          {hasPets ? (
+            <>
+              {pets.map((pet) => {
+                const isActive = activePetId === pet.id && !browsingOther
+                const typeInfo = PET_TYPE_MAP[pet.species] || { name: pet.species, icon: '🐾' }
+                return (
+                  <View
+                    key={pet.id}
+                    onClick={() => handlePetClick(pet.id)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
+                      isActive
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white border-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <Text className="text-lg">{typeInfo.icon}</Text>
+                    <View className="text-left">
+                      <Text className={`text-sm font-medium ${isActive ? 'text-white' : ''}`}>
+                        {pet.nickname}
+                      </Text>
+                      {pet.breed?.name && (
+                        <Text className={`text-[10px] mt-0.5 ${
+                          isActive ? 'text-orange-100' : 'text-gray-400'
+                        }`}>
+                          {pet.breed.name}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                )
+              })}
               <View
-                key={pet.id}
-                onClick={() => handlePetClick(pet.id)}
+                key="other"
+                onClick={() => handlePetClick('other')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
-                  isOther
-                    ? 'border-dashed border-gray-200 bg-white text-gray-400'
-                    : isActive
+                  browsingOther
                     ? 'bg-orange-500 border-orange-500 text-white'
-                    : 'bg-white border-gray-100 text-gray-700'
+                    : 'border-dashed border-gray-200 bg-white text-gray-400'
                 }`}
               >
-                <Text className="text-lg">{isOther ? '•••' : pet.icon}</Text>
-                <View className="text-left">
-                  <Text className={`text-sm font-medium ${isOther ? 'text-gray-400' : ''}`}>
-                    {pet.name}
-                  </Text>
-                  {pet.subtitle && (
-                    <Text className={`text-[10px] mt-0.5 ${
-                      isActive ? 'text-orange-100' : 'text-gray-400'
-                    }`}>
-                      {pet.isMine ? '我的' + pet.subtitle : pet.subtitle}
-                    </Text>
-                  )}
-                </View>
+                <Text className="text-lg">•••</Text>
+                <Text className={`text-sm font-medium ${browsingOther ? 'text-white' : ''}`}>
+                  选择其他
+                </Text>
               </View>
-            )
-          })}
+            </>
+          ) : (
+            <>
+              {defaultPetChoices.map((p) => {
+                const isActive = !browsingOther && activePetId === p.id
+                return (
+                  <View
+                    key={p.id}
+                    onClick={() => handlePetClick(p.id)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
+                      isActive
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white border-gray-100 text-gray-700'
+                    }`}
+                  >
+                    <Text className="text-lg">{p.icon}</Text>
+                    <Text className="text-sm font-medium">{p.name}</Text>
+                  </View>
+                )
+              })}
+              <View
+                key="other"
+                onClick={() => {}}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed border-gray-200 bg-white text-gray-400 shrink-0"
+              >
+                <Text className="text-lg">•••</Text>
+                <Text className="text-sm font-medium">其他</Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
+
+      {/* 浏览其他物种指示器 */}
+      {isBrowsingOther && (
+        <View className="px-5 pt-1">
+          <View className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+            <Text className="text-xs text-orange-600">
+              正在浏览{SPECIES_LABELS[browsingSpecies!] || browsingSpecies}用品 · 点击宠物卡片切换回专属推荐
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* 种类选择弹窗 */}
+      {showSpeciesPicker && (
+        <View
+          className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center"
+          onClick={() => setShowSpeciesPicker(false)}
+        >
+          <View
+            className="bg-white rounded-t-2xl w-full px-5 pt-6 pb-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text className="text-base font-bold text-gray-800 mb-4 text-center">选择浏览种类</Text>
+            <View className="grid grid-cols-3 gap-3">
+              {SPECIES_OPTIONS.map((species) => {
+                const info = PET_TYPE_MAP[species]
+                return (
+                  <View
+                    key={species}
+                    onClick={() => handleSpeciesSelect(species)}
+                    className="flex flex-col items-center gap-2 py-4 rounded-xl bg-gray-50 active:bg-gray-100"
+                  >
+                    <Text className="text-2xl">{info?.icon || '🐾'}</Text>
+                    <Text className="text-sm text-gray-700">{info?.name || species}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* AI助手卡片 */}
       <View className="px-5 pt-5 pb-2">
@@ -217,7 +339,7 @@ export default function HomePage() {
           </Text>
           <Text
             className="text-[11px] text-gray-400"
-            onClick={() => navigateToProducts(petTypeKey)}
+            onClick={() => navigateToProducts(activeSpecies)}
           >
             更多 →
           </Text>

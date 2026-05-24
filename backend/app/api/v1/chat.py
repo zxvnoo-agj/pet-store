@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.agent import AIAgent
 from app.core.database import get_db
+from app.core.deps import get_optional_current_user
+from app.models.user import User
 from app.schemas.chat import ChatSessionCreate, ChatStreamRequest
 from app.schemas.common import ApiResponse
 from app.services.chat_service import ChatService
+from app.services.pet_service import PetService
+from app.services.suggested_questions import get_questions as get_suggested_questions
 
 router = APIRouter()
 
@@ -58,6 +63,7 @@ async def clear_session(
 async def chat_stream(
     data: ChatStreamRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
 ):
     service = ChatService(db)
     agent = AIAgent(db)
@@ -72,7 +78,9 @@ async def chat_stream(
     async def event_generator():
         full_response = ""
         referenced_spus = []
-        async for chunk in agent.chat_stream(data.content, history):
+        async for chunk in agent.chat_stream(
+            data.content, history, user_id=current_user.id if current_user else None
+        ):
             if chunk.startswith("event: message\ndata: "):
                 import json
                 try:
@@ -101,3 +109,23 @@ async def chat_stream(
         event_generator(),
         media_type="text/event-stream",
     )
+
+
+@router.get("/chat/suggested-questions", response_model=ApiResponse[dict])
+async def suggested_questions(
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
+):
+    pets = []
+    if current_user is not None:
+        service = PetService(db)
+        pets = await service.list_user_pets(current_user.id)
+
+    questions, source = await get_suggested_questions(
+        current_user.id if current_user else None, pets
+    )
+
+    return ApiResponse(data={
+        "questions": questions,
+        "source": source,
+    })

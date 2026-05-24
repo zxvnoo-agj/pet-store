@@ -69,3 +69,20 @@ export interface Category {
 
 // Backward-compatible alias for gradual migration
 export type Product = Spu;
+
+export interface PetBreed {
+  id: number
+  name: string
+  description?: string
+}
+
+export interface Pet {
+  id: number
+  species: string
+  breed?: PetBreed | null
+  nickname: string
+  age_months?: number | null
+  weight_kg?: number | null
+  notes?: string | null
+  created_at: string
+}

@@ -10,6 +10,16 @@ from app.models.user import User
 MOCK_H5_TOKEN = "mock_h5_token_for_dev"
 
 
+async def get_optional_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    try:
+        return await get_current_user(request, db)
+    except HTTPException:
+        return None
+
+
 async def get_current_user(
     request: Request,
     db: AsyncSession = Depends(get_db),

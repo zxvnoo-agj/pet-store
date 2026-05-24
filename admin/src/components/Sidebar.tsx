@@ -6,6 +6,7 @@ const menuItems = [
   { path: '/dashboard', label: '运营总览', icon: LayoutDashboard },
   { path: '/spus', label: 'SPU管理', icon: Boxes },
   { path: '/categories', label: '分类管理', icon: FolderTree },
+  { path: '/pet-breeds', label: '品种管理', icon: PawPrint },
   { path: '/reviews', label: '评价审核', icon: MessageSquare },
   { path: '/matching-queue', label: '匹配审核', icon: GitPullRequest },
 ]

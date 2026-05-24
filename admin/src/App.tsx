@@ -7,6 +7,7 @@ import Reviews from './pages/Reviews'
 import Spus from './pages/Spus'
 import SpuDetail from './pages/Spus/Detail'
 import MatchingQueue from './pages/MatchingQueue'
+import PetBreeds from './pages/PetBreeds'
 import ToastContainer from './components/ToastContainer'
 import { useAuthStore } from './stores/authStore'
 
@@ -67,6 +68,14 @@ function App() {
           element={
             <PrivateRoute>
               <MatchingQueue />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/pet-breeds"
+          element={
+            <PrivateRoute>
+              <PetBreeds />
             </PrivateRoute>
           }
         />

@@ -3,17 +3,40 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { wechatLogin } from '../../services/auth'
+import { getMyPets } from '../../services/petApi'
 import { FavoriteIcon } from '../../components/Icons'
 
 export default function MinePage() {
   const { user, isLoggedIn, logout } = useAuthStore()
   const [loading, setLoading] = useState(false)
+  const [petCount, setPetCount] = useState(0)
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchPetCount()
+    }
+  }, [isLoggedIn])
+
+  const fetchPetCount = async () => {
+    try {
+      const res = await getMyPets()
+      setPetCount(res.total || 0)
+    } catch {
+      setPetCount(0)
+    }
+  }
 
   const handleLogin = async () => {
     setLoading(true)
     try {
       await wechatLogin()
       Taro.showToast({ title: '登录成功', icon: 'success' })
+      const res = await getMyPets()
+      if (!res.pets || res.pets.length === 0) {
+        setTimeout(() => {
+          Taro.navigateTo({ url: '/pages/mine/pets-create' })
+        }, 1000)
+      }
     } catch (error) {
       Taro.showToast({ title: '登录失败', icon: 'none' })
     } finally {
@@ -32,6 +55,10 @@ export default function MinePage() {
 
   const navigateToCompare = () => {
     Taro.navigateTo({ url: '/pages/product/compare' })
+  }
+
+  const navigateToPets = () => {
+    Taro.navigateTo({ url: '/pages/mine/pets' })
   }
 
   return (
@@ -60,6 +87,22 @@ export default function MinePage() {
 
       {/* 功能列表 */}
       <View className="mt-4 bg-white">
+        <View
+          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
+          onClick={navigateToPets}
+        >
+          <View className="flex items-center gap-2">
+            <Text className="text-lg">🐾</Text>
+            <Text className="text-sm text-gray-800">宠物管理</Text>
+          </View>
+          <View className="flex items-center gap-1">
+            {petCount > 0 && (
+              <Text className="text-xs text-orange-500">{petCount}只</Text>
+            )}
+            <Text className="text-gray-400">→</Text>
+          </View>
+        </View>
+
         <View
           className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
           onClick={navigateToFavorites}
