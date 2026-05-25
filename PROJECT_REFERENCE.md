@@ -370,7 +370,8 @@ data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 | POST | `/admin/goods/spus/{id}/listings/link` | 关联清单到SPU |
 | POST | `/admin/goods/spus/{id}/listings/unlink` | 取消关联 |
 | POST | `/admin/goods/spus/extract-ai` | AI提取SPU信息 |
-| POST | `/admin/goods/spus/import` | 批量导入SPU |
+| POST | `/admin/goods/spus/{id}/import-listings` | 为指定SPU导入外部链接（定向导入） |
+| POST | `/admin/goods/listings/import` | 全局关键词导入（发现式导入） |
 | GET/POST/PUT/DELETE | `/admin/goods/listings/...` | 清单CRUD |
 | GET | `/admin/categories/...` | 分类CRUD |
 | GET | `/admin/reviews/...` | 评价审核 (pending→approved/rejected) |
@@ -437,4 +438,5 @@ data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 6. **路由匹配顺序**：FastAPI按注册顺序匹配，`/spus/compare` 必须在 `/spus/{spu_id}` 之前注册
 7. **SPU图片自动填充**：创建SPU时 `image_urls` 可为空；导入商品时若匹配到同SPU且SPU没有图片，自动从商品 `image_url` 填充。入口点：`_run_matching_for_unmatched`（自动链接）、`link_listing`（手动关联）、`confirm_listings`（批量确认）
 8. **异步导入流程**：`POST /admin/goods/listings/import` 改为后台任务。端点立即返回 `job_id`，实际抓取+LLM匹配在 `asyncio.create_task` 中执行。前端通过 `/admin/goods/jobs/{job_id}` 轮询状态
-9. **SVG图标组件体系**：项目根目录 `*.svg` 为设计源文件（favorite/favorite-filled/share/ai-assistant）。`components/Icons.tsx` 导出内联SVG的React组件（`FavoriteIcon`/`FavoriteFilledIcon`/`ShareIcon`/`AiAssistantIcon`），支持 `size`/`color`/`className` 属性，同时兼容Taro小程序和Web React渲染
+9. **SPU定向导入（2026-05-25更新）**：新增 `POST /admin/goods/spus/{id}/import-listings` 端点，导入操作从 SPU 列表页的全局关键词搜索改为 SPU 详情页的定向导入。系统默认用 SPU 的 `brand+name+model` 作为搜索关键词，且 LLM 匹配仅针对该 SPU（而非遍历全库），匹配结果直接关联到该 SPU。全局导入保留为发现式导入场景使用
+10. **SVG图标组件体系**：项目根目录 `*.svg` 为设计源文件（favorite/favorite-filled/share/ai-assistant）。`components/Icons.tsx` 导出内联SVG的React组件（`FavoriteIcon`/`FavoriteFilledIcon`/`ShareIcon`/`AiAssistantIcon`），支持 `size`/`color`/`className` 属性，同时兼容Taro小程序和Web React渲染

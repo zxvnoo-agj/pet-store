@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, X, Eye } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
+import ListingDetailModal from '../../Spus/components/ListingDetailModal'
 
 interface CandidateListProps {
   onConfirm: (listingIds: number[]) => void
@@ -10,6 +11,7 @@ interface CandidateListProps {
 export default function CandidateList({ onConfirm, onReject }: CandidateListProps) {
   const queueListings = useSpuStore((s) => s.queueListings)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [detailListing, setDetailListing] = useState<typeof queueListings[0] | null>(null)
 
   const toggleSelect = (id: number) => {
     const next = new Set(selectedIds)
@@ -68,8 +70,16 @@ export default function CandidateList({ onConfirm, onReject }: CandidateListProp
           </thead>
           <tbody>
             {queueListings.map((listing) => (
-              <tr key={listing.id} className="border-b border-peach/5 hover:bg-white/30 transition-colors">
-                <td className="px-4 py-3">
+              <tr
+                key={listing.id}
+                className="border-b border-peach/5 hover:bg-white/30 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  // Prevent modal when clicking checkbox or action buttons
+                  if ((e.target as HTMLElement).closest('input, button')) return
+                  setDetailListing(listing)
+                }}
+              >
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selectedIds.has(listing.id)}
@@ -104,14 +114,21 @@ export default function CandidateList({ onConfirm, onReject }: CandidateListProp
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-carbon">
-                  {listing.spu_id ? (
-                    <span className="text-peach">#{listing.spu_id}</span>
+                  {listing.spu_name ? (
+                    <span className="text-peach">{listing.spu_name}</span>
                   ) : (
                     <span className="text-carbon/40">-</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setDetailListing(listing)}
+                      className="p-1.5 rounded-lg text-carbon/40 hover:text-peach hover:bg-peach/10 transition-colors"
+                      title="查看详情"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => onConfirm([listing.id])}
                       className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
@@ -133,6 +150,13 @@ export default function CandidateList({ onConfirm, onReject }: CandidateListProp
           </tbody>
         </table>
       </div>
+
+      {detailListing && (
+        <ListingDetailModal
+          listing={detailListing}
+          onClose={() => setDetailListing(null)}
+        />
+      )}
     </div>
   )
 }

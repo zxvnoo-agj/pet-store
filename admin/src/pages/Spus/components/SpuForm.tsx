@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { useLockBodyScroll } from '../../../hooks/useLockBodyScroll'
 import { X, Save, Loader2, Sparkles, ImageIcon, Type } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
 import { useToastStore } from '../../../stores/toastStore'
@@ -20,6 +22,7 @@ interface SpuFormProps {
 }
 
 export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
+  useLockBodyScroll()
   const { createSpu, updateSpu } = useSpuStore()
   const { addToast } = useToastStore()
   const [loading, setLoading] = useState(false)
@@ -50,6 +53,8 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
       const cat = categories.find(c => c.id === spu.category_id)
       if (cat?.parent_id) {
         setSelectedParentId(cat.parent_id)
+      } else if (cat) {
+        setSelectedParentId(cat.id)
       }
     } else if (!spu) {
       setSelectedParentId('')
@@ -59,36 +64,7 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   const fetchCategories = async () => {
     try {
       const res = await adminCategoryApi.list()
-      console.log('[SpuForm] Full API response:', res)
-      console.log('[SpuForm] res.data:', res.data)
-      
-      let categoriesList: Category[] = []
-      
-      // Try all possible response formats
-      if (Array.isArray(res.data)) {
-        // Format: [{id, name}, ...]
-        categoriesList = res.data
-      } else if (res.data && typeof res.data === 'object') {
-        if (Array.isArray(res.data.data)) {
-          // Format: {code: 200, data: [{id, name}, ...]}
-          categoriesList = res.data.data
-        } else if (Array.isArray(res.data.data?.categories)) {
-          // Format: {data: {categories: [{id, name}, ...]}}
-          categoriesList = res.data.data.categories
-        } else if (Array.isArray(res.data.items)) {
-          // Format: {items: [{id, name}, ...]}
-          categoriesList = res.data.items
-        } else if (res.data.id && res.data.name) {
-          // Format: single object {id, name, ...}
-          categoriesList = [res.data]
-        } else if (res.data.data && typeof res.data.data === 'object' && res.data.data.id) {
-          // Format: {data: {id, name, ...}}
-          categoriesList = [res.data.data]
-        }
-      }
-      
-      console.log('[SpuForm] Parsed categories:', categoriesList)
-      setCategories(categoriesList)
+      setCategories(res.data?.data?.categories || [])
     } catch (err) {
       console.error('Failed to fetch categories', err)
       setCategories([])
@@ -100,6 +76,11 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   }
 
   const handleSubmit = async () => {
+    if (!formData.category_id) {
+      addToast('请选择一个分类', 'error')
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const data = {
@@ -243,14 +224,16 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
     }
   }
 
+  const parentHasChildren = selectedParentId ? categories.some(c => c.parent_id === selectedParentId && c.level === 2) : false
+
   const labelStyle = 'block text-xs font-medium text-carbon/60 mb-1.5'
   const inputStyle = 'w-full px-3 py-2.5 bg-white/50 border border-peach/10 rounded-xl text-sm text-deep-black placeholder:text-carbon/30 focus:outline-none focus:border-peach/40 focus:bg-white/80 transition-all duration-300'
   const textareaStyle = inputStyle + ' resize-none'
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-10">
-      <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 bg-peach rounded-full" />
             <h2 className="font-serif-display text-lg font-bold text-deep-black">
@@ -265,7 +248,7 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-6 max-h-[65vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
@@ -288,17 +271,18 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
                 </select>
               </div>
               <div>
-                <label className={labelStyle}>父类 *</label>
+                <label className={labelStyle}>分类 *</label>
                 <select
                   value={selectedParentId}
                   onChange={(e) => {
                     const val = e.target.value ? Number(e.target.value) : ''
                     setSelectedParentId(val)
-                    handleChange('category_id', '')
+                    const hasChildren = categories.some(c => c.parent_id === val && c.level === 2)
+                    handleChange('category_id', hasChildren ? '' : String(val))
                   }}
                   className={inputStyle}
                 >
-                  <option value="">选择父类</option>
+                  <option value="">选择分类</option>
                   {categories
                     .filter(c => c.pet_type === formData.pet_type && c.level === 1)
                     .map(c => (
@@ -307,14 +291,14 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
                 </select>
               </div>
               <div>
-                <label className={labelStyle}>子类 *</label>
+                <label className={labelStyle}>子类</label>
                 <select
                   value={formData.category_id}
                   onChange={(e) => handleChange('category_id', e.target.value)}
-                  disabled={!selectedParentId}
+                  disabled={!selectedParentId || !parentHasChildren}
                   className={inputStyle + ' disabled:opacity-50 disabled:cursor-not-allowed'}
                 >
-                  <option value="">选择子类</option>
+                  <option value="">{parentHasChildren ? '选择子类' : '无子分类'}</option>
                   {categories
                     .filter(c => c.parent_id === selectedParentId && c.level === 2)
                     .map(c => (
@@ -539,7 +523,7 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-peach/10">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-peach/10 shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-2.5 text-sm text-carbon bg-white/50 border border-peach/10 rounded-pill hover:bg-white transition-all"
@@ -556,6 +540,7 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

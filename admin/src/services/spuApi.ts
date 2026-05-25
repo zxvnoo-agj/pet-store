@@ -77,11 +77,13 @@ export const spuApi = {
   // Import
   importListings: (data: ImportParams) =>
     apiClient.post('/admin/goods/listings/import', data),
+  importListingsForSpu: (spuId: number, data: ImportParams) =>
+    apiClient.post(`/admin/goods/spus/${spuId}/import-listings`, data),
   getJob: (jobId: string) =>
     apiClient.get(`/admin/goods/jobs/${jobId}`),
 
   // Matching Queue
-  getMatchingQueue: (params?: { match_status?: string; page?: number; page_size?: number }) =>
+  getMatchingQueue: (params?: { tier?: string; page?: number; page_size?: number }) =>
     apiClient.get('/admin/goods/matching-queue', { params }),
   confirmCandidates: (listingIds: number[]) =>
     apiClient.post('/admin/goods/matching-queue/confirm', { listing_ids: listingIds }),

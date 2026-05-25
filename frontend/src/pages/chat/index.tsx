@@ -495,20 +495,20 @@ export default function ChatPage() {
         {messages.length <= 1 && !isLoading && (
           <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">
             <Text className="text-xs text-gray-400 mb-2 font-medium">你可以这样问</Text>
-            <View className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            <View className="flex flex-col gap-2 pb-1">
               {questionsLoading
                 ? Array.from({ length: 3 }).map((_, i) => (
                     <View
                       key={i}
-                      className="shrink-0 px-4 py-2 bg-gray-100 rounded-full animate-pulse"
+                      className="px-4 py-2.5 bg-gray-100 rounded-xl animate-pulse"
                     >
                       <Text className="text-sm text-transparent">加载中...</Text>
                     </View>
                   ))
-                : quickQuestions.map((q, i) => (
+                : quickQuestions.slice(0, 3).map((q, i) => (
                     <View
                       key={i}
-                      className="shrink-0 px-4 py-2 bg-white border border-orange-200 text-orange-600 text-sm rounded-full shadow-sm active:bg-orange-50"
+                      className="text-orange-600 text-sm active:opacity-70"
                       onClick={() => handleSend(q)}
                     >
                       <Text>{q}</Text>

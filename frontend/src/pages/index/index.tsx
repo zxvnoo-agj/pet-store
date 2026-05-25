@@ -209,7 +209,7 @@ export default function HomePage() {
                         {pet.nickname}
                       </Text>
                       {pet.breed?.name && (
-                        <Text className={`text-[10px] mt-0.5 ${
+                        <Text className={`text-xs mt-0.5 ${
                           isActive ? 'text-orange-100' : 'text-gray-400'
                         }`}>
                           {pet.breed.name}
@@ -228,7 +228,6 @@ export default function HomePage() {
                     : 'border-dashed border-gray-200 bg-white text-gray-400'
                 }`}
               >
-                <Text className="text-lg">•••</Text>
                 <Text className={`text-sm font-medium ${browsingOther ? 'text-white' : ''}`}>
                   选择其他
                 </Text>
@@ -258,7 +257,6 @@ export default function HomePage() {
                 onClick={() => {}}
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed border-gray-200 bg-white text-gray-400 shrink-0"
               >
-                <Text className="text-lg">•••</Text>
                 <Text className="text-sm font-medium">其他</Text>
               </View>
             </>

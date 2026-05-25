@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Loader2 } from 'lucide-react'
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll'
 import apiClient from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 
@@ -28,6 +29,7 @@ export default function PetBreeds() {
   const [showForm, setShowForm] = useState(false)
   const [editBreed, setEditBreed] = useState<Breed | null>(null)
   const [formData, setFormData] = useState({ species: 'cat', name: '', description: '' })
+  useLockBodyScroll(showForm)
 
   const fetchBreeds = async () => {
     setLoading(true)
@@ -179,7 +181,7 @@ export default function PetBreeds() {
       </main>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 bg-black/45 z-[100] flex items-center justify-center" onClick={() => setShowForm(false)}>
           <div className="bg-white rounded-xl p-6 w-[400px] shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-deep-black mb-4">{editBreed ? '编辑品种' : '添加品种'}</h3>
             <div className="space-y-3">

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import AsyncSessionLocal, get_db
+from app.models.spu import Spu
 from app.schemas.common import ApiResponse, Pagination
 from app.schemas.spu import SpuCreate, SpuFilter, SpuResponse, SpuUpdate
 from app.schemas.spu_listing import SpuListingResponse, LinkListingRequest
@@ -281,6 +282,55 @@ async def _run_import_job(job_id: str, keyword: str, max_results: int, platform:
         service = SpuListingService(db)
         await service.import_and_match(
             job_id=job_id,
+            keyword=keyword,
+            max_results=max_results,
+            platform=platform,
+        )
+
+
+@router.post("/admin/goods/spus/{spu_id}/import-listings", response_model=ApiResponse[dict], summary="Import Listings for SPU", description="Import listings for a specific SPU from external data source. If keyword is not provided, uses SPU's brand+name+model as the search keyword.")
+async def admin_import_listings_for_spu(
+    spu_id: int,
+    data: dict,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    keyword = data.get("keyword", "")
+    max_results = data.get("max_results", 100)
+    platform = data.get("source", "pdd_ddk").replace("_ddk", "")
+
+    # Verify SPU exists
+    from sqlalchemy import select
+
+    spu_result = await db.execute(select(Spu).where(Spu.id == spu_id))
+    spu = spu_result.scalar_one_or_none()
+    if not spu:
+        raise HTTPException(status_code=404, detail="SPU not found")
+
+    job = ImportJobManager.create_job(f"SPU-{spu_id}")
+    await db.commit()
+
+    asyncio.create_task(
+        _run_import_for_spu_job(job.job_id, spu_id, keyword, max_results, platform)
+    )
+
+    return ApiResponse(
+        data={
+            "job_id": job.job_id,
+            "status": job.status,
+            "message": "SPU import job started",
+            "estimated_duration": "2-5 minutes",
+        }
+    )
+
+
+async def _run_import_for_spu_job(job_id: str, spu_id: int, keyword: str, max_results: int, platform: str) -> None:
+    """Background task to import listings for a specific SPU."""
+    async with AsyncSessionLocal() as db:
+        service = SpuListingService(db)
+        await service.import_and_match_for_spu(
+            job_id=job_id,
+            spu_id=spu_id,
             keyword=keyword,
             max_results=max_results,
             platform=platform,

@@ -16,21 +16,21 @@ export default function MatchingQueue() {
   const rejectCandidates = useSpuStore((s) => s.rejectCandidates)
 
   useEffect(() => {
-    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
+    fetchMatchingQueue({ tier: activeTab, page: 1, page_size: 20 })
   }, [activeTab])
 
   const handleConfirm = async (listingIds: number[]) => {
     await confirmCandidates(listingIds)
-    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
+    fetchMatchingQueue({ tier: activeTab, page: 1, page_size: 20 })
   }
 
   const handleReject = async (listingIds: number[]) => {
     await rejectCandidates(listingIds)
-    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
+    fetchMatchingQueue({ tier: activeTab, page: 1, page_size: 20 })
   }
 
   const handleRefresh = () => {
-    fetchMatchingQueue({ match_status: activeTab, page: 1, page_size: 50 })
+    fetchMatchingQueue({ tier: activeTab, page: 1, page_size: 20 })
   }
 
   return (

@@ -43,6 +43,7 @@ export interface SpuListing {
   sales_count?: number
   match_confidence?: number
   match_status: string
+  spu_name?: string
   last_synced_at?: string
   created_at?: string
   updated_at?: string
@@ -66,7 +67,7 @@ interface SpuState {
   queueTotal: number
   queueLoading: boolean
   queueFilters: {
-    match_status?: string
+    tier?: string
     page?: number
     page_size?: number
   }
@@ -82,12 +83,12 @@ interface SpuState {
   updateSpu: (id: number, data: any) => Promise<Spu>
   deleteSpu: (id: number) => Promise<void>
   fetchListings: (spuId: number, matchStatus?: string) => Promise<void>
-  fetchMatchingQueue: (filters?: { match_status?: string; page?: number; page_size?: number }) => Promise<void>
+  fetchMatchingQueue: (filters?: { tier?: string; page?: number; page_size?: number }) => Promise<void>
   confirmCandidates: (listingIds: number[]) => Promise<void>
   rejectCandidates: (listingIds: number[]) => Promise<void>
   pollImportStatus: () => Promise<any>
   setFilters: (filters: SpuFilterParams) => void
-  setQueueFilters: (filters: { match_status?: string; page?: number; page_size?: number }) => void
+  setQueueFilters: (filters: { tier?: string; page?: number; page_size?: number }) => void
   setImportJob: (jobId: string | null) => void
   setImportStatus: (status: string | null) => void
 }
@@ -106,7 +107,7 @@ export const useSpuStore = create<SpuState>((set, get) => ({
   queueListings: [],
   queueTotal: 0,
   queueLoading: false,
-  queueFilters: { match_status: 'candidate', page: 1, page_size: 50 },
+  queueFilters: { tier: 'candidate', page: 1, page_size: 50 },
 
   importJobId: null,
   importStatus: null,

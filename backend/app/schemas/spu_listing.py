@@ -24,6 +24,7 @@ class SpuListingCreate(SpuListingBase):
 class SpuListingResponse(SpuListingBase):
     id: int
     spu_id: int | None = None
+    spu_name: str | None = None
     last_synced_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

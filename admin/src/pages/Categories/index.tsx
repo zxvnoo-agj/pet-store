@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Trash2, Loader2, FolderTree, Cat, Dog } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Plus, Trash2, Loader2, FolderTree, Cat, Dog, X } from 'lucide-react'
 import { adminCategoryApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll'
 
 interface Category {
   id: number
@@ -28,6 +30,21 @@ export default function Categories() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    pet_type: 'cat',
+    level: 1,
+    parent_id: '',
+    icon: '',
+    sort_order: 0,
+    is_active: true,
+  })
+
+  const resetForm = () => {
+    setForm({ name: '', pet_type: 'cat', level: 1, parent_id: '', icon: '', sort_order: 0, is_active: true })
+  }
 
   const fetchCategories = async () => {
     setLoading(true)
@@ -56,21 +73,62 @@ export default function Categories() {
     }
   }
 
+  const handleCreate = async () => {
+    if (!form.name.trim()) return
+    setSubmitting(true)
+    try {
+      await adminCategoryApi.create({
+        name: form.name,
+        pet_type: form.pet_type,
+        level: form.level,
+        parent_id: form.parent_id ? parseInt(form.parent_id) : null,
+        icon: form.icon || null,
+        sort_order: form.sort_order,
+        is_active: form.is_active,
+      })
+      setShowModal(false)
+      resetForm()
+      fetchCategories()
+    } catch (error) {
+      console.error('Failed to create category', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-gray/30 via-white to-rose-gray/20">
       <Sidebar />
+      {showModal && (
+        <CreateCategoryModal
+          form={form}
+          setForm={setForm}
+          submitting={submitting}
+          onClose={() => setShowModal(false)}
+          onSubmit={handleCreate}
+        />
+      )}
       <main className="ml-[260px] min-h-screen p-8">
         <div className="page-enter max-w-[1400px] mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1 h-5 bg-peach rounded-full" />
-              <h1 className="font-serif-display text-2xl font-bold text-deep-black">
-                分类管理
-              </h1>
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1 h-5 bg-peach rounded-full" />
+                <h1 className="font-serif-display text-2xl font-bold text-deep-black">
+                  分类管理
+                </h1>
+              </div>
+              <p className="text-sm text-carbon/60 ml-3">
+                管理商品分类体系，支持一级和二级分类
+              </p>
             </div>
-            <p className="text-sm text-carbon/60 ml-3">
-              管理商品分类体系，支持一级和二级分类
-            </p>
+            <button
+              onClick={() => { resetForm(); setShowModal(true) }}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-white bg-peach rounded-pill hover:shadow-peach transition-all duration-300"
+            >
+              <Plus className="w-4 h-4" />
+              新增分类
+            </button>
           </div>
 
           <div className="glass-card overflow-hidden">
@@ -193,5 +251,132 @@ export default function Categories() {
         </div>
       </main>
     </div>
+  )
+}
+
+function CreateCategoryModal({
+  form,
+  setForm,
+  submitting,
+  onClose,
+  onSubmit,
+}: {
+  form: { name: string; pet_type: string; level: number; parent_id: string; icon: string; sort_order: number; is_active: boolean }
+  setForm: React.Dispatch<React.SetStateAction<typeof form>>
+  submitting: boolean
+  onClose: () => void
+  onSubmit: () => void
+}) {
+  useLockBodyScroll()
+  const [parentOptions, setParentOptions] = useState<{ id: number; name: string }[]>([])
+
+  useEffect(() => {
+    adminCategoryApi.list({ page_size: 100 }).then(res => {
+      const cats = res.data.data.categories || []
+      setParentOptions(cats.filter((c: any) => c.level === 1).map((c: any) => ({ id: c.id, name: c.name })))
+    }).catch(() => {})
+  }, [])
+
+  const inputStyle = 'w-full px-3 py-2.5 bg-white/50 border border-peach/10 rounded-xl text-sm text-deep-black placeholder:text-carbon/30 focus:outline-none focus:border-peach/40 focus:bg-white/80 transition-all duration-300'
+  const labelStyle = 'block text-xs font-medium text-carbon/60 mb-1.5'
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-4 bg-peach rounded-full" />
+            <h2 className="font-serif-display text-lg font-bold text-deep-black">新增分类</h2>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-carbon/40 hover:text-carbon hover:bg-peach/10 transition-all duration-300">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className={labelStyle}>分类名称</label>
+            <input className={inputStyle} placeholder="如：猫粮、猫砂" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelStyle}>宠物类型</label>
+              <select className={inputStyle} value={form.pet_type} onChange={e => setForm(f => ({ ...f, pet_type: e.target.value }))}>
+                <option value="cat">猫咪</option>
+                <option value="dog">狗狗</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelStyle}>层级</label>
+              <select className={inputStyle} value={form.level} onChange={e => setForm(f => ({ ...f, level: parseInt(e.target.value), parent_id: parseInt(e.target.value) === 1 ? '' : f.parent_id }))}>
+                <option value={1}>一级分类</option>
+                <option value={2}>二级分类</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelStyle}>父分类</label>
+              {form.level === 1 ? (
+                <div className={inputStyle + ' text-carbon/40 cursor-not-allowed bg-peach/[0.02]'}>
+                  一级分类无父分类
+                </div>
+              ) : (
+                <select
+                  className={inputStyle}
+                  value={form.parent_id}
+                  onChange={e => setForm(f => ({ ...f, parent_id: e.target.value }))}
+                >
+                  <option value="">请选择父分类</option>
+                  {parentOptions.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div>
+              <label className={labelStyle}>排序</label>
+              <input className={inputStyle} type="number" placeholder="0" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))} />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelStyle}>图标标识</label>
+            <input className={inputStyle} placeholder="如: cat-food, litter" value={form.icon} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="is_active"
+              checked={form.is_active}
+              onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+              className="w-4 h-4 rounded border-peach/30 text-peach focus:ring-peach/30"
+            />
+            <label htmlFor="is_active" className="text-sm text-deep-black">启用</label>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-peach/10">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 text-sm text-carbon bg-white/50 border border-peach/10 rounded-pill hover:bg-white hover:border-peach/30 transition-all duration-300"
+          >
+            取消
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={submitting || !form.name.trim()}
+            className="px-5 py-2.5 text-sm text-white bg-peach rounded-pill hover:shadow-peach disabled:opacity-50 transition-all duration-300 flex items-center gap-2"
+          >
+            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {submitting ? '创建中...' : '创建'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   )
 }

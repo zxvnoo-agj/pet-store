@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { ExternalLink, Link } from 'lucide-react'
+import { ExternalLink, Link, Eye } from 'lucide-react'
 import { useSpuStore } from '../../../stores/spuStore'
 import { spuApi } from '../../../services/spuApi'
+import ListingDetailModal from '../../Spus/components/ListingDetailModal'
 
 export default function UnmatchedList() {
   const queueListings = useSpuStore((s) => s.queueListings)
   const fetchMatchingQueue = useSpuStore((s) => s.fetchMatchingQueue)
   const [spuInputs, setSpuInputs] = useState<Record<number, string>>({})
   const [linking, setLinking] = useState<Record<number, boolean>>({})
+  const [detailListing, setDetailListing] = useState<typeof queueListings[0] | null>(null)
 
   const handleLink = async (listingId: number) => {
     const spuId = parseInt(spuInputs[listingId])
@@ -15,7 +17,7 @@ export default function UnmatchedList() {
     setLinking((prev) => ({ ...prev, [listingId]: true }))
     try {
       await spuApi.linkListing(listingId, { spu_id: spuId })
-      fetchMatchingQueue({ match_status: 'unmatched', page: 1, page_size: 50 })
+      fetchMatchingQueue({ tier: 'unmatched', page: 1, page_size: 20 })
     } catch (e) {
       console.error('Link failed', e)
     } finally {
@@ -33,11 +35,19 @@ export default function UnmatchedList() {
               <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">平台 / 店铺</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">价格</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">关联 SPU</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-carbon/60 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
           <tbody>
             {queueListings.map((listing) => (
-              <tr key={listing.id} className="border-b border-peach/5 hover:bg-white/30 transition-colors">
+              <tr
+                key={listing.id}
+                className="border-b border-peach/5 hover:bg-white/30 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('input, button, a')) return
+                  setDetailListing(listing)
+                }}
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {listing.image_url && (
@@ -67,7 +77,7 @@ export default function UnmatchedList() {
                   <p className="text-xs text-carbon/50 mt-0.5">{listing.shop_name}</p>
                 </td>
                 <td className="px-4 py-3 text-sm text-deep-black font-medium">¥{listing.price}</td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
@@ -92,11 +102,27 @@ export default function UnmatchedList() {
                     </button>
                   </div>
                 </td>
+                <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setDetailListing(listing)}
+                    className="p-1.5 rounded-lg text-carbon/40 hover:text-peach hover:bg-peach/10 transition-colors"
+                    title="查看详情"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {detailListing && (
+        <ListingDetailModal
+          listing={detailListing}
+          onClose={() => setDetailListing(null)}
+        />
+      )}
     </div>
   )
 }

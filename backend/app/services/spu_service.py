@@ -286,7 +286,11 @@ class SpuService:
         return list(spus), total or 0
 
     async def get_listings_by_spu(self, spu_id: int, match_status: str | None = None) -> list[SpuListing]:
-        query = select(SpuListing).where(SpuListing.spu_id == spu_id)
+        query = (
+            select(SpuListing)
+            .options(selectinload(SpuListing.spu))
+            .where(SpuListing.spu_id == spu_id)
+        )
         if match_status:
             query = query.where(SpuListing.match_status == match_status)
         query = query.order_by(SpuListing.price.asc())
@@ -327,7 +331,13 @@ class SpuService:
     async def get_matching_queue(
         self, match_status: str, page: int = 1, page_size: int = 50
     ) -> tuple[list[SpuListing], int]:
-        query = select(SpuListing).where(SpuListing.match_status == match_status)
+        from sqlalchemy.orm import selectinload
+
+        query = (
+            select(SpuListing)
+            .options(selectinload(SpuListing.spu))
+            .where(SpuListing.match_status == match_status)
+        )
         count_query = select(func.count(SpuListing.id)).where(SpuListing.match_status == match_status)
 
         if match_status == "candidate":

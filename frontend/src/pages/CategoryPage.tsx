@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Loader2 } from 'lucide-react';
 import MobileLayout from '../components/MobileLayout';
-import apiClient from '../services/api';
+import { webApi } from '../services/webApi';
 
 interface CategoryItem {
   id: number
@@ -38,7 +38,7 @@ export default function CategoryPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const data = await apiClient.get<{ categories: CategoryItem[] }>('/categories');
+      const data = await webApi.get<{ categories: CategoryItem[] }>('/categories');
       setCategories(data.categories || []);
     } catch (e) {
       console.error('Failed to fetch categories', e);

@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, ExternalLink, ShoppingCart, BarChart3, CheckCircle2 } from 'lucide-react'
 
 interface Listing {
@@ -19,6 +21,10 @@ interface ListingDetailModalProps {
 }
 
 export default function ListingDetailModal({ listing, onClose }: ListingDetailModalProps) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
   const matchStatusLabel: Record<string, string> = {
     linked: '已关联',
     candidate: '候选',
@@ -30,10 +36,10 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
     rejected: 'bg-red-50 text-red-500',
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-10">
-      <div className="bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 bg-peach rounded-full" />
             <h2 className="font-serif-display text-lg font-bold text-deep-black">
@@ -49,8 +55,7 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-6 max-h-[65vh] overflow-y-auto">
-          {/* Image */}
+        <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           <div className="bg-gradient-to-br from-rose-gray/30 to-peach/5 rounded-xl flex items-center justify-center h-56 overflow-hidden">
             {listing.image_url ? (
               <img
@@ -65,7 +70,6 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
 
           <div className="h-px bg-gradient-to-r from-transparent via-peach/20 to-transparent" />
 
-          {/* Title & meta */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
@@ -81,7 +85,6 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
 
           <div className="h-px bg-gradient-to-r from-transparent via-peach/20 to-transparent" />
 
-          {/* Price */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
@@ -103,7 +106,6 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
 
           <div className="h-px bg-gradient-to-r from-transparent via-peach/20 to-transparent" />
 
-          {/* Status */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
@@ -120,7 +122,7 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-peach/10">
+        <div className="px-6 py-4 border-t border-peach/10 shrink-0">
           <a
             href={listing.url}
             target="_blank"
@@ -132,6 +134,7 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
           </a>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

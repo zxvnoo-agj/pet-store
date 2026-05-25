@@ -1,4 +1,14 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, func, CheckConstraint, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -35,3 +45,7 @@ class SpuListing(Base):
     )
 
     spu = relationship("Spu", back_populates="listings")
+
+    @property
+    def spu_name(self) -> str | None:
+        return self.spu.name if self.spu else None

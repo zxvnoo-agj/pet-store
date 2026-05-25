@@ -12,6 +12,7 @@ class CategoryBase(BaseModel):
 class CategoryCreate(CategoryBase):
     parent_id: int | None = None
     level: int = 1
+    is_active: bool = True
 
 
 class CategoryResponse(CategoryBase):

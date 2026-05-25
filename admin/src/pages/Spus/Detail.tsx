@@ -1,15 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Boxes, ExternalLink, Loader2 } from 'lucide-react'
+import { ArrowLeft, Boxes, ExternalLink, Loader2, Download } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
+import { spuApi } from '../../services/spuApi'
+import { useToastStore } from '../../stores/toastStore'
 import Sidebar from '../../components/Sidebar'
 import ListingTable from './components/ListingTable'
 
 export default function SpuDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { addToast } = useToastStore()
   const { currentSpu, currentListings, detailLoading, fetchSpu, fetchListings } = useSpuStore()
   const [activeTab, setActiveTab] = useState('info')
+  const [showImportForm, setShowImportForm] = useState(false)
+  const [importKeyword, setImportKeyword] = useState('')
+  const [importMaxResults, setImportMaxResults] = useState(100)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importJobId, setImportJobId] = useState<string | null>(null)
+  const [importStatus, setImportStatus] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -17,6 +26,71 @@ export default function SpuDetail() {
       fetchListings(Number(id))
     }
   }, [id])
+
+  // Pre-fill import keyword when SPU loads
+  useEffect(() => {
+    if (currentSpu && !importKeyword) {
+      setImportKeyword(`${currentSpu.brand} ${currentSpu.name} ${currentSpu.model}`.trim())
+    }
+  }, [currentSpu])
+
+  // Poll import job status
+  useEffect(() => {
+    if (!importJobId) return
+
+    const poll = async () => {
+      try {
+        const res = await spuApi.getJob(importJobId)
+        const job = res.data.data
+        setImportStatus(job.status)
+
+        if (job.status === 'completed') {
+          setImportJobId(null)
+          setImportLoading(false)
+          addToast(`导入完成：共导入 ${job.result?.total_imported || 0} 条，成功关联 ${job.result?.auto_linked || 0} 条`, 'success')
+          fetchListings(Number(id))
+        } else if (job.status === 'failed') {
+          setImportJobId(null)
+          setImportLoading(false)
+          addToast('导入失败：' + (job.error || '未知错误'), 'error')
+        }
+      } catch (err: any) {
+        console.error('Poll job failed', err)
+      }
+    }
+
+    const interval = setInterval(poll, 3000)
+    return () => clearInterval(interval)
+  }, [importJobId, id])
+
+  const handleImport = async () => {
+    if (!id) return
+    const keyword = importKeyword.trim()
+    if (!keyword) {
+      addToast('请输入搜索关键词', 'error')
+      return
+    }
+
+    setImportLoading(true)
+    setImportStatus('started')
+
+    try {
+      const res = await spuApi.importListingsForSpu(Number(id), {
+        keyword,
+        max_results: importMaxResults,
+        platform: 'pdd_ddk',
+      })
+      const jobId = res.data.data?.job_id
+      if (jobId) {
+        setImportJobId(jobId)
+        setImportStatus('running')
+      }
+    } catch (err: any) {
+      setImportLoading(false)
+      setImportStatus(null)
+      addToast(err.message || '导入失败', 'error')
+    }
+  }
 
   if (detailLoading) {
     return (
@@ -201,22 +275,107 @@ export default function SpuDetail() {
 
             {activeTab === 'listings' && (
               <div>
-                {currentListings.length === 0 ? (
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-carbon/60">
+                    {currentListings.length > 0 ? `共 ${currentListings.length} 个外部链接` : '暂无外部链接'}
+                  </p>
+                  <button
+                    onClick={() => setShowImportForm(!showImportForm)}
+                    disabled={importLoading}
+                    className="px-4 py-2 bg-peach text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {importLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> 导入中...</>
+                    ) : (
+                      <><Download className="w-4 h-4" /> 导入链接</>
+                    )}
+                  </button>
+                </div>
+
+                {showImportForm && (
+                  <div className="bg-white/50 rounded-xl p-4 mb-4 border border-peach/10">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs text-carbon/60 mb-1.5">
+                          搜索关键词 <span className="text-carbon/40">（留空则使用 SPU 品牌+名称+型号）</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={importKeyword}
+                          onChange={(e) => setImportKeyword(e.target.value)}
+                          placeholder="例如：皇家猫粮、渴望狗粮..."
+                          className="w-full px-4 py-2.5 bg-white/50 border border-peach/10 rounded-pill text-sm text-deep-black placeholder:text-carbon/40 focus:outline-none focus:border-peach/40"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-carbon/60 mb-1.5">最大数量</label>
+                          <input
+                            type="number"
+                            value={importMaxResults}
+                            onChange={(e) => setImportMaxResults(Number(e.target.value))}
+                            min={10}
+                            max={500}
+                            className="w-full px-4 py-2.5 bg-white/50 border border-peach/10 rounded-pill text-sm text-deep-black focus:outline-none focus:border-peach/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-carbon/60 mb-1.5">数据来源</label>
+                          <select
+                            disabled
+                            className="w-full px-4 py-2.5 bg-gray-100 border border-peach/10 rounded-pill text-sm text-carbon/60 focus:outline-none cursor-not-allowed"
+                          >
+                            <option>拼多多 DDK</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 pt-2">
+                        <button
+                          onClick={handleImport}
+                          disabled={importLoading}
+                          className="px-6 py-2.5 bg-peach text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {importLoading ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> 开始导入...</>
+                          ) : (
+                            <><Download className="w-4 h-4" /> 开始导入</>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setShowImportForm(false)}
+                          disabled={importLoading}
+                          className="px-4 py-2.5 text-sm text-carbon hover:text-deep-black transition-colors disabled:opacity-50"
+                        >
+                          取消
+                        </button>
+                      </div>
+                      {importStatus === 'running' && (
+                        <div className="text-sm text-peach flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          正在导入并匹配，请稍候...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {currentListings.length === 0 && !showImportForm ? (
                   <div className="text-center py-12 text-carbon/40">
                     <ExternalLink className="w-10 h-10 mx-auto mb-2" />
                     <p className="text-sm">暂无链接</p>
+                    <p className="text-xs text-carbon/30 mt-1">点击上方"导入链接"按钮搜索外部商品</p>
                   </div>
-                ) : (
+                ) : currentListings.length > 0 ? (
                   <ListingTable
                     listings={currentListings}
-                    onUnlink={(id) => {
+                    onUnlink={(listingId) => {
                       if (confirm('确定要取消关联这个链接吗？')) {
                         // TODO: implement unlink
-                        console.log('Unlink', id)
+                        console.log('Unlink', listingId)
                       }
                     }}
                   />
-                )}
+                ) : null}
               </div>
             )}
           </div>

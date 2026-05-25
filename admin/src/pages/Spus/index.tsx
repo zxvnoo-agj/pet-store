@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, Download, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import { useToastStore } from '../../stores/toastStore'
 import { adminCategoryApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
-import ImportTrigger from './components/ImportTrigger'
 
 interface Category {
   id: number
@@ -22,7 +21,6 @@ export default function Spus() {
   const { addToast } = useToastStore()
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [showImport, setShowImport] = useState(false)
   const [editSpu, setEditSpu] = useState<any>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showFilters, setShowFilters] = useState(false)
@@ -190,17 +188,6 @@ export default function Spus() {
               筛选
             </button>
             <button
-              onClick={() => setShowImport(!showImport)}
-              className={`px-6 py-3 rounded-pill text-sm font-medium flex items-center gap-2 transition-all ${
-                showImport
-                  ? 'bg-peach text-white'
-                  : 'bg-white/50 text-carbon border border-peach/10 hover:bg-white'
-              }`}
-            >
-              <Download className="w-4 h-4" />
-              导入
-            </button>
-            <button
               onClick={() => { setEditSpu(null); setShowForm(true) }}
               className="px-6 py-3 bg-deep-black text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2"
             >
@@ -208,8 +195,6 @@ export default function Spus() {
               新建 SPU
             </button>
           </div>
-
-          {showImport && <ImportTrigger />}
 
           {showFilters && (
             <div className="glass-card p-5 mb-6">

@@ -1,18 +1,15 @@
 import asyncio
-import json
 import uuid
 from dataclasses import dataclass
-from typing import Any
 
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.config import settings
 from app.models.spu import Spu
 from app.models.spu_listing import SpuListing
-from app.services.spu_matching_service import MatchingResult, SpuMatchingService
+from app.services.spu_matching_service import SpuMatchingService
 
 
 @dataclass
@@ -80,10 +77,10 @@ class SpuListingService:
         """
         if not sales_tip:
             return None
-        
+
         # Remove '+' suffix
         cleaned = sales_tip.replace('+', '').strip()
-        
+
         # Handle '万' (ten thousand)
         if '万' in cleaned:
             num_str = cleaned.replace('万', '').strip()
@@ -91,7 +88,7 @@ class SpuListingService:
                 return int(float(num_str) * 10000)
             except ValueError:
                 return None
-        
+
         # Plain number
         try:
             return int(cleaned)
@@ -179,6 +176,142 @@ class SpuListingService:
                 completed_at=__import__("datetime").datetime.utcnow().isoformat(),
             )
 
+    async def import_and_match_for_spu(
+        self,
+        job_id: str,
+        spu_id: int,
+        keyword: str | None = None,
+        max_results: int = 100,
+        platform: str = "pdd",
+    ) -> None:
+        """Import listings for a specific SPU from DDK API.
+
+        Uses SPU's brand+name+model as search keyword if not provided.
+        Only checks if listings match this specific SPU.
+        """
+        ImportJobManager.update_job(job_id, status="running")
+
+        try:
+            # Step 1: Fetch the target SPU
+            spu_result = await self.db.execute(
+                select(Spu)
+                .options(selectinload(Spu.category))
+                .where(Spu.id == spu_id)
+            )
+            spu = spu_result.scalar_one_or_none()
+            if not spu:
+                raise ValueError(f"SPU {spu_id} not found")
+
+            # Step 2: Build search keyword
+            search_keyword = keyword or f"{spu.brand} {spu.name} {spu.model}".strip()
+            logger.info(
+                f"Import job {job_id}: searching for SPU {spu_id} with keyword '{search_keyword}'"
+            )
+
+            # Step 3: Fetch listings
+            listings_data = await self._fetch_listings(
+                search_keyword, max_results, platform
+            )
+            logger.info(
+                f"Import job {job_id}: fetched {len(listings_data)} listings"
+            )
+
+            # Step 4: Save and match against single SPU
+            imported_count = 0
+            linked_count = 0
+
+            for item in listings_data:
+                # Check duplicate
+                existing = await self.db.execute(
+                    select(SpuListing).where(
+                        SpuListing.platform == platform,
+                        SpuListing.goods_id == item["goods_id"],
+                    )
+                )
+                if existing.scalar_one_or_none():
+                    continue
+
+                # Check if matches this specific SPU
+                match_result = await asyncio.to_thread(
+                    self.matching_service.match_listing_to_spu_sync,
+                    item["title"],
+                    [spu],  # Only check against this one SPU
+                )
+
+                if match_result.confidence >= 0.75:
+                    # Link to this SPU
+                    listing = SpuListing(
+                        spu_id=spu_id,
+                        platform=platform,
+                        shop_name=item.get("shop_name", ""),
+                        goods_id=item.get("goods_id"),
+                        goods_sign=item.get("goods_sign"),
+                        title=item.get("title", ""),
+                        price=item.get("price", 0),
+                        original_price=item.get("original_price"),
+                        url=item.get("url", ""),
+                        image_url=item.get("image_url"),
+                        sales_count=item.get("sales_count"),
+                        sku_specs=item.get("sku_specs"),
+                        service_tags=item.get("service_tags"),
+                        match_confidence=match_result.confidence,
+                        match_status="linked",
+                    )
+                    linked_count += 1
+                else:
+                    # Unmatched
+                    listing = SpuListing(
+                        spu_id=None,
+                        platform=platform,
+                        shop_name=item.get("shop_name", ""),
+                        goods_id=item.get("goods_id"),
+                        goods_sign=item.get("goods_sign"),
+                        title=item.get("title", ""),
+                        price=item.get("price", 0),
+                        original_price=item.get("original_price"),
+                        url=item.get("url", ""),
+                        image_url=item.get("image_url"),
+                        sales_count=item.get("sales_count"),
+                        sku_specs=item.get("sku_specs"),
+                        service_tags=item.get("service_tags"),
+                        match_confidence=match_result.confidence,
+                        match_status="unmatched",
+                    )
+
+                self.db.add(listing)
+                imported_count += 1
+
+            await self.db.commit()
+            logger.info(
+                f"Import job {job_id}: saved {imported_count} listings ({linked_count} linked to SPU {spu_id})"
+            )
+
+            # Update price range for the SPU
+            if linked_count > 0:
+                from app.utils.price_utils import update_spu_price_range
+
+                await update_spu_price_range(self.db, spu_id)
+
+            # Update job status
+            ImportJobManager.update_job(
+                job_id,
+                status="completed",
+                total_imported=imported_count,
+                auto_linked=linked_count,
+                candidates=0,
+                unmatched=imported_count - linked_count,
+                completed_at=__import__("datetime").datetime.utcnow().isoformat(),
+            )
+
+        except Exception as e:
+            logger.error(f"Import job {job_id} failed: {e}")
+            ImportJobManager.update_job(
+                job_id,
+                status="failed",
+                error=str(e),
+                completed_at=__import__("datetime").datetime.utcnow().isoformat(),
+            )
+
     async def _fetch_listings(
         self, keyword: str, max_results: int, platform: str
     ) -> list[dict]:
@@ -203,12 +336,12 @@ class SpuListingService:
                 for goods in goods_list:
                     parsed = client.parse_goods(goods)
                     goods_id = parsed["external_id"]
-                    
+
                     # Fetch detail to get goods_sign, sku_specs, service_tags
                     goods_sign = goods.get("goods_sign", "")
                     sku_specs = None
                     service_tags = None
-                    
+
                     if goods_sign:
                         try:
                             detail = await client.get_goods_detail(goods_sign)
@@ -226,7 +359,7 @@ class SpuListingService:
                                 logger.debug(f"Fetched detail for goods_sign={goods_sign}: {len(sku_specs)} SKUs, {len(service_tags)} tags")
                         except Exception as e:
                             logger.warning(f"Failed to fetch detail for goods_sign={goods_sign}: {e}")
-                    
+
                     all_goods.append({
                         "goods_id": goods_id,
                         "goods_sign": goods_sign,

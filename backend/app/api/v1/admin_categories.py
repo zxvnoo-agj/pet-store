@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
 from app.models.category import Category
-from app.schemas.category import CategoryResponse
+from app.schemas.category import CategoryCreate, CategoryResponse
 from app.schemas.common import ApiResponse, Pagination
 
 router = APIRouter()
@@ -56,15 +56,17 @@ async def admin_list_categories(
 
 @router.post("/admin/categories", response_model=ApiResponse[dict])
 async def admin_create_category(
-    data: CategoryResponse,
+    data: CategoryCreate,
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    category = Category(**data.model_dump(exclude={"id", "children"}))
+    category = Category(**data.model_dump())
     db.add(category)
     await db.commit()
     await db.refresh(category, ["id", "name", "pet_type", "parent_id", "level", "icon", "sort_order", "is_active", "created_at"])
-    return ApiResponse(data={"category": CategoryResponse.model_validate(category)})
+    from sqlalchemy import inspect
+    col_data = {c.key: getattr(category, c.key) for c in inspect(category).mapper.column_attrs}
+    return ApiResponse(data={"category": CategoryResponse.model_validate(col_data)})
 
 
 @router.get("/admin/categories/{category_id}", response_model=ApiResponse[dict])

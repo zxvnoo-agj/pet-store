@@ -40,8 +40,8 @@ export default defineAppConfig({
       {
         pagePath: 'pages/chat/index',
         text: 'AI助手',
-        iconPath: 'assets/tabbar/chat.svg',
-        selectedIconPath: 'assets/tabbar/chat-active.svg',
+        iconPath: 'assets/tabbar/ai-assistant.svg',
+        selectedIconPath: 'assets/tabbar/ai-assistant-active.svg',
       },
       {
         pagePath: 'pages/mine/index',

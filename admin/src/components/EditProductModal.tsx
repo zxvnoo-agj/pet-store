@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useLockBodyScroll } from '../hooks/useLockBodyScroll'
 import { X, Loader2, ExternalLink, Copy, Check } from 'lucide-react'
 import { adminProductApi, promotionUrlApi } from '../services/api'
 
@@ -42,6 +44,7 @@ interface Props {
 }
 
 export default function EditProductModal({ productId, onClose, onSaved }: Props) {
+  useLockBodyScroll()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -188,13 +191,14 @@ export default function EditProductModal({ productId, onClose, onSaved }: Props)
   }
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm">
         <div className="bg-white rounded-2xl p-8 flex items-center gap-3">
           <Loader2 className="w-5 h-5 animate-spin text-peach" />
           <span className="text-sm text-carbon/60">加载中...</span>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
@@ -204,10 +208,10 @@ export default function EditProductModal({ productId, onClose, onSaved }: Props)
   const textareaStyle = inputStyle + ' resize-none h-24'
   const jsonTextareaStyle = inputStyle + ' resize-none h-20 font-mono text-xs'
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm py-10">
-      <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-peach/10 shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 bg-peach rounded-full" />
             <h2 className="font-serif-display text-lg font-bold text-deep-black">
@@ -225,7 +229,7 @@ export default function EditProductModal({ productId, onClose, onSaved }: Props)
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-6 max-h-[65vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           <div className={sectionStyle}>
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
@@ -382,7 +386,7 @@ export default function EditProductModal({ productId, onClose, onSaved }: Props)
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-peach/10 space-y-3">
+        <div className="px-6 py-4 border-t border-peach/10 space-y-3 shrink-0">
           {promoUrl && (
             <div className="bg-emerald-50 rounded-xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
@@ -437,6 +441,7 @@ export default function EditProductModal({ productId, onClose, onSaved }: Props)
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
