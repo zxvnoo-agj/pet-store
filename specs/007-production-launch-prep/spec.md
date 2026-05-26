@@ -5,6 +5,13 @@
 **Status**: Draft  
 **Input**: User description: "007特性需求为上线准备，包含上面的上线检查清单涉及到的任务"
 
+## Clarifications
+
+### Session 2026-05-26
+
+- Q: 生产环境 API 域名是什么？ → A: pawpalai.cn，API 子域名为 api.pawpalai.cn，管理后台子域名为 admin.pawpalai.cn
+- Q: 是否需要独立的预发布（staging）环境？ → A: 是，建立 staging 环境（staging.api.pawpalai.cn），所有变更先部署 staging 验证后再上线
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 小程序配置与域名备案 (Priority: P1)
@@ -23,13 +30,13 @@
 
 ---
 
-### User Story 2 - 后端生产环境部署 (Priority: P1)
+### User Story 2 - 后端生产/预发布环境部署 (Priority: P1)
 
-运维人员将后端服务部署到生产环境，配置反向代理、数据库、缓存服务，替换所有占位符配置为正式值。
+运维人员将后端服务部署到生产环境和预发布（staging）环境，配置反向代理、数据库、缓存服务，替换所有占位符配置为正式值。所有变更先部署到 staging 验证，验证通过后再上线生产。
 
-**Why this priority**: 后端是全部功能的基础，没有生产环境后端，前端无法正常工作。
+**Why this priority**: 后端是全部功能的基础，没有生产环境后端，前端无法正常工作。staging 环境降低上线风险。
 
-**Independent Test**: 部署完成后通过健康检查端点和关键 API 接口验证服务正常。
+**Independent Test**: 部署完成后分别访问 staging 和生产环境的健康检查端点，确认均返回正常。
 
 **Acceptance Scenarios**:
 
@@ -101,14 +108,14 @@
 
 ### Functional Requirements
 
-- **FR-001**: 系统 MUST 支持通过环境变量配置生产环境 API 域名，不得硬编码域名
-- **FR-002**: 前端构建 MUST 根据 `TARO_ENV` 和 `NODE_ENV` 自动选择正确的 API 地址
+- **FR-001**: 系统 MUST 支持通过环境变量配置生产环境 API 域名（正式域名为 `api.pawpalai.cn`），不得硬编码域名
+- **FR-002**: 前端构建 MUST 根据 `TARO_ENV` 和 `NODE_ENV` 自动选择正确的 API 地址（生产环境为 `https://api.pawpalai.cn/v1`）
 - **FR-003**: Chat SSE 请求 MUST 携带用户的 Bearer Token 进行身份验证
 - **FR-004**: 前端主包体积 MUST 控制在 2MB 以内，超出时需配置分包策略
 - **FR-005**: 所有外部图片和资源 URL MUST 使用 HTTPS 协议
 - **FR-006**: 微信小程序后台 MUST 配置 `request`、`downloadFile`、`uploadFile` 的合法域名白名单
 - **FR-007**: 后端 Secret Key MUST 使用生产环境随机生成的密钥，不得使用默认值
-- **FR-008**: 后端 CORS 配置 MUST 仅允许生产域名和白名单域名
+- **FR-008**: 后端 CORS 配置 MUST 仅允许生产域名（`https://api.pawpalai.cn`、`https://admin.pawpalai.cn`）和白名单域名
 - **FR-009**: 后端 MUST 配置速率限制，防止单个 IP 过度请求
 - **FR-010**: 后端 Metrics 端点 MUST 添加身份验证或仅限内网访问
 - **FR-011**: 后端日志 MUST 按级别分离（错误日志独立记录），生产环境日志级别为 INFO
@@ -116,8 +123,9 @@
 - **FR-013**: 生产环境 MUST 使用真实的微信 AppID 和 AppSecret 进行登录
 - **FR-014**: 小程序 MUST 提供用户隐私协议页面，首次启动时弹窗获取用户同意
 - **FR-015**: PostgreSQL 和 Redis MUST 配置定期数据备份策略
-- **FR-016**: 生产环境 MUST 配置进程管理器（如 Supervisor 或 systemd）确保后端服务崩溃后自动重启
+- **FR-016**: 生产环境和 staging 环境 MUST 配置进程管理器（如 Supervisor 或 systemd）确保后端服务崩溃后自动重启
 - **FR-017**: 未使用的依赖（如 `lucide-react`）MUST 从 `package.json` 中移除以减小包体积
+- **FR-018**: 系统 MUST 部署预发布（staging）环境（`staging.api.pawpalai.cn`），镜像生产环境配置，用于上线前验证
 
 ### Key Entities *(include if feature involves data)*
 
@@ -141,7 +149,8 @@
 - 生产服务器使用 Linux 系统，已安装 Docker 和 Docker Compose
 - 使用 Let's Encrypt 免费 SSL 证书，通过 certbot 自动续期
 - 使用 Nginx 作为反向代理处理 TLS 终结和静态文件服务
-- ICP 备案流程由业务方自行处理，开发团队仅提供域名信息
+- 正式域名 `pawpalai.cn`，API 子域名 `api.pawpalai.cn`（生产）和 `staging.api.pawpalai.cn`（预发布），管理后台子域名 `admin.pawpalai.cn`
+- ICP 备案流程由业务方自行处理，开发团队提供域名信息
 - 微信小程序审核流程独立进行，不与开发时间线绑定
 - 生产环境与开发环境完全隔离，使用独立的数据库和缓存实例
 - Prometheus + Grafana 用于生产监控（基础设施方向，不在本 spec 详细展开）
