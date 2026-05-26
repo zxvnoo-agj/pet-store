@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView, Button } from '@tarojs/components'
 import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
@@ -72,7 +72,7 @@ function SpuDetailContent() {
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const [imageExpanded, setImageExpanded] = useState(false)
+  const [imageExpanded, setImageExpanded] = useState(true)
 
   const { addToCompare, isInCompare } = useCompareStore()
   const { isLoggedIn } = useAuthStore()
@@ -249,21 +249,24 @@ function SpuDetailContent() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" scrollY>
+      <ScrollView className="flex-1" scrollY style={{ paddingBottom: '60px' }}>
         {/* 产品图片 */}
-        <View
-          className="bg-gray-100 relative"
-          style={{ height: imageExpanded ? 'auto' : '50vh', overflow: imageExpanded ? 'visible' : 'hidden' }}
-          onClick={() => !imageExpanded && setImageExpanded(true)}
-        >
-          <Image src={spu.image_urls?.[0] || ''} className="w-full h-auto" mode="widthFix" />
-          {!imageExpanded && (
-            <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent py-4 flex items-center justify-center">
-              <View className="px-4 py-1.5 bg-white/20 backdrop-blur rounded-full">
-                <Text className="text-white text-xs font-medium">展开查看完整图片</Text>
-              </View>
-            </View>
+        <View className="bg-gray-100">
+          {imageExpanded ? (
+            <Image src={spu.image_urls?.[0] || ''} className="w-full" mode="widthFix" />
+          ) : (
+            <Image src={spu.image_urls?.[0] || ''} className="w-full" mode="aspectFill" style={{ height: '50vh' }} />
           )}
+        </View>
+        {/* 展开/折叠图片按钮 */}
+        <View className="flex items-center justify-center py-2 bg-white">
+          <View
+            className="flex items-center gap-1 px-4 py-1.5 bg-gray-100 rounded-full active:bg-gray-200"
+            onClick={() => setImageExpanded(!imageExpanded)}
+          >
+            <Text className="text-xs text-gray-600">{imageExpanded ? '收起图片' : '展开查看完整图片'}</Text>
+            <Text className="text-xs text-gray-400">{imageExpanded ? '▲' : '▼'}</Text>
+          </View>
         </View>
 
         {/* SPU 基本信息 */}
@@ -284,7 +287,7 @@ function SpuDetailContent() {
           </View>
 
           <View className="flex items-start justify-between gap-2">
-            <Text className="text-lg font-bold text-gray-900 leading-tight">{spu.name}</Text>
+                <Text className="text-lg font-bold text-gray-900 leading-tight" userSelect>{spu.name}</Text>
           </View>
 
           {/* 价格区间 */}
@@ -399,7 +402,7 @@ function SpuDetailContent() {
             {spu.description && (
               <View>
                 <Text className="text-sm font-bold text-gray-800 mb-2">产品描述</Text>
-                <Text className="text-xs text-gray-600 leading-relaxed">{spu.description}</Text>
+                <Text className="text-xs text-gray-600 leading-relaxed" userSelect>{spu.description}</Text>
               </View>
             )}
 
@@ -574,7 +577,7 @@ function SpuDetailContent() {
                     <Text className="text-xs text-orange-400">{'★'.repeat(Math.round(review.rating || 0))}</Text>
                   </View>
                 </View>
-                <Text className="text-xs text-gray-600 leading-relaxed">{review.content}</Text>
+                <Text className="text-xs text-gray-600 leading-relaxed" userSelect>{review.content}</Text>
                 <View className="flex flex-wrap gap-1.5 mt-2">
                   {review.tags?.map((tag: string) => (
                     <Text key={tag} className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded">
@@ -604,7 +607,7 @@ function SpuDetailContent() {
       </ScrollView>
 
       {/* 底部操作栏 */}
-      <View className="shrink-0 px-4 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3 z-10">
+      <View className="shrink-0 px-4 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3 z-10 fixed bottom-0 left-0 right-0" style={{ paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))' }}>
         <View
           className="flex flex-col items-center gap-0.5 px-2"
           onClick={navigateToChat}

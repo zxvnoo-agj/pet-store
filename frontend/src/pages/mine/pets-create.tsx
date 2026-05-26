@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import React, { useState, useEffect } from 'react'
+import { View, Text, Input, Textarea } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { createPet, getMyPets, getBreeds, updatePet } from '../../services/petApi'
@@ -165,25 +165,25 @@ export default function PetsCreatePage() {
           <View className="flex items-center gap-3">
             <Text className="text-sm text-gray-600 w-16 shrink-0">昵称</Text>
             <View className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-              <input
+              <Input
                 className="text-sm text-gray-800 w-full bg-transparent outline-none"
                 type="text"
                 placeholder="给宠物起个名字"
                 value={nickname}
-                onInput={(e: any) => setNickname(e.target.value)}
-                maxLength={32}
+                onInput={(e) => setNickname(e.detail.value)}
+                maxlength={32}
               />
             </View>
           </View>
           <View className="flex items-center gap-3">
             <Text className="text-sm text-gray-600 w-16 shrink-0">年龄</Text>
             <View className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-              <input
+              <Input
                 className="text-sm text-gray-800 w-full bg-transparent outline-none"
                 type="number"
                 placeholder="月龄"
                 value={ageMonths}
-                onInput={(e: any) => setAgeMonths(e.target.value)}
+                onInput={(e) => setAgeMonths(e.detail.value)}
               />
             </View>
             <Text className="text-xs text-gray-400">个月</Text>
@@ -191,13 +191,12 @@ export default function PetsCreatePage() {
           <View className="flex items-center gap-3">
             <Text className="text-sm text-gray-600 w-16 shrink-0">体重</Text>
             <View className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-              <input
+              <Input
                 className="text-sm text-gray-800 w-full bg-transparent outline-none"
                 type="number"
-                step="0.1"
                 placeholder="体重"
                 value={weightKg}
-                onInput={(e: any) => setWeightKg(e.target.value)}
+                onInput={(e) => setWeightKg(e.detail.value)}
               />
             </View>
             <Text className="text-xs text-gray-400">kg</Text>
@@ -205,12 +204,12 @@ export default function PetsCreatePage() {
           <View className="flex gap-3">
             <Text className="text-sm text-gray-600 w-16 shrink-0 pt-2">备注</Text>
             <View className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
-              <textarea
+              <Textarea
                 className="text-sm text-gray-800 w-full bg-transparent outline-none min-h-[60px]"
                 placeholder="记录一些关于宠物的信息..."
                 value={notes}
-                onInput={(e: any) => setNotes(e.target.value)}
-                maxLength={500}
+                onInput={(e) => setNotes(e.detail.value)}
+                maxlength={500}
               />
             </View>
           </View>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { View, Text, Input, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
@@ -202,7 +202,7 @@ export default function ChatPage() {
     setActiveTools([])
 
     try {
-      const baseURL = process.env.NODE_ENV === 'development' ? 'http://localhost:8001/v1' : 'https://api.your-domain.com/v1'
+      const baseURL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production' ? 'https://api.your-domain.com/v1' : 'http://127.0.0.1:8001/v1'
       const response = await fetch(`${baseURL}/chat/stream`, {
         method: 'POST',
         headers: {
@@ -489,8 +489,8 @@ export default function ChatPage() {
         </ScrollView>
       </View>
 
-      {/* 底部区域：快捷问题 + 输入栏 - 固定在底部，paddingBottom 给 TabBar 留空 */}
-      <View style={{ flexShrink: 0, paddingBottom: '50px' }}>
+      {/* 底部区域：快捷问题 + 输入栏 */}
+      <View style={{ flexShrink: 0 }}>
         {/* 快捷问题 - 在输入框上方且相邻 */}
         {messages.length <= 1 && !isLoading && (
           <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">

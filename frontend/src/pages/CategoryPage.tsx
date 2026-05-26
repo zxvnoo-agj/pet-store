@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Loader2 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import MobileLayout from '../components/MobileLayout';
 import { webApi } from '../services/webApi';
 
@@ -61,7 +61,7 @@ export default function CategoryPage() {
           className="flex items-center gap-2 bg-gray-100 rounded-full px-3.5 py-2"
           onClick={() => navigate('/search')}
         >
-          <Search size={14} className="text-gray-400" />
+          <Icon name="search" size={14} className="text-gray-400" />
           <span className="text-xs text-gray-400">搜索猫粮、狗粮、用品...</span>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function CategoryPage() {
         <div className="flex-1 p-4 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+              <Icon name="loader2" className="w-5 h-5 animate-spin text-orange-500" />
             </div>
           ) : (
             <>

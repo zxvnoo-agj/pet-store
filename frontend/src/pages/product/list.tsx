@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
@@ -145,7 +145,7 @@ export default function ProductListPage() {
       {/* 头部 */}
       <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
         <Text className="text-gray-600" onClick={goBack}>←</Text>
-        <Text className="flex-1 text-sm font-bold text-gray-800 truncate">{getPageTitle()}</Text>
+        <Text className="flex-1 text-sm font-bold text-gray-800 truncate" userSelect>{getPageTitle()}</Text>
         <View
           className="flex items-center gap-1 text-xs text-gray-500"
           onClick={() => setShowSortMenu(!showSortMenu)}

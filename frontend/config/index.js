@@ -1,3 +1,5 @@
+const { UnifiedWebpackPluginV5 } = require('weapp-tailwindcss/webpack')
+
 const config = {
   projectName: 'pet-shop-mp',
   date: '2026-5-11',
@@ -15,7 +17,9 @@ const config = {
     '@': require('path').resolve(__dirname, '..', 'src')
   },
   copy: {
-    patterns: [],
+    patterns: [
+      { from: 'project.config.json', to: 'project.config.json' },
+    ],
     options: {}
   },
   framework: 'react',
@@ -36,7 +40,19 @@ const config = {
       pxtransform: {
         enable: true,
         config: {}
-      }
+      },
+    },
+    webpackChain(chain, webpack) {
+      chain.merge({
+        plugin: {
+          install: {
+            plugin: UnifiedWebpackPluginV5,
+            args: [{
+              rem2rpx: true,
+            }]
+          }
+        }
+      })
     }
   },
   h5: {

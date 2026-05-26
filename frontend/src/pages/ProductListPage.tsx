@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, SlidersHorizontal, ChevronDown, Loader2 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import ProductCard from '../components/ProductCard';
 import { useSpuStore } from '../stores/spuStore';
 
@@ -50,16 +50,16 @@ export default function ProductListPage() {
 
         <div className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
           <button onClick={() => navigate(-1)}>
-            <ArrowLeft size={20} className="text-gray-600" />
+            <Icon name="arrowLeft" size={20} className="text-gray-600" />
           </button>
           <h1 className="flex-1 text-sm font-bold text-gray-800 truncate">{getPageTitle()}</h1>
           <button
             className="flex items-center gap-1 text-xs text-gray-500"
             onClick={() => setShowSortMenu(!showSortMenu)}
           >
-            <SlidersHorizontal size={14} />
+            <Icon name="slidersHorizontal" size={14} />
             <span>排序</span>
-            <ChevronDown size={12} />
+            <Icon name="chevronDown" size={12} />
           </button>
         </div>
 
@@ -93,7 +93,7 @@ export default function ProductListPage() {
         <main className="flex-1 overflow-y-auto px-4 pb-4">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+              <Icon name="loader2" className="w-5 h-5 animate-spin text-orange-500" />
             </div>
           ) : (
             <div className="space-y-3">
@@ -105,7 +105,7 @@ export default function ProductListPage() {
 
           {!loading && spus.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-              <SlidersHorizontal size={40} strokeWidth={1.5} />
+              <Icon name="slidersHorizontal" size={40} color="#9CA3AF" />
               <p className="text-sm mt-3">暂无相关商品</p>
             </div>
           )}

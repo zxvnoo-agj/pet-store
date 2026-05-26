@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import React, { useState, useEffect } from 'react'
+import { View, Text, Block } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
@@ -189,7 +189,7 @@ export default function HomePage() {
       <View className="px-5 pt-4 pb-2">
         <View className="flex items-center gap-3 overflow-x-auto py-1">
           {hasPets ? (
-            <>
+            <Block>
               {pets.map((pet) => {
                 const isActive = activePetId === pet.id && !browsingOther
                 const typeInfo = PET_TYPE_MAP[pet.species] || { name: pet.species, icon: '🐾' }
@@ -232,9 +232,9 @@ export default function HomePage() {
                   选择其他
                 </Text>
               </View>
-            </>
+            </Block>
           ) : (
-            <>
+            <Block>
               {defaultPetChoices.map((p) => {
                 const isActive = !browsingOther && activePetId === p.id
                 return (
@@ -259,7 +259,7 @@ export default function HomePage() {
               >
                 <Text className="text-sm font-medium">其他</Text>
               </View>
-            </>
+            </Block>
           )}
         </View>
       </View>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, ThumbsUp, Check, X } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import { webApi } from '../services/webApi';
 import { FavoriteIcon, FavoriteFilledIcon, ShareIcon, AiAssistantIcon } from '../components/Icons';
 
@@ -107,7 +107,7 @@ const ProductDetailPage: React.FC = () => {
             className="w-9 h-9 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft size={18} className="text-white" />
+            <Icon name="arrowLeft" size={18} color="white" />
           </button>
           <div className="flex gap-2">
             <button
@@ -155,7 +155,7 @@ const ProductDetailPage: React.FC = () => {
 
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-1">
-                <Star size={16} className="text-orange-400 fill-orange-400" />
+                <Icon name="star" size={16} color="#fb923c" fill="#fb923c" />
                 <span className="text-sm font-bold text-gray-800">{displayRating}</span>
               </div>
               <span className="text-xs text-gray-400">{displayReviewCount}条评价</span>
@@ -195,7 +195,7 @@ const ProductDetailPage: React.FC = () => {
               {spu.pros?.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold text-green-700 flex items-center gap-1.5 mb-2">
-                    <Check size={16} /> 优点
+                    <Icon name="check" size={16} color="#16a34a" /> 优点
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {spu.pros.map((pro, i) => (
@@ -213,7 +213,7 @@ const ProductDetailPage: React.FC = () => {
               {spu.cons?.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold text-red-600 flex items-center gap-1.5 mb-2">
-                    <X size={16} /> 缺点
+                    <Icon name="x" size={16} color="#dc2626" /> 缺点
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {spu.cons.map((con, i) => (
@@ -316,10 +316,12 @@ const ProductDetailPage: React.FC = () => {
                     <span className="text-xs font-medium text-gray-700">{review.user?.nickname || '匿名用户'}</span>
                     <div className="ml-auto flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
-                        <Star
+                        <Icon
                           key={i}
+                          name="star"
                           size={10}
-                          className={i < Math.round(review.rating) ? 'text-orange-400 fill-orange-400' : 'text-gray-200'}
+                          color={i < Math.round(review.rating) ? '#fb923c' : '#e5e7eb'}
+                          fill={i < Math.round(review.rating) ? '#fb923c' : undefined}
                         />
                       ))}
                     </div>
@@ -340,7 +342,7 @@ const ProductDetailPage: React.FC = () => {
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-[10px] text-gray-400">{review.created_at}</span>
                     <div className="flex items-center gap-1 text-gray-400">
-                      <ThumbsUp size={10} />
+                      <Icon name="thumbsUp" size={10} color="#6B7280" />
                       <span className="text-[10px]">{review.helpful_count || 0}</span>
                     </div>
                   </div>

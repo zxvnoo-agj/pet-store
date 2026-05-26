@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreHorizontal, Send, Loader2 } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import { AiAssistantIcon } from '../components/Icons';
 
 interface Spu {
@@ -40,9 +40,9 @@ const TOOL_NAMES: Record<string, string> = {
   compare_spus: '对比产品',
 }
 
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:8001/v1'
-  : 'https://api.your-domain.com/v1'
+const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
+  ? 'https://api.your-domain.com/v1'
+  : 'http://127.0.0.1:8001/v1'
 
 function parseSSEChunk(chunk: string): { type: string; data: any }[] {
   const events: { type: string; data: any }[] = []
@@ -378,7 +378,7 @@ const ChatPage: React.FC = () => {
         {/* 头部 */}
         <div className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100 z-10">
           <button onClick={() => navigate(-1)}>
-            <ArrowLeft size={20} className="text-gray-600" />
+            <Icon name="arrowLeft" size={20} className="text-gray-600" />
           </button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
@@ -393,7 +393,7 @@ const ChatPage: React.FC = () => {
             </div>
           </div>
           <button className="ml-auto p-1.5">
-            <MoreHorizontal size={20} className="text-gray-600" />
+            <Icon name="moreHorizontal" size={20} className="text-gray-600" />
           </button>
         </div>
 
@@ -455,7 +455,7 @@ const ChatPage: React.FC = () => {
             <div>
               <div className="rounded-2xl px-4 py-3 bg-white border border-gray-100 rounded-bl-md shadow-sm">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Loader2 size={14} className="animate-spin text-orange-500" />
+                  <Icon name="loader2" size={14} className="animate-spin text-orange-500" />
                   <span>正在思考...</span>
                 </div>
               </div>
@@ -501,7 +501,7 @@ const ChatPage: React.FC = () => {
             onClick={() => handleSend()}
             disabled={!inputValue.trim() || isLoading}
           >
-            <Send size={16} />
+            <Icon name="send" size={16} />
           </button>
         </div>
       </div>

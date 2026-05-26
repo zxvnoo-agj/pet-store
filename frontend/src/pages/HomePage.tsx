@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MessageCircle, BookOpen, ChevronRight } from 'lucide-react';
+import { Icon } from '../components/Icon';
 import { AiAssistantIcon } from '../components/Icons';
 import MobileLayout from '../components/MobileLayout';
 import ProductCard from '../components/ProductCard';
@@ -93,7 +93,7 @@ const HomePage: React.FC = () => {
             onClick={() => navigate('/search')}
             className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center"
           >
-            <Search size={16} className="text-gray-500" />
+            <Icon name="search" size={16} className="text-gray-500" />
           </button>
         </div>
       </div>
@@ -156,7 +156,7 @@ const HomePage: React.FC = () => {
                 不知道选什么？直接问我
               </p>
             </div>
-            <MessageCircle size={20} className="text-white/70" />
+            <Icon name="messageCircle" size={20} className="text-white/70" />
           </div>
         </button>
       </div>
@@ -168,7 +168,7 @@ const HomePage: React.FC = () => {
             onClick={() => navigate(`/products?petType=${petTypeKey}`)}
             className="flex-1 bg-white rounded-2xl p-4 text-left border border-gray-100 active:scale-[0.97] transition-transform"
           >
-            <BookOpen size={18} className="text-orange-400 mb-2" />
+            <Icon name="bookOpen" size={18} className="text-orange-400 mb-2" />
             <p className="text-sm font-medium text-gray-800">产品库</p>
             <p className="text-[10px] text-gray-400 mt-0.5">看看大家的选择</p>
           </button>
@@ -176,7 +176,7 @@ const HomePage: React.FC = () => {
             onClick={() => navigate('/category')}
             className="flex-1 bg-white rounded-2xl p-4 text-left border border-gray-100 active:scale-[0.97] transition-transform"
           >
-            <Search size={18} className="text-teal-400 mb-2" />
+            <Icon name="search" size={18} className="text-teal-400 mb-2" />
             <p className="text-sm font-medium text-gray-800">分类 browse</p>
             <p className="text-[10px] text-gray-400 mt-0.5">按品类慢慢逛</p>
           </button>
@@ -193,7 +193,7 @@ const HomePage: React.FC = () => {
             onClick={() => navigate(`/products?petType=${petTypeKey}`)}
             className="flex items-center gap-0.5 text-[11px] text-gray-400"
           >
-            更多 <ChevronRight size={12} />
+            更多 <Icon name="chevronRight" size={12} />
           </button>
         </div>
         <div className="space-y-3">

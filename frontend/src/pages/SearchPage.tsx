@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeft, Clock, TrendingUp, X } from 'lucide-react';
+import { Icon } from '../components/Icon';
 
 const searchHistory = ['幼猫猫粮', '渴望六种鱼', '性价比猫粮', '猫罐头'];
 
@@ -33,10 +33,10 @@ const SearchPage: React.FC = () => {
         {/* 搜索头部 */}
         <div className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3">
           <button onClick={() => navigate(-1)}>
-            <ArrowLeft size={20} className="text-gray-600" />
+            <Icon name="arrowLeft" size={20} className="text-gray-600" />
           </button>
           <div className="flex-1 flex items-center gap-2 bg-gray-100 rounded-full px-3.5 py-2">
-            <Search size={14} className="text-gray-400" />
+            <Icon name="search" size={14} className="text-gray-400" />
             <input
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
               placeholder="搜索猫粮、狗粮、用品..."
@@ -47,7 +47,7 @@ const SearchPage: React.FC = () => {
             />
             {query && (
               <button onClick={() => setQuery('')}>
-                <X size={14} className="text-gray-400" />
+                <Icon name="x" size={14} className="text-gray-400" />
               </button>
             )}
           </div>
@@ -64,7 +64,7 @@ const SearchPage: React.FC = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                <Clock size={14} className="text-gray-400" />
+                <Icon name="clock" size={14} className="text-gray-400" />
                 搜索历史
               </h3>
               <button className="text-xs text-gray-400">清除</button>
@@ -85,7 +85,7 @@ const SearchPage: React.FC = () => {
           {/* 热门搜索 */}
           <div>
             <h3 className="text-sm font-bold text-gray-800 flex items-center gap-1.5 mb-3">
-              <TrendingUp size={14} className="text-orange-500" />
+              <Icon name="trendingUp" size={14} className="text-orange-500" />
               热门搜索
             </h3>
             <div className="bg-white rounded-2xl overflow-hidden">
