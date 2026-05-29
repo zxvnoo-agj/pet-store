@@ -85,4 +85,36 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)
+
+export interface Spu {
+  id: number
+  name: string
+  brand: string
+  price_min: number
+  price_max: number
+  image_urls: string[]
+  rating: number
+  review_count: number
+  pros?: string[]
+  cons?: string[]
+}
+
+export interface SearchSpusResponse {
+  items: Spu[]
+  total: number
+}
+
+export async function searchSpusByKeywords(
+  keywords: string[],
+  petType?: string
+): Promise<SearchSpusResponse> {
+  const params: Record<string, string> = {
+    keywords: keywords.join(','),
+  }
+  if (petType) {
+    params.pet_type = petType
+  }
+  return apiClient.get('/spus/search', params)
+}
+
 export default apiClient

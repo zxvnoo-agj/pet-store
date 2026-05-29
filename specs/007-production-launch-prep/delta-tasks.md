@@ -17,9 +17,9 @@
 
 **Purpose**: Understand existing code structure and API availability before implementation
 
-- [ ] T001 Verify existing search API endpoint in `frontend/src/services/api.ts` and `backend/app/api/v1/` — confirm `/v1/spus/search` or equivalent supports `keywords` query parameter
-- [ ] T002 [P] Check `SpuCard` component usage across the codebase (`frontend/src/components/SpuCard.tsx`) — identify all pages that import it to assess style change impact
-- [ ] T003 Verify current `frontend/src/pages/index/index.tsx` structure — locate AI banner code block to be removed and identify exact insertion point for scenario section
+- [X] T001 Verify existing search API endpoint in `frontend/src/services/api.ts` and `backend/app/api/v1/` — confirm `/v1/spus/search` or equivalent supports `keywords` query parameter
+- [X] T002 [P] Check `SpuCard` component usage across the codebase (`frontend/src/components/SpuCard.tsx`) — identify all pages that import it to assess style change impact
+- [X] T003 Verify current `frontend/src/pages/index/index.tsx` structure — locate AI banner code block to be removed and identify exact insertion point for scenario section
 
 **Checkpoint**: Search API confirmed, SpuCard impact assessed, insertion point identified. Implementation can begin.
 
@@ -31,10 +31,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Create scenario configuration file `frontend/src/config/scenarios.ts` with TypeScript types (`ScenarioConfig` interface) and static data for all 6 cat scenarios (美毛亮毛/肠胃敏感/幼猫成长/囤货专区/挑食改善/换季护理) plus dog/bird/fish/reptile/small_pet templates with keyword replacement
-- [ ] T005 [P] Create reusable `ScenarioCard` component in `frontend/src/components/ScenarioCard.tsx` — accepts icon, title, subtitle, active state props; styling: 150-170px width, 72-88px height, 16px border-radius, left icon + right two-line text layout
-- [ ] T006 Create `ScenarioSection` component in `frontend/src/components/ScenarioSection.tsx` — wraps horizontal `scroll-view`, renders scenario cards, handles active state highlight, includes "清除" clear button (visible only when a scenario is selected)
-- [ ] T007 Add search API call method to `frontend/src/services/api.ts` — `searchSpusByKeywords(keywords: string[], petType?: string)` that calls `GET /v1/spus/search` or equivalent endpoint
+- [X] T004 [P] Create scenario configuration file `frontend/src/config/scenarios.ts` with TypeScript types (`ScenarioConfig` interface) and static data for all 6 cat scenarios (美毛亮毛/肠胃敏感/幼猫成长/囤货专区/挑食改善/换季护理) plus dog/bird/fish/reptile/small_pet templates with keyword replacement
+- [X] T005 [P] Create reusable `ScenarioCard` component in `frontend/src/components/ScenarioCard.tsx` — accepts icon, title, subtitle, active state props; styling: 150-170px width, 72-88px height, 16px border-radius, left icon + right two-line text layout
+- [X] T006 Create `ScenarioSection` component in `frontend/src/components/ScenarioSection.tsx` — wraps horizontal `scroll-view`, renders scenario cards, handles active state highlight, includes "清除" clear button (visible only when a scenario is selected)
+- [X] T007 Add search API call method to `frontend/src/services/api.ts` — `searchSpusByKeywords(keywords: string[], petType?: string)` that calls `GET /v1/spus/search` or equivalent endpoint
 
 **Checkpoint**: Foundation ready — scenario config, card component, section component, and search API wrapper are all in place. User story implementation can now begin in parallel.
 
