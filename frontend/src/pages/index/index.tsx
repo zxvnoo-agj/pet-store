@@ -93,6 +93,14 @@ export default function HomePage() {
     fetchRecommendedSpus()
   }, [activePetId])
 
+  // 宠物类型切换时自动重置场景状态
+  useEffect(() => {
+    setActiveScenarioId(null)
+    setScenarioResults(null)
+    setScenarioError(null)
+    setIsSearching(false)
+  }, [activePetId])
+
   const getActiveSpecies = (): string => {
     if (browsingSpecies) return browsingSpecies
     if (typeof activePetId === 'number') {
@@ -344,6 +352,7 @@ export default function HomePage() {
 
       {/* 场景快捷推荐 */}
       <ScenarioSection
+        key={activeSpecies}
         scenarios={getScenariosByPetType(activeSpecies)}
         activeScenarioId={activeScenarioId}
         onScenarioClick={handleScenarioClick}

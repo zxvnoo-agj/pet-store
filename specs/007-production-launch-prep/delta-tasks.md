@@ -90,10 +90,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Add pet type watcher to `frontend/src/pages/index/index.tsx` — when `activeSpecies` changes, recalculate scenario config and reset `activeScenarioId` to null
-- [ ] T021 [US3] Implement pet type → scenario config mapping in `frontend/src/config/scenarios.ts` — export `getScenariosByPetType(petType: string)` that returns appropriate scenario array (cat gets full config, others get template with keyword replacement)
-- [ ] T022 [US3] Handle unsupported pet types in `frontend/src/components/ScenarioSection.tsx` — when `scenarios` array is empty or pet type has no config, hide the entire scenario section or show generic "热门推荐"/"日常用品" cards
-- [ ] T023 [US3] Ensure smooth transition in `frontend/src/pages/index/index.tsx` — when pet type switches, scenario cards should update without flickering; maintain scroll position if possible
+- [X] T020 [US3] Add pet type watcher to `frontend/src/pages/index/index.tsx` — when `activeSpecies` changes, recalculate scenario config and reset `activeScenarioId` to null
+- [X] T021 [US3] Implement pet type → scenario config mapping in `frontend/src/config/scenarios.ts` — export `getScenariosByPetType(petType: string)` that returns appropriate scenario array (cat gets full config, others get template with keyword replacement)
+- [X] T022 [US3] Handle unsupported pet types in `frontend/src/components/ScenarioSection.tsx` — when `scenarios` array is empty or pet type has no config, hide the entire scenario section or show generic "热门推荐"/"日常用品" cards
+- [X] T023 [US3] Ensure smooth transition in `frontend/src/pages/index/index.tsx` — when pet type switches, scenario cards should update without flickering; maintain scroll position if possible
 
 **Checkpoint**: All user stories should now be independently functional. Pet type switching updates scenarios smoothly.
 
