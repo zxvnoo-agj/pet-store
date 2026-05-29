@@ -12,6 +12,8 @@ Also refer to:
 - Feature 007 deployment checklist: specs/007-production-launch-prep/contracts/deployment-checklist.md
 - Feature 007 quickstart: specs/007-production-launch-prep/quickstart.md
 - Feature 007 research notes: specs/007-production-launch-prep/research.md
+- Feature 007 delta spec (首页场景快捷卡): specs/007-production-launch-prep/delta-spec.md
+- Feature 007 delta plan (首页场景快捷卡): specs/007-production-launch-prep/delta-plan.md
 - Feature 006 plan: specs/006-pet-profiles-ai/plan.md
 - Feature 005 specification: specs/005-spu-migration/spec.md
 - Feature 005 data model: specs/005-spu-migration/data-model.md
