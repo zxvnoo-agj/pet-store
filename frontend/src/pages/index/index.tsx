@@ -208,9 +208,9 @@ export default function HomePage() {
       {/* 顶部欢迎区 */}
       <View className="px-5 pt-6 pb-2">
         <View>
-          <Text className="text-xs text-gray-400">下午好 👋</Text>
+          <Text className="text-xs text-gray-400">下午好</Text>
           <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
-            今天想给<Text className="text-orange-500">{getActivePetName()}</Text>看点什么？
+            今天给<Text className="text-orange-500">{getActivePetName()}</Text>挑点什么？
           </Text>
         </View>
         <View

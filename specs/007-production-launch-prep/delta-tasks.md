@@ -69,14 +69,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Apply `#FFF4EA` background color to `ScenarioSection` component container — replace any orange gradient with light beige background
-- [ ] T017 [P] [US2] Update greeting text in `frontend/src/pages/index/index.tsx` — change from "下午好 👋 今天想给{petName}看点什么？" to "下午好，今天给{petName}挑点什么？" with pet name in orange
-- [ ] T018 [US2] Optimize `frontend/src/components/SpuCard.tsx` visual hierarchy:
+- [X] T016 [US2] Apply `#FFF4EA` background color to `ScenarioSection` component container — replace any orange gradient with light beige background
+- [X] T017 [P] [US2] Update greeting text in `frontend/src/pages/index/index.tsx` — change from "下午好 👋 今天想给{petName}看点什么？" to "下午好，今天给{petName}挑点什么？" with pet name in orange
+- [X] T018 [US2] Optimize `frontend/src/components/SpuCard.tsx` visual hierarchy:
   - Title: bold, medium font size
   - Category/usage: light gray small text
   - Price: bottom-right positioned, orange color prominent
   - Rating and review count: de-emphasized (smaller, lighter color)
-- [ ] T019 [US2] Verify and adjust scenario card styling in `frontend/src/components/ScenarioCard.tsx` — ensure consistent spacing, font sizes, and colors match NutUI-React design tokens
+- [X] T019 [US2] Verify and adjust scenario card styling in `frontend/src/components/ScenarioCard.tsx` — ensure consistent spacing, font sizes, and colors match NutUI-React design tokens
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. Visual design matches spec requirements.
 
