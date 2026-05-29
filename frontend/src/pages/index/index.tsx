@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, Block } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
@@ -47,6 +47,7 @@ export default function HomePage() {
   const [isSearching, setIsSearching] = useState(false)
   const [scenarioResults, setScenarioResults] = useState<Spu[] | null>(null)
   const [scenarioError, setScenarioError] = useState<string | null>(null)
+  const lastClickTimeRef = useRef(0)
 
   const loadPetsAndSelection = async () => {
     try {
@@ -178,6 +179,10 @@ export default function HomePage() {
   }
 
   const handleScenarioClick = async (scenarioId: string) => {
+    const now = Date.now()
+    if (now - lastClickTimeRef.current < 300) return
+    lastClickTimeRef.current = now
+
     const scenarios = getScenariosByPetType(activeSpecies)
     const scenario = scenarios.find((s) => s.id === scenarioId)
     if (!scenario) return

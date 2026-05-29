@@ -103,17 +103,17 @@
 
 **Purpose**: Final verification, edge case handling, and cleanup
 
-- [ ] T024 [P] Add debounce to scenario click handler in `frontend/src/pages/index/index.tsx` — prevent rapid consecutive clicks from triggering multiple API calls (300ms debounce)
-- [ ] T025 [P] Verify `frontend/src/app.config.ts` — confirm no new page routes needed (all interaction stays on homepage)
+- [X] T024 [P] Add debounce to scenario click handler in `frontend/src/pages/index/index.tsx` — prevent rapid consecutive clicks from triggering multiple API calls (300ms debounce)
+- [X] T025 [P] Verify `frontend/src/app.config.ts` — confirm no new page routes needed (all interaction stays on homepage)
 - [ ] T026 Run WeChat DevTools preview and test on real device — verify horizontal scroll works on iOS and Android, check for capsule button overlap
-- [ ] T027 Test edge cases in `frontend/src/pages/index/index.tsx`:
+- [X] T027 Test edge cases in `frontend/src/pages/index/index.tsx`:
   - No matching products: empty state displays correctly
   - Network failure: error message shows, falls back to recommendations
   - Rapid pet type switching: no flickering, no duplicate API calls
   - Refresh page: scenario selection resets to default
-- [ ] T028 Check bundle size impact — run `npm run build:weapp`, verify main package size increase <50KB after adding new components
-- [ ] T029 Clean up unused AI banner imports in `frontend/src/pages/index/index.tsx` — remove `AiAssistantIcon` import if no longer used elsewhere
-- [ ] T030 Update `frontend/src/components/SpuCard.tsx` regression check — verify the component still renders correctly on search results page, favorites page, and any other pages that use it
+- [X] T028 Check bundle size impact — run `npm run build:weapp`, verify main package size increase <50KB after adding new components
+- [X] T029 Clean up unused AI banner imports in `frontend/src/pages/index/index.tsx` — remove `AiAssistantIcon` import if no longer used elsewhere
+- [X] T030 Update `frontend/src/components/SpuCard.tsx` regression check — verify the component still renders correctly on search results page, favorites page, and any other pages that use it
 
 ---
 
