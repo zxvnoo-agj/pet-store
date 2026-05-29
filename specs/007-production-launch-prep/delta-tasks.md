@@ -48,14 +48,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Remove AI assistant banner from `frontend/src/pages/index/index.tsx` (delete the orange gradient banner block with "问问 AI 助手" text, AI icon, and arrow)
-- [ ] T009 [US1] Integrate `ScenarioSection` into `frontend/src/pages/index/index.tsx` at the position where AI banner was removed (between pet type selector and product recommendation list)
-- [ ] T010 [US1] Add scenario state management to `frontend/src/pages/index/index.tsx` — `activeScenarioId`, `isSearching`, `scenarioResults`, `scenarioError`; pass state and handlers to `ScenarioSection`
-- [ ] T011 [US1] Implement scenario click handler in `frontend/src/pages/index/index.tsx` — calls search API with scenario keywords, shows loading state, replaces `recommendedSpus` with search results
-- [ ] T012 [US1] Implement "清除" (clear) button handler in `frontend/src/pages/index/index.tsx` — resets `activeScenarioId` to null, restores original `recommendedSpus` list
-- [ ] T013 [US1] Add empty state UI in `frontend/src/pages/index/index.tsx` — when scenario search returns no results, show "暂无相关商品，试试其他场景？" with a "查看更多商品" link that navigates to search page
-- [ ] T014 [US1] Add loading state UI in `frontend/src/pages/index/index.tsx` — show skeleton placeholders or loading spinner while search API is in progress
-- [ ] T015 [US1] Add error handling in `frontend/src/pages/index/index.tsx` — when search API fails, show error message and fallback to original recommendations
+- [X] T008 [US1] Remove AI assistant banner from `frontend/src/pages/index/index.tsx` (delete the orange gradient banner block with "问问 AI 助手" text, AI icon, and arrow)
+- [X] T009 [US1] Integrate `ScenarioSection` into `frontend/src/pages/index/index.tsx` at the position where AI banner was removed (between pet type selector and product recommendation list)
+- [X] T010 [US1] Add scenario state management to `frontend/src/pages/index/index.tsx` — `activeScenarioId`, `isSearching`, `scenarioResults`, `scenarioError`; pass state and handlers to `ScenarioSection`
+- [X] T011 [US1] Implement scenario click handler in `frontend/src/pages/index/index.tsx` — calls search API with scenario keywords, shows loading state, replaces `recommendedSpus` with search results
+- [X] T012 [US1] Implement "清除" (clear) button handler in `frontend/src/pages/index/index.tsx` — resets `activeScenarioId` to null, restores original `recommendedSpus` list
+- [X] T013 [US1] Add empty state UI in `frontend/src/pages/index/index.tsx` — when scenario search returns no results, show "暂无相关商品，试试其他场景？" with a "查看更多商品" link that navigates to search page
+- [X] T014 [US1] Add loading state UI in `frontend/src/pages/index/index.tsx` — show skeleton placeholders or loading spinner while search API is in progress
+- [X] T015 [US1] Add error handling in `frontend/src/pages/index/index.tsx` — when search API fails, show error message and fallback to original recommendations
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. Scenario cards display, click triggers search, clear restores defaults.
 

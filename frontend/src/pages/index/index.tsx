@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, Block } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
-import { apiClient } from '../../services/api'
+import ScenarioSection from '../../components/ScenarioSection'
+import { apiClient, searchSpusByKeywords, type Spu } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
-import { AiAssistantIcon } from '../../components/Icons'
 import { getMyPets, getLastSelectedPet, setLastSelectedPet } from '../../services/petApi'
+import { getScenariosByPetType } from '../../config/scenarios'
 import type { Pet } from '../../types'
 
 const defaultPetChoices = [
@@ -41,6 +42,11 @@ export default function HomePage() {
   const [showSpeciesPicker, setShowSpeciesPicker] = useState(false)
   const [browsingOther, setBrowsingOther] = useState(false)
   const [browsingSpecies, setBrowsingSpecies] = useState<string | null>(null)
+
+  const [activeScenarioId, setActiveScenarioId] = useState<string | null>(null)
+  const [isSearching, setIsSearching] = useState(false)
+  const [scenarioResults, setScenarioResults] = useState<Spu[] | null>(null)
+  const [scenarioError, setScenarioError] = useState<string | null>(null)
 
   const loadPetsAndSelection = async () => {
     try {
@@ -103,9 +109,16 @@ export default function HomePage() {
         pet_type: species,
         page_size: 3,
       })
-      setRecommendedSpus(res.items || [])
+      const items = res.items || []
+      setRecommendedSpus(items)
+      if (!activeScenarioId) {
+        setScenarioResults(null)
+      }
     } catch (error) {
       setRecommendedSpus([])
+      if (!activeScenarioId) {
+        setScenarioResults(null)
+      }
     }
   }
 
@@ -118,6 +131,7 @@ export default function HomePage() {
     setActivePetId(petId)
     setBrowsingOther(false)
     setBrowsingSpecies(null)
+    handleClearScenario()
 
     if (typeof petId === 'number') {
       try {
@@ -131,6 +145,7 @@ export default function HomePage() {
     setBrowsingSpecies(species)
     setActivePetId(species)
     setShowSpeciesPicker(false)
+    handleClearScenario()
   }
 
   const getActivePetName = () => {
@@ -154,8 +169,31 @@ export default function HomePage() {
     Taro.navigateTo({ url: '/pages/search/index' })
   }
 
-  const navigateToChat = () => {
-    Taro.switchTab({ url: '/pages/chat/index' })
+  const handleScenarioClick = async (scenarioId: string) => {
+    const scenarios = getScenariosByPetType(activeSpecies)
+    const scenario = scenarios.find((s) => s.id === scenarioId)
+    if (!scenario) return
+
+    setActiveScenarioId(scenarioId)
+    setIsSearching(true)
+    setScenarioError(null)
+
+    try {
+      const res = await searchSpusByKeywords(scenario.keywords, activeSpecies)
+      setScenarioResults(res.items || [])
+    } catch (err: any) {
+      setScenarioError(err.message || '搜索失败，请稍后重试')
+      setScenarioResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleClearScenario = () => {
+    setActiveScenarioId(null)
+    setScenarioResults(null)
+    setScenarioError(null)
+    setIsSearching(false)
   }
 
   const navigateToProducts = (petType: string) => {
@@ -304,48 +342,82 @@ export default function HomePage() {
         </View>
       )}
 
-      {/* AI助手卡片 */}
-      <View className="px-5 pt-5 pb-2">
-        <View
-          onClick={navigateToChat}
-          className="w-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-2xl p-4 relative overflow-hidden"
-        >
-          <View className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full" />
-          <View className="absolute right-8 bottom-[-10px] w-12 h-12 bg-white/5 rounded-full" />
+      {/* 场景快捷推荐 */}
+      <ScenarioSection
+        scenarios={getScenariosByPetType(activeSpecies)}
+        activeScenarioId={activeScenarioId}
+        onScenarioClick={handleScenarioClick}
+        onClear={handleClearScenario}
+      />
 
-          <View className="relative flex items-center gap-3">
-            <View className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
-              <AiAssistantIcon size={24} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm font-bold text-white">问问 AI 助手</Text>
-              <Text className="text-[11px] text-orange-100 mt-0.5">
-                不知道选什么？直接问我
-              </Text>
-            </View>
-            <Text className="text-white/70 text-xl">→</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 为你推荐 */}
+      {/* 为你推荐 / 场景搜索结果 */}
       <View className="px-5 pt-6 pb-4">
         <View className="flex items-center justify-between mb-3">
           <Text className="text-sm text-gray-800">
-            给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的推荐
+            {activeScenarioId ? (
+              <>
+                <Text className="text-orange-500 font-medium">场景精选</Text>
+                <Text className="text-gray-400"> · </Text>
+                <Text>{getActivePetName()}</Text>
+              </>
+            ) : (
+              <>
+                给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的推荐
+              </>
+            )}
           </Text>
-          <Text
-            className="text-[11px] text-gray-400"
-            onClick={() => navigateToProducts(activeSpecies)}
-          >
-            更多 →
-          </Text>
+          {!activeScenarioId && (
+            <Text
+              className="text-[11px] text-gray-400"
+              onClick={() => navigateToProducts(activeSpecies)}
+            >
+              更多 →
+            </Text>
+          )}
         </View>
-        <View className="space-y-3">
-          {recommendedSpus.map((spu: any) => (
-            <SpuCard key={spu.id} spu={spu} />
-          ))}
-        </View>
+
+        {/* Loading */}
+        {isSearching && (
+          <View className="py-8 flex flex-col items-center justify-center">
+            <View className="w-6 h-6 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+            <Text className="text-xs text-gray-400 mt-3">正在搜索相关商品...</Text>
+          </View>
+        )}
+
+        {/* Error */}
+        {!isSearching && scenarioError && (
+          <View className="py-8 flex flex-col items-center justify-center">
+            <Text className="text-sm text-gray-500">{scenarioError}</Text>
+            <Text
+              className="text-xs text-orange-500 mt-2"
+              onClick={handleClearScenario}
+            >
+              清除筛选，查看全部推荐
+            </Text>
+          </View>
+        )}
+
+        {/* Empty */}
+        {!isSearching && !scenarioError && activeScenarioId && scenarioResults?.length === 0 && (
+          <View className="py-8 flex flex-col items-center justify-center">
+            <Text className="text-sm text-gray-500">暂无相关商品，试试其他场景？</Text>
+            <Text
+              className="text-xs text-orange-500 mt-2"
+              onClick={() => navigateToProducts(activeSpecies)}
+            >
+              查看更多商品 →
+            </Text>
+          </View>
+        )}
+
+        {/* Results */}
+        {!isSearching && !scenarioError && (
+          <View className="space-y-3">
+            {(activeScenarioId ? scenarioResults : recommendedSpus)?.map((spu: any) => (
+              <SpuCard key={spu.id} spu={spu} />
+            ))}
+          </View>
+        )}
       </View>
 
       {/* 底部提示 */}
