@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { View, Text, Input, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
+import { useAuthStore } from '../../stores/authStore'
 import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon } from '../../components/Icons'
@@ -202,11 +203,13 @@ export default function ChatPage() {
     setActiveTools([])
 
     try {
-      const baseURL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production' ? 'https://api.your-domain.com/v1' : 'http://127.0.0.1:8001/v1'
+      const baseURL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production' ? 'https://api.pawpalai.cn/v1' : 'http://127.0.0.1:8000/v1'
+      const token = useAuthStore.getState().token
       const response = await fetch(`${baseURL}/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           session_id: sid,

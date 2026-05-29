@@ -30,11 +30,15 @@ const config = {
   mini: {
     // Bundle size optimization
     optimizeMainPackage: {
-      enable: true,
+      enable: false,
     },
     // Code splitting for subpackages
     subPackages: {
-      enable: true,
+      enable: false,
+    },
+    // Disable prebundle to fix "page instance not found" error
+    prebundle: {
+      enable: false,
     },
     postcss: {
       pxtransform: {

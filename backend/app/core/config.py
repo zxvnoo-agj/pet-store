@@ -1,9 +1,11 @@
+import os
 from functools import lru_cache
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    APP_ENV: str = "dev"
     DATABASE_URL: str = "postgresql+asyncpg://petshop:petshop123@localhost:5432/petshop"
     REDIS_URL: str = "redis://localhost:6379/0"
     SECRET_KEY: str = "change-me-in-production"
@@ -26,14 +28,14 @@ class Settings(BaseSettings):
     CRAWL_DAILY_LIMIT: int = 200
     DEBUG: bool = False
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    env = os.getenv("APP_ENV", "dev")
+    env_file = f".env.{env}"
+    return Settings(_env_file=env_file)
 
 
 settings = get_settings()

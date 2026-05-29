@@ -18,12 +18,14 @@ async def wechat_login(
     db: AsyncSession = Depends(get_db),
 ):
     service = AuthService(db)
-    result = await service.wechat_login(data.code)
-    return ApiResponse(data={
-        "token": result.token,
-        "expires_at": result.expires_at,
-        "user": result.user.model_dump(),
-    })
+    result = await service.wechat_login(data.code, data.encrypted_data, data.iv)
+    return ApiResponse(
+        data={
+            "token": result.token,
+            "expires_at": result.expires_at,
+            "user": result.user.model_dump(),
+        }
+    )
 
 
 @router.get("/users/me", response_model=ApiResponse[dict])
@@ -42,12 +44,14 @@ async def get_current_user_info(
         }
         for p in pets
     ]
-    return ApiResponse(data={
-        "user": {
-            "id": current_user.id,
-            "nickname": current_user.nickname,
-            "avatar_url": current_user.avatar_url,
-            "pets": pet_list,
-            "pet_count": len(pet_list),
+    return ApiResponse(
+        data={
+            "user": {
+                "id": current_user.id,
+                "nickname": current_user.nickname,
+                "avatar_url": current_user.avatar_url,
+                "pets": pet_list,
+                "pet_count": len(pet_list),
+            }
         }
-    })
+    )

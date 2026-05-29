@@ -42,7 +42,7 @@ const TOOL_NAMES: Record<string, string> = {
 
 const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
   ? 'https://api.your-domain.com/v1'
-  : 'http://127.0.0.1:8001/v1'
+  : 'http://127.0.0.1:8000/v1'
 
 function parseSSEChunk(chunk: string): { type: string; data: any }[] {
   const events: { type: string; data: any }[] = []

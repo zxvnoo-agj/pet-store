@@ -26,9 +26,9 @@
 
 **Purpose**: Create deployment directory structure and environment configuration templates
 
-- [ ] T001 Create deploy/ directory structure including deploy/production/nginx/, deploy/staging/nginx/, and deploy/scripts/ subdirectories
-- [ ] T002 [P] Create deploy/production/.env.production.example with all required environment variables (DATABASE_URL, REDIS_URL, SECRET_KEY, WECHAT_APP_ID, WECHAT_APP_SECRET, DASHSCOPE_API_KEY, MEILISEARCH_URL, MEILISEARCH_API_KEY, DEBUG=false)
-- [ ] T003 [P] Create deploy/staging/.env.staging.example with staging-specific environment variables (separate DB name petshop_staging, Redis DB 1, staging secrets)
+- [X] T001 Create deploy/ directory structure including deploy/production/nginx/, deploy/staging/nginx/, and deploy/scripts/ subdirectories
+- [X] T002 [P] Create deploy/production/.env.production.example with all required environment variables (DATABASE_URL, REDIS_URL, SECRET_KEY, WECHAT_APP_ID, WECHAT_APP_SECRET, DASHSCOPE_API_KEY, MEILISEARCH_URL, MEILISEARCH_API_KEY, DEBUG=false)
+- [X] T003 [P] Create deploy/staging/.env.staging.example with staging-specific environment variables (separate DB name petshop_staging, Redis DB 1, staging secrets)
 
 ---
 
@@ -38,12 +38,12 @@
 
 **⚠️ CRITICAL**: No deployment or environment-specific configuration should begin until this phase is complete
 
-- [ ] T004 Create backend/Dockerfile with multi-stage build (builder stage for pip install, runtime stage with python:3.11-slim, copies only runtime files per research.md)
-- [ ] T005 [P] Create admin/Dockerfile for admin SPA serving via Nginx (multi-stage: node build + nginx:alpine serve)
-- [ ] T006 [P] Create admin/nginx.conf for serving admin SPA static files (SPA fallback, gzip, cache headers)
-- [ ] T007 [P] Create deploy/scripts/deploy.sh for automated deployment (git pull, docker compose build, docker compose up -d with health check verification)
-- [ ] T008 [P] Create deploy/scripts/backup.sh for PostgreSQL + Redis backup (pg_dump with gzip, redis-cli bgsave, timestamped filenames)
-- [ ] T009 [P] Create deploy/scripts/healthcheck.sh for post-deployment verification (curl /health, curl /metrics, curl /v1/categories, report pass/fail)
+- [X] T004 Create backend/Dockerfile with multi-stage build (builder stage for pip install, runtime stage with python:3.11-slim, copies only runtime files per research.md)
+- [X] T005 [P] Create admin/Dockerfile for admin SPA serving via Nginx (multi-stage: node build + nginx:alpine serve)
+- [X] T006 [P] Create admin/nginx.conf for serving admin SPA static files (SPA fallback, gzip, cache headers)
+- [X] T007 [P] Create deploy/scripts/deploy.sh for automated deployment (git pull, docker compose build, docker compose up -d with health check verification)
+- [X] T008 [P] Create deploy/scripts/backup.sh for PostgreSQL + Redis backup (pg_dump with gzip, redis-cli bgsave, timestamped filenames)
+- [X] T009 [P] Create deploy/scripts/healthcheck.sh for post-deployment verification (curl /health, curl /metrics, curl /v1/categories, report pass/fail)
 
 **Checkpoint**: Foundation ready — deployment infrastructure artifacts created. User story implementation can now begin.
 
@@ -57,8 +57,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Configure WeChat AppID in frontend/project.config.json (replace placeholder appid field with real mini-program AppID)
-- [ ] T011 [P] [US1] Update frontend/config/prod.js with production environment configuration (set API base URL to https://api.pawpalai.cn/v1, enable production-specific flags)
+- [X] T010 [P] [US1] Configure WeChat AppID in frontend/project.config.json (replace placeholder appid field with real mini-program AppID)
+- [X] T011 [P] [US1] Update frontend/config/prod.js with production environment configuration (set API base URL to https://api.pawpalai.cn/v1, enable production-specific flags)
 
 **Checkpoint**: Mini program is configured with production AppID and API domain. Build and preview in WeChat DevTools to verify.
 
@@ -72,13 +72,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [P] [US2] Create deploy/production/docker-compose.yml defining backend (FastAPI), postgres, redis, meilisearch services with Docker network petstore_prod, volume mounts, and restart policies
-- [ ] T013 [P] [US2] Create deploy/production/nginx/api.pawpalai.cn.conf with reverse proxy to backend:8000, SSL termination via certbot certs, SSE buffering disabled for /v1/chat/stream, and X-Forwarded headers per research.md
-- [ ] T014 [P] [US2] Create deploy/production/nginx/admin.pawpalai.cn.conf for admin SPA static file serving with SPA fallback routing and SSL termination
-- [ ] T015 [P] [US2] Create deploy/staging/docker-compose.yml mirroring production with isolated resources (separate DB name petshop_staging, Redis DB 1, staging network)
-- [ ] T016 [P] [US2] Create deploy/staging/nginx/staging.api.pawpalai.cn.conf for staging Nginx reverse proxy configuration
-- [ ] T017 [US2] Update CORS origins in backend/app/main.py to allow production domains (https://admin.pawpalai.cn, https://staging.api.pawpalai.cn) and retain localhost dev origins (localhost:10086, localhost:3001)
-- [ ] T018 [US2] Update logging configuration in backend/app/main.py for production readiness (set default level to INFO, configure separate ERROR-level log file handler)
+- [X] T012 [P] [US2] Create deploy/production/docker-compose.yml defining backend (FastAPI), postgres, redis, meilisearch services with Docker network petstore_prod, volume mounts, and restart policies
+- [X] T013 [P] [US2] Create deploy/production/nginx/api.pawpalai.cn.conf with reverse proxy to backend:8000, SSL termination via certbot certs, SSE buffering disabled for /v1/chat/stream, and X-Forwarded headers per research.md
+- [X] T014 [P] [US2] Create deploy/production/nginx/admin.pawpalai.cn.conf for admin SPA static file serving with SPA fallback routing and SSL termination
+- [X] T015 [P] [US2] Create deploy/staging/docker-compose.yml mirroring production with isolated resources (separate DB name petshop_staging, Redis DB 1, staging network)
+- [X] T016 [P] [US2] Create deploy/staging/nginx/staging.api.pawpalai.cn.conf for staging Nginx reverse proxy configuration
+- [X] T017 [US2] Update CORS origins in backend/app/main.py to allow production domains (https://admin.pawpalai.cn, https://staging.api.pawpalai.cn) and retain localhost dev origins (localhost:10086, localhost:3001)
+- [X] T018 [US2] Update logging configuration in backend/app/main.py for production readiness (set default level to INFO, configure separate ERROR-level log file handler)
 
 **Checkpoint**: Production and staging backend stacks are deployable. Run quickstart.md steps 3-4 to deploy and verify.
 
@@ -92,10 +92,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [P] [US3] Update API base URL resolution in frontend/src/services/api.ts to use environment-aware logic (TARO_ENV=weapp + NODE_ENV=production → https://api.pawpalai.cn/v1, else → http://127.0.0.1:8001/v1 per data-model.md resolution logic)
-- [ ] T020 [P] [US3] Update API base URL resolution in frontend/src/services/webApi.ts matching the same environment-aware domain logic as api.ts
-- [ ] T021 [P] [US3] Add Bearer token authentication header to SSE fetch in frontend/src/pages/chat/index.tsx (retrieve token from storage, add `Authorization: Bearer <token>` header to fetch/EventSource request)
-- [ ] T022 [US3] Remove unused dependencies (lucide-react and other unused packages) from frontend/package.json to reduce bundle size
+- [X] T019 [P] [US3] Update API base URL resolution in frontend/src/services/api.ts to use environment-aware logic (TARO_ENV=weapp + NODE_ENV=production → https://api.pawpalai.cn/v1, else → http://127.0.0.1:8001/v1 per data-model.md resolution logic)
+- [X] T020 [P] [US3] Update API base URL resolution in frontend/src/services/webApi.ts matching the same environment-aware domain logic as api.ts
+- [X] T021 [P] [US3] Add Bearer token authentication header to SSE fetch in frontend/src/pages/chat/index.tsx (retrieve token from storage, add `Authorization: Bearer <token>` header to fetch/EventSource request)
+- [X] T022 [US3] Remove unused dependencies (lucide-react and other unused packages) from frontend/package.json to reduce bundle size
 - [ ] T023 [US3] Verify main package size < 2MB after production build (run `npm run build:weapp`, check dist/ size; configure subpackaging in app.config if exceeding 2MB threshold)
 
 **Checkpoint**: Frontend production build succeeds with correct API URLs, SSE carries auth token, package is under 2MB.
@@ -110,12 +110,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T024 [P] [US4] Protect /metrics endpoint in backend/app/main.py with authentication (implement Bearer token check or IP whitelist; return 401/403 for unauthorized access per FR-010)
-- [ ] T025 [P] [US4] Configure rate limiting middleware in backend/app/main.py (100 req/min per IP for general endpoints, 20 req/min for auth endpoints per FR-009 and deployment-checklist Phase 4)
-- [ ] T026 [P] [US4] Add production SECRET_KEY validation in backend/app/main.py startup (reject service startup if SECRET_KEY matches default/placeholder values per FR-007)
-- [ ] T027 [P] [US4] Remove unused dev-only routes from backend router (admin_products stubs, admin_crawled stubs referenced in deployment-checklist Phase 4)
-- [ ] T028 [US4] Configure log rotation for error logs in backend/app/main.py (daily rotation, 30-day retention, ERROR level to separate error_*.log files per deployment-checklist Phase 5)
-- [ ] T029 [P] [US4] Add Prometheus scrape configuration documentation in deploy/production/ for /metrics endpoint (scrape interval, job name, basic setup instructions)
+- [X] T024 [P] [US4] Protect /metrics endpoint in backend/app/main.py with authentication (implement Bearer token check or IP whitelist; return 401/403 for unauthorized access per FR-010)
+- [X] T025 [P] [US4] Configure rate limiting middleware in backend/app/main.py (100 req/min per IP for general endpoints, 20 req/min for auth endpoints per FR-009 and deployment-checklist Phase 4)
+- [X] T026 [P] [US4] Add production SECRET_KEY validation in backend/app/main.py startup (reject service startup if SECRET_KEY matches default/placeholder values per FR-007)
+- [X] T027 [P] [US4] Remove unused dev-only routes from backend router (admin_products stubs, admin_crawled stubs referenced in deployment-checklist Phase 4)
+- [X] T028 [US4] Configure log rotation for error logs in backend/app/main.py (daily rotation, 30-day retention, ERROR level to separate error_*.log files per deployment-checklist Phase 5)
+- [X] T029 [P] [US4] Add Prometheus scrape configuration documentation in deploy/production/ for /metrics endpoint (scrape interval, job name, basic setup instructions)
 
 **Checkpoint**: Security measures active — default keys rejected, rate limiting enforced, metrics auth protected, error logs rotating.
 
@@ -129,9 +129,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T030 [US5] Create privacy agreement page/component in frontend/src/pages/privacy/ (static page displaying privacy policy content accessible from Settings or launch popup per FR-014)
-- [ ] T031 [US5] Implement first-launch privacy consent popup in frontend/src/app.tsx or app entry point (check async storage for consent flag, show modal if not yet consented, require agreement before proceeding per FR-014)
-- [ ] T032 [US5] Document user data collection points for compliance review (list all API endpoints that collect/store user data: WeChat login, chat messages, search queries; output as deploy/production/compliance-data-points.md)
+- [X] T030 [US5] Create privacy agreement page/component in frontend/src/pages/privacy/ (static page displaying privacy policy content accessible from Settings or launch popup per FR-014)
+- [X] T031 [US5] Implement first-launch privacy consent popup in frontend/src/app.tsx or app entry point (check async storage for consent flag, show modal if not yet consented, require agreement before proceeding per FR-014)
+- [X] T032 [US5] Document user data collection points for compliance review (list all API endpoints that collect/store user data: WeChat login, chat messages, search queries; output as deploy/production/compliance-data-points.md)
 
 **Checkpoint**: Privacy compliance implemented — consent popup works, privacy page accessible, data collection documented.
 
@@ -142,8 +142,8 @@
 **Purpose**: Final verification, documentation updates, and cleanup.
 
 - [ ] T033 [P] Verify all deployment steps by following quickstart.md end-to-end (run through server initialization, SSL cert, backend deploy, Nginx config, frontend build, and health check validation)
-- [ ] T034 [P] Update AGENTS.md with production launch references per plan.md Phase 1 note (add reference to specs/007-production-launch-prep/plan.md in project references section)
-- [ ] T035 Final code review and cleanup of all modified and new files (check for hardcoded domains, placeholder secrets, commented-out debug code, ensure consistent formatting)
+- [X] T034 [P] Update AGENTS.md with production launch references per plan.md Phase 1 note (add reference to specs/007-production-launch-prep/plan.md in project references section)
+- [X] T035 Final code review and cleanup of all modified and new files (check for hardcoded domains, placeholder secrets, commented-out debug code, ensure consistent formatting)
 
 ---
 

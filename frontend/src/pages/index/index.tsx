@@ -155,7 +155,7 @@ export default function HomePage() {
   }
 
   const navigateToChat = () => {
-    Taro.navigateTo({ url: '/pages/chat/index' })
+    Taro.switchTab({ url: '/pages/chat/index' })
   }
 
   const navigateToProducts = (petType: string) => {
@@ -172,8 +172,7 @@ export default function HomePage() {
         <View>
           <Text className="text-xs text-gray-400">下午好 👋</Text>
           <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
-            今天想给{'\n'}
-            <Text className="text-orange-500">{getActivePetName()}</Text> 看点什么？
+            今天想给<Text className="text-orange-500">{getActivePetName()}</Text>看点什么？
           </Text>
         </View>
         <View

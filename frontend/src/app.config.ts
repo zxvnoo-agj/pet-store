@@ -12,6 +12,7 @@ export default defineAppConfig({
     'pages/mine/favorites',
     'pages/mine/pets',
     'pages/mine/pets-create',
+    'pages/privacy/index',
   ],
   window: {
     backgroundTextStyle: 'light',
