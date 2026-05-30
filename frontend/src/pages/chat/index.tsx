@@ -489,17 +489,22 @@ export default function ChatPage() {
   return (
     <View
       style={{
-        height: systemInfo.windowHeight ? `${systemInfo.windowHeight + systemInfo.statusBarHeight}px` : '100vh',
-        display: 'flex',
-        flexDirection: 'column',
+        height: '100vh',
         overflow: 'hidden',
         backgroundColor: '#f9fafb',
       }}
     >
-      {/* 自定义导航栏 - 与原生导航栏视觉一致 */}
+      {/* 自定义导航栏 - 独立 Fixed 在顶部 */}
       <View
-        style={{ flexShrink: 0, paddingTop: systemInfo.statusBarHeight ? `${systemInfo.statusBarHeight}px` : 0 }}
-        className="bg-white z-20"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 20,
+          paddingTop: systemInfo.statusBarHeight ? `${systemInfo.statusBarHeight}px` : 0,
+        }}
+        className="bg-white"
       >
         <View
           style={{ height: systemInfo.navBarHeight ? `${systemInfo.navBarHeight}px` : '44px', paddingRight: systemInfo.menuRight ? `${systemInfo.menuRight}px` : '0px' }}
@@ -526,125 +531,136 @@ export default function ChatPage() {
         </View>
       </View>
 
-      {/* 消息区域 - 占据剩余空间，内部可滚动 */}
-      <View style={{ flex: 1, overflow: 'hidden' }}>
-        <ScrollView
-          ref={scrollViewRef}
-          style={{ height: '100%' }}
-          className="px-4"
-          scrollY
-          scrollWithAnimation
-          scrollIntoView={messages.length > 0 ? `msg-${messages[messages.length - 1].id}` : undefined}
-          showScrollbar={false}
-        >
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              id={`msg-${msg.id}`}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-5`}
-            >
-              <View
-                className={`max-w-[75%] ${
-                  msg.role === 'user'
-                    ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3'
-                    : 'bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
-                }`}
-              >
-                {msg.role === 'user' ? (
-                  <Text className="text-sm leading-relaxed text-white">{msg.content}</Text>
-                ) : (
-                  <View>
-                    {msg.toolCalls && msg.toolCalls.length > 0 && (
-                      <>
-                        {renderToolStatus(msg.toolCalls, true)}
-                        {msg.content && <View className="my-2 border-t border-gray-200" />}
-                      </>
-                    )}
-                    <MarkdownRenderer content={msg.content} />
-                    {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
-                  </View>
-                )}
-              </View>
-            </View>
-          ))}
-
-          {isLoading && activeTools.length > 0 && (
-            <View className="flex justify-start mb-5">
-              <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                {renderToolStatus(activeTools)}
-                {streamProducts.length > 0 && renderProductCards(streamProducts)}
-                <View className="flex items-center gap-1 mt-2">
-                  <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
-                  <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
-                  <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-150" />
-                </View>
-              </View>
-            </View>
-          )}
-
-          {isLoading && activeTools.length === 0 && (
-            <View className="flex justify-start mb-5">
-              <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                <View className="flex items-center gap-2">
-                  <View className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
-                  <Text className="text-sm text-gray-500">正在思考...</Text>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* 底部留白，确保最后一条消息能被滚动到可视区域 */}
-          <View className="h-4" />
-        </ScrollView>
-      </View>
-
-      {/* 底部区域：快捷问题 + 输入栏 */}
-      <View style={{ flexShrink: 0 }}>
-        {/* 快捷问题 - 在输入框上方且相邻 */}
-        {messages.length <= 1 && !isLoading && (
-          <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">
-            <Text className="text-xs text-gray-400 mb-2 font-medium">你可以这样问</Text>
-            <View className="flex flex-col gap-2 pb-1">
-              {questionsLoading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                    <View
-                      key={i}
-                      className="px-4 py-2.5 bg-gray-100 rounded-xl animate-pulse"
-                    >
-                      <Text className="text-sm text-transparent">加载中...</Text>
-                    </View>
-                  ))
-                : quickQuestions.slice(0, 3).map((q, i) => (
-                    <View
-                      key={i}
-                      className="text-orange-600 text-sm active:opacity-70"
-                      onClick={() => handleSend(q)}
-                    >
-                      <Text>{q}</Text>
-                    </View>
-                  ))}
-            </View>
-          </View>
-        )}
-
-        {/* 输入栏 */}
-        <View className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
-          <Input
-            className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm"
-            placeholder="请输入问题，如：幼猫吃什么粮好？"
-            value={inputValue}
-            onInput={(e) => setInputValue(e.detail.value)}
-            onConfirm={() => handleSend()}
-          />
-          <View
-            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
-              inputValue.trim() && !isLoading
-                ? 'bg-orange-500 text-white active:bg-orange-600'
-                : 'bg-gray-200 text-gray-400'
-            }`}
-            onClick={() => handleSend()}
+      {/* 内容区 - 使用 windowHeight，已自动避开状态栏和 TabBar */}
+      <View
+        style={{
+          height: systemInfo.windowHeight ? `${systemInfo.windowHeight}px` : '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          paddingTop: systemInfo.statusBarHeight + systemInfo.navBarHeight ? `${systemInfo.statusBarHeight + systemInfo.navBarHeight}px` : '88px',
+        }}
+      >
+        {/* 消息区域 - 占据剩余空间，内部可滚动 */}
+        <View style={{ flex: 1, overflow: 'hidden' }}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={{ height: '100%' }}
+            className="px-4"
+            scrollY
+            scrollWithAnimation
+            scrollIntoView={messages.length > 0 ? `msg-${messages[messages.length - 1].id}` : undefined}
+            showScrollbar={false}
           >
-            <Text className="text-lg">➤</Text>
+            {messages.map((msg) => (
+              <View
+                key={msg.id}
+                id={`msg-${msg.id}`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-5`}
+              >
+                <View
+                  className={`max-w-[75%] ${
+                    msg.role === 'user'
+                      ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3'
+                      : 'bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
+                  }`}
+                >
+                  {msg.role === 'user' ? (
+                    <Text className="text-sm leading-relaxed text-white">{msg.content}</Text>
+                  ) : (
+                    <View>
+                      {msg.toolCalls && msg.toolCalls.length > 0 && (
+                        <>
+                          {renderToolStatus(msg.toolCalls, true)}
+                          {msg.content && <View className="my-2 border-t border-gray-200" />}
+                        </>
+                      )}
+                      <MarkdownRenderer content={msg.content} />
+                      {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+
+            {isLoading && activeTools.length > 0 && (
+              <View className="flex justify-start mb-5">
+                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                  {renderToolStatus(activeTools)}
+                  {streamProducts.length > 0 && renderProductCards(streamProducts)}
+                  <View className="flex items-center gap-1 mt-2">
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-150" />
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {isLoading && activeTools.length === 0 && (
+              <View className="flex justify-start mb-5">
+                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                  <View className="flex items-center gap-2">
+                    <View className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+                    <Text className="text-sm text-gray-500">正在思考...</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* 底部留白，确保最后一条消息能被滚动到可视区域 */}
+            <View className="h-4" />
+          </ScrollView>
+        </View>
+
+        {/* 底部区域：快捷问题 + 输入栏 */}
+        <View style={{ flexShrink: 0 }}>
+          {/* 快捷问题 - 在输入框上方且相邻 */}
+          {messages.length <= 1 && !isLoading && (
+            <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">
+              <Text className="text-xs text-gray-400 mb-2 font-medium">你可以这样问</Text>
+              <View className="flex flex-col gap-2 pb-1">
+                {questionsLoading
+                  ? Array.from({ length: 3 }).map((_, i) => (
+                      <View
+                        key={i}
+                        className="px-4 py-2.5 bg-gray-100 rounded-xl animate-pulse"
+                      >
+                        <Text className="text-sm text-transparent">加载中...</Text>
+                      </View>
+                    ))
+                  : quickQuestions.slice(0, 3).map((q, i) => (
+                      <View
+                        key={i}
+                        className="text-orange-600 text-sm active:opacity-70"
+                        onClick={() => handleSend(q)}
+                      >
+                        <Text>{q}</Text>
+                      </View>
+                    ))}
+              </View>
+            </View>
+          )}
+
+          {/* 输入栏 */}
+          <View className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
+            <Input
+              className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm"
+              placeholder="请输入问题，如：幼猫吃什么粮好？"
+              value={inputValue}
+              onInput={(e) => setInputValue(e.detail.value)}
+              onConfirm={() => handleSend()}
+            />
+            <View
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
+                inputValue.trim() && !isLoading
+                  ? 'bg-orange-500 text-white active:bg-orange-600'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+              onClick={() => handleSend()}
+            >
+              <Text className="text-lg">➤</Text>
+            </View>
           </View>
         </View>
       </View>
