@@ -94,6 +94,42 @@ async def compare_spus(
     )
 
 
+@router.get("/spus/search", response_model=ApiResponse[dict])
+async def search_spus(
+    keywords: str = Query(..., description="Comma-separated search keywords"),
+    pet_type: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    """Search SPUs by keywords."""
+    service = SpuService(db)
+    # Use the first keyword or combined keywords for search
+    query_str = keywords.replace(",", " ")
+    spus, total = await service.search_spus(
+        query_str=query_str,
+        pet_type=pet_type,
+        page=page,
+        page_size=page_size,
+    )
+
+    total_pages = (total + page_size - 1) // page_size
+    pagination = Pagination(
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+
+    return ApiResponse(
+        data={
+            "items": [SpuMiniProgramListResponse.model_validate(s) for s in spus],
+            "pagination": pagination,
+            "total": total,
+        }
+    )
+
+
 @router.get("/spus/{spu_id}", response_model=ApiResponse[dict])
 async def get_spu_detail(
     spu_id: int,

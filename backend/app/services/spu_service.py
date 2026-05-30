@@ -1,4 +1,4 @@
-from sqlalchemy import asc, desc, func, select
+from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -249,21 +249,24 @@ class SpuService:
         """Search SPUs by keyword across name, brand, description, and ingredients."""
         from app.models.review import Review
         
-        search_term = f"%{query_str}%"
-        
         query = select(Spu).where(Spu.status == "active").options(selectinload(Spu.category))
         count_query = select(func.count(Spu.id)).where(Spu.status == "active")
         
-        # Search across multiple fields
-        search_conditions = (
-            (Spu.name.ilike(search_term)) |
-            (Spu.brand.ilike(search_term)) |
-            (Spu.description.ilike(search_term)) |
-            (Spu.model.ilike(search_term))
-        )
+        keywords = [kw for kw in query_str.split() if kw]
         
-        query = query.where(search_conditions)
-        count_query = count_query.where(search_conditions)
+        if keywords:
+            keyword_conditions = []
+            for kw in keywords:
+                kw_term = f"%{kw}%"
+                keyword_conditions.append(
+                    (Spu.name.ilike(kw_term)) |
+                    (Spu.brand.ilike(kw_term)) |
+                    (Spu.description.ilike(kw_term)) |
+                    (Spu.model.ilike(kw_term))
+                )
+            search_conditions = or_(*keyword_conditions)
+            query = query.where(search_conditions)
+            count_query = count_query.where(search_conditions)
         
         if pet_type:
             query = query.where(Spu.pet_type == pet_type)
