@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon } from '../../components/Icons'
+import { API_HOST } from '../../config/env'
 
 interface Spu {
   id: number
@@ -279,7 +280,7 @@ export default function ChatPage() {
     setActiveTools([])
 
     try {
-      const baseURL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production' ? 'https://api.pawpalai.cn/v1' : 'http://192.168.1.16:8000/v1'
+      const baseURL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production' ? 'https://api.pawpalai.cn/v1' : `http://${API_HOST}:8000/v1`
       const token = useAuthStore.getState().token
       let accumulated = ''
       let spus: Spu[] = []
@@ -588,6 +589,11 @@ export default function ChatPage() {
                 <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                   {renderToolStatus(activeTools)}
                   {streamProducts.length > 0 && renderProductCards(streamProducts)}
+                  {currentStream ? (
+                    <View className="mt-2">
+                      <MarkdownRenderer content={currentStream} />
+                    </View>
+                  ) : null}
                   <View className="flex items-center gap-1 mt-2">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
@@ -597,7 +603,20 @@ export default function ChatPage() {
               </View>
             )}
 
-            {isLoading && activeTools.length === 0 && (
+            {isLoading && activeTools.length === 0 && currentStream && (
+              <View className="flex justify-start mb-5">
+                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                  <MarkdownRenderer content={currentStream} />
+                  <View className="flex items-center gap-1 mt-1">
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
+                    <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-150" />
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {isLoading && activeTools.length === 0 && !currentStream && (
               <View className="flex justify-start mb-5">
                 <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                   <View className="flex items-center gap-2">

@@ -427,6 +427,11 @@ const ChatPage: React.FC = () => {
               <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
                 {renderToolStatus(activeTools)}
                 {streamSpus.length > 0 && renderProductCards(streamSpus)}
+                {currentStream && (
+                  <div className="mt-2">
+                    <div>{renderMessage(currentStream)}</div>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 mt-2">
                   <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                   <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />

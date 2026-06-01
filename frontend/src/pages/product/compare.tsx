@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useCompareStore } from '../../stores/compareStore'
@@ -26,7 +26,6 @@ export default function ComparePage() {
     loading,
     dimensions,
     removeFromCompare,
-    clearCompare,
     fetchCompareData,
   } = useCompareStore()
 
@@ -34,10 +33,6 @@ export default function ComparePage() {
     fetchCompareData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compareList.length])
-
-  const goBack = () => {
-    Taro.navigateBack()
-  }
 
   const navigateToProductList = () => {
     Taro.switchTab({ url: '/pages/index/index' })
@@ -146,12 +141,6 @@ export default function ComparePage() {
   if (compareList.length === 0) {
     return (
       <View className="flex flex-col h-screen bg-gray-50">
-        <View className="shrink-0 bg-white px-4 py-3 flex items-center border-b border-gray-100">
-          <Text className="text-gray-600 text-lg" onClick={goBack}>←</Text>
-          <Text className="flex-1 text-center text-base font-bold text-gray-800">商品对比</Text>
-          <View className="w-6" />
-        </View>
-
         <View className="flex-1 flex flex-col items-center justify-center px-8">
           <View className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <Text className="text-3xl">📊</Text>
@@ -174,12 +163,6 @@ export default function ComparePage() {
   if (compareList.length === 1) {
     return (
       <View className="flex flex-col h-screen bg-gray-50">
-        <View className="shrink-0 bg-white px-4 py-3 flex items-center border-b border-gray-100">
-          <Text className="text-gray-600 text-lg" onClick={goBack}>←</Text>
-          <Text className="flex-1 text-center text-base font-bold text-gray-800">商品对比</Text>
-          <View className="w-6" />
-        </View>
-
         <View className="flex-1 flex flex-col items-center justify-center px-8">
           <Text className="text-base font-bold text-gray-700 mb-2">还需添加 1 个商品</Text>
           <Text className="text-sm text-gray-400 text-center mb-6">
@@ -198,13 +181,6 @@ export default function ComparePage() {
 
   return (
     <View className="flex flex-col h-screen bg-gray-50">
-      {/* 头部 */}
-      <View className="shrink-0 bg-white px-4 py-3 flex items-center border-b border-gray-100">
-        <Text className="text-gray-600 text-lg" onClick={goBack}>←</Text>
-        <Text className="flex-1 text-center text-base font-bold text-gray-800">商品对比</Text>
-        <Text className="text-sm text-orange-500" onClick={clearCompare}>清空</Text>
-      </View>
-
       <ScrollView className="flex-1" scrollY>
         {/* 产品卡片区域 */}
         <View className="bg-white overflow-x-auto">

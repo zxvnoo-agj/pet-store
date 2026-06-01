@@ -239,70 +239,111 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     )
   }
 
-  const renderInline = (tokens: MarkdownIt.Token[]): (string | JSX.Element)[] => {
-    return tokens.map((token, idx) => {
+  const renderInline = (tokens: MarkdownIt.Token[]): JSX.Element[] => {
+    const result: JSX.Element[] = []
+    let idx = 0
+    while (idx < tokens.length) {
+      const token = tokens[idx]
       switch (token.type) {
         case 'text':
-          return token.content
+          result.push(<Text key={idx} className="text-sm text-gray-800 leading-relaxed">{token.content}</Text>)
+          idx++
+          break
 
-        case 'strong_open':
-          return <Text key={idx} className="font-bold text-gray-900"></Text>
+        case 'strong_open': {
+          let j = idx + 1; let depth = 1
+          while (j < tokens.length && depth > 0) {
+            if (tokens[j].type === 'strong_open') depth++
+            else if (tokens[j].type === 'strong_close') depth--
+            j++
+          }
+          result.push(
+            <Text key={`s-${idx}`} className="font-bold text-gray-900">
+              {renderInline(tokens.slice(idx + 1, j - 1))}
+            </Text>
+          )
+          idx = j; break
+        }
 
         case 'strong_close':
-          return ''
+          idx++; break
 
-        case 'em_open':
-          return <Text key={idx} className="italic text-gray-700"></Text>
+        case 'em_open': {
+          let j = idx + 1; let depth = 1
+          while (j < tokens.length && depth > 0) {
+            if (tokens[j].type === 'em_open') depth++
+            else if (tokens[j].type === 'em_close') depth--
+            j++
+          }
+          result.push(
+            <Text key={`em-${idx}`} className="italic text-gray-700">
+              {renderInline(tokens.slice(idx + 1, j - 1))}
+            </Text>
+          )
+          idx = j; break
+        }
 
         case 'em_close':
-          return ''
+          idx++; break
 
         case 'code_inline':
-          return (
-            <Text
-              key={idx}
-              className="text-xs bg-gray-100 text-orange-700 px-1 py-0.5 rounded font-mono"
-            >
+          result.push(
+            <Text key={idx} className="text-xs bg-gray-100 text-orange-700 px-1 py-0.5 rounded font-mono">
               {token.content}
             </Text>
           )
+          idx++; break
 
-        case 'link_open':
-          {
-            const href = token.attrGet('href') || '#'
-            return <Text key={idx} className="text-blue-600 underline" onClick={() => Taro.navigateTo({ url: href })}></Text>
+        case 'link_open': {
+          let j = idx + 1; let depth = 1
+          while (j < tokens.length && depth > 0) {
+            if (tokens[j].type === 'link_open') depth++
+            else if (tokens[j].type === 'link_close') depth--
+            j++
           }
+          const href = token.attrGet('href') || '#'
+          result.push(
+            <Text key={`l-${idx}`} className="text-blue-600 underline" onClick={() => { /* eslint-disable-next-line */ if (href.startsWith('/')) Taro.navigateTo({ url: href }) }}>
+              {renderInline(tokens.slice(idx + 1, j - 1))}
+            </Text>
+          )
+          idx = j; break
+        }
 
         case 'link_close':
-          return ''
+          idx++; break
 
         case 'softbreak':
-          return ' '
+          result.push(<Text key={idx}> </Text>)
+          idx++; break
 
         case 'hardbreak':
-          return '\n'
+          result.push(<Text key={idx}>{'\n'}</Text>)
+          idx++; break
 
         case 's_open':
         case 's_close':
-          return ''
+          idx++; break
 
-        case 'image':
-          {
-            const src = token.attrGet('src') || ''
-            return (
-              <Image
-                key={idx}
-                src={src}
-                className="w-full h-40 object-cover rounded-lg my-2"
-                lazyLoad
-              />
-            )
-          }
+        case 'image': {
+          const src = token.attrGet('src') || ''
+          result.push(
+            <Image
+              key={idx}
+              src={src}
+              className="w-full h-40 object-cover rounded-lg my-2"
+              lazyLoad
+            />
+          )
+          idx++; break
+        }
 
         default:
-          return token.content || ''
+          result.push(<Text key={idx}>{token.content || ''}</Text>)
+          idx++; break
       }
-    })
+    }
+    return result
   }
 
   return <View>{renderTokens(tokens, 0, false)}</View>

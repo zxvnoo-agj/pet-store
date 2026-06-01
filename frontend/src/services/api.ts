@@ -1,9 +1,10 @@
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../stores/authStore'
+import { API_HOST } from '../config/env'
 
 const API_BASE_URL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production'
   ? 'https://api.pawpalai.cn/v1'
-  : 'http://192.168.1.16:8000/v1'
+  : `http://${API_HOST}:8000/v1`
 
 interface RequestOptions {
   url: string
