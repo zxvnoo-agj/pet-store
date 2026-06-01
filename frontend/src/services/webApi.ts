@@ -1,6 +1,8 @@
-const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
-  ? 'https://api.your-domain.com/v1'
-  : 'http://127.0.0.1:8001/v1'
+import { API_HOST } from '../config/env'
+
+const API_BASE_URL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production'
+  ? 'https://api.pawpalai.cn/v1'
+  : `http://${API_HOST}:8000/v1`
 
 interface ApiResponse<T = any> {
   code: number

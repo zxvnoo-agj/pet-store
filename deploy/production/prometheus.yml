@@ -1,0 +1,24 @@
+scrape_configs:
+  - job_name: "petstore-backend"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    scheme: https
+    authorization:
+      credentials: "<your-secret-key>"
+    static_configs:
+      - targets: ["api.pawpalai.cn"]
+        labels:
+          env: production
+          service: backend
+
+  - job_name: "petstore-backend-staging"
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scheme: https
+    authorization:
+      credentials: "<your-staging-secret-key>"
+    static_configs:
+      - targets: ["staging.api.pawpalai.cn"]
+        labels:
+          env: staging
+          service: backend

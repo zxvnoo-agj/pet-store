@@ -1,6 +1,12 @@
 module.exports = {
-  mini: {},
+  mini: {
+    urlCheck: false,
+  },
   h5: {
-    publicPath: './'
-  }
+    publicPath: './',
+  },
+  env: {
+    NODE_ENV: JSON.stringify('production'),
+    TARO_ENV: JSON.stringify('weapp'),
+  },
 }

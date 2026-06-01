@@ -30,11 +30,23 @@ export async function wechatLogin() {
   }
 
   try {
-    const { code } = await Taro.login({
-      provider: 'weixin',
-    })
+    const { code } = await Taro.login()
 
-    const res = await apiClient.post('/auth/wechat-login', { code })
+    let encryptedData: string | undefined
+    let iv: string | undefined
+    try {
+      const userInfoRes = await Taro.getUserInfo({ withCredentials: true, lang: 'zh_CN' })
+      encryptedData = userInfoRes.encryptedData as string
+      iv = userInfoRes.iv as string
+    } catch {
+      // user hasn't authorized, continue with default info
+    }
+
+    const res = await apiClient.post('/auth/wechat-login', {
+      code,
+      encrypted_data: encryptedData,
+      iv,
+    })
     
     const { token, user } = res
     useAuthStore.getState().setToken(token)

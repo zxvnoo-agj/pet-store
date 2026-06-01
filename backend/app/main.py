@@ -1,8 +1,10 @@
 import sys
 import time
 import uuid
+from collections import defaultdict
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
@@ -27,6 +29,22 @@ from app.api.v1 import (
     spus,
 )
 
+
+RATE_LIMIT_STORE: dict[str, list[float]] = defaultdict(list)
+GENERAL_RATE_LIMIT = 100
+AUTH_RATE_LIMIT = 20
+RATE_LIMIT_WINDOW = 60
+
+
+def validate_secret_key():
+    if settings.APP_ENV != "prod":
+        logger.info("Skipping SECRET_KEY validation (APP_ENV={}).", settings.APP_ENV)
+        return
+    if settings.SECRET_KEY in ("change-me-in-production", "", "your-secret-key-here"):
+        logger.critical("SECRET_KEY is set to a default/placeholder value! Refusing to start in prd mode.")
+        raise SystemExit(1)
+    logger.info("SECRET_KEY validation passed.")
+
 # Prometheus metrics
 REQUEST_COUNT = Counter(
     "http_requests_total",
@@ -43,7 +61,7 @@ REQUEST_DURATION = Histogram(
 logger.remove()
 logger.add(
     sys.stderr,
-    level="DEBUG" if settings.DEBUG else "INFO",
+    level="INFO",
     format="<green>{time:HH:mm:ss}</green> | <level>{level:<7}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
     colorize=True,
     backtrace=True,
@@ -59,19 +77,51 @@ logger.add(
     diagnose=True,
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    validate_secret_key()
+    yield
+
+
 app = FastAPI(
     title="Pet Supplies Assistant API",
     description="Backend API for Pet Supplies Assistant Mini Program",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:10086", "http://localhost:3001", "http://localhost:3000"],
+    allow_origins=[
+        "https://admin.pawpalai.cn",
+        "https://staging.api.pawpalai.cn",
+        "http://localhost:10086",
+        "http://localhost:3001",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    client_ip = request.client.host if request.client else "unknown"
+    path = request.url.path
+    limit = AUTH_RATE_LIMIT if path.startswith("/v1/auth/") else GENERAL_RATE_LIMIT
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW
+    timestamps = RATE_LIMIT_STORE[client_ip]
+    RATE_LIMIT_STORE[client_ip] = [t for t in timestamps if t > window_start]
+    if len(RATE_LIMIT_STORE[client_ip]) >= limit:
+        logger.warning("Rate limit exceeded", extra={"ip": client_ip, "path": path})
+        return JSONResponse(
+            status_code=429,
+            content={"code": 429, "message": "Too many requests. Please try again later.", "data": None},
+        )
+    RATE_LIMIT_STORE[client_ip].append(now)
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -176,8 +226,12 @@ async def health_check():
 
 
 @app.get("/metrics")
-async def metrics():
-    """Prometheus metrics endpoint."""
+async def metrics(request: Request):
+    """Prometheus metrics endpoint. Requires Bearer token auth."""
+    auth_header = request.headers.get("Authorization", "")
+    expected_token = f"Bearer {settings.SECRET_KEY}"
+    if auth_header != expected_token:
+        raise HTTPException(status_code=403, detail="Forbidden: valid metrics token required")
     return Response(
         content=generate_latest(),
         media_type=CONTENT_TYPE_LATEST,

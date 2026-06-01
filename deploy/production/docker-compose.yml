@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: petstore-postgres
+    environment:
+      POSTGRES_USER: petshop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petshop123}
+      POSTGRES_DB: petshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U petshop -d petshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petstore_prod
+
+  redis:
+    image: redis:7-alpine
+    container_name: petstore-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petstore_prod
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.14
+    container_name: petstore-meilisearch
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-petshop-meili-key}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    restart: unless-stopped
+    networks:
+      - petstore_prod
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: backend/Dockerfile
+    container_name: petstore-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://petshop:${POSTGRES_PASSWORD:-petshop123}@postgres:5432/petshop
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      WECHAT_APP_ID: ${WECHAT_APP_ID}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      DASHSCOPE_MODEL: ${DASHSCOPE_MODEL:-deepseek-v4-flash}
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
+      APP_ENV: prod
+      DEBUG: ${DEBUG:-false}
+    env_file:
+      - ../../backend/.env.prod
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - backend_logs:/app/logs
+    networks:
+      - petstore_prod
+
+volumes:
+  postgres_data:
+  redis_data:
+  meilisearch_data:
+  backend_logs:
+
+networks:
+  petstore_prod:
+    driver: bridge

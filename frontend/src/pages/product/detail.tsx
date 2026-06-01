@@ -151,7 +151,10 @@ function SpuDetailContent() {
   }
 
   const navigateToChat = () => {
-    Taro.navigateTo({ url: `/pages/chat/index?spuId=${id}` })
+    if (id) {
+      Taro.setStorageSync('pendingSpuId', id)
+    }
+    Taro.switchTab({ url: '/pages/chat/index' })
   }
 
   const navigateToPriceCompare = () => {

@@ -1,9 +1,10 @@
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../stores/authStore'
+import { API_HOST } from '../config/env'
 
-const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
-  ? 'https://api.your-domain.com/v1'
-  : 'http://127.0.0.1:8001/v1'
+const API_BASE_URL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production'
+  ? 'https://api.pawpalai.cn/v1'
+  : `http://${API_HOST}:8000/v1`
 
 interface RequestOptions {
   url: string
@@ -85,4 +86,36 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL)
+
+export interface Spu {
+  id: number
+  name: string
+  brand: string
+  price_min: number
+  price_max: number
+  image_urls: string[]
+  rating: number
+  review_count: number
+  pros?: string[]
+  cons?: string[]
+}
+
+export interface SearchSpusResponse {
+  items: Spu[]
+  total: number
+}
+
+export async function searchSpusByKeywords(
+  keywords: string[],
+  petType?: string
+): Promise<SearchSpusResponse> {
+  const params: Record<string, string> = {
+    keywords: keywords.join(','),
+  }
+  if (petType) {
+    params.pet_type = petType
+  }
+  return apiClient.get('/spus/search', params)
+}
+
 export default apiClient

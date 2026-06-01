@@ -10,10 +10,6 @@ interface SpuCardProps {
   showCompare?: boolean;
 }
 
-function msgUri(size: number): string {
-  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`)}`
-}
-
 const starFilledUri = (s: number) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${s}" height="${s}" fill="#fb923c" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`)}`
 
 const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showCompare = true }) => {
@@ -81,36 +77,33 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
           mode="aspectFill"
         />
       </View>
-      <View className="flex-1 min-w-0">
-        <Text className="text-sm font-medium text-gray-900 leading-tight block">{spu.name}</Text>
-        <Text className="text-xs text-gray-500 mt-0.5 block">{spu.brand}</Text>
+        <View className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+        <View>
+          <Text className="text-sm font-bold text-gray-900 leading-tight block">{spu.name}</Text>
+          <Text className="text-xs text-gray-400 mt-0.5 block">{spu.brand}</Text>
 
-        <View className="flex flex-wrap gap-1 mt-1.5">
-          {spu.pros?.slice(0, 2).map((pro, i) => (
-            <Text key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full">
-              +{pro}
-            </Text>
-          ))}
-          {spu.cons?.slice(0, 1).map((con, i) => (
-            <Text key={`con-${i}`} className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full">
-              -{con}
-            </Text>
-          ))}
+          <View className="flex flex-wrap gap-1 mt-1.5">
+            {spu.pros?.slice(0, 2).map((pro, i) => (
+              <Text key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full">
+                +{pro}
+              </Text>
+            ))}
+            {spu.cons?.slice(0, 1).map((con, i) => (
+              <Text key={`con-${i}`} className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full">
+                -{con}
+              </Text>
+            ))}
+          </View>
         </View>
 
-        <View className="flex items-center justify-between mt-2">
-          <View className="flex items-center gap-1.5">
-            <View className="flex items-center gap-0.5">
-              <Image src={starFilledUri(12)} style={{ width: 12, height: 12 }} />
-              <Text className="text-xs font-medium text-orange-500">{spu.rating || 0}</Text>
-            </View>
-            <View className="flex items-center gap-0.5 text-gray-400">
-              <Image src={msgUri(11)} style={{ width: 11, height: 11 }} />
-              <Text className="text-[10px]">{spu.review_count || 0}</Text>
-            </View>
+        <View className="flex items-end justify-between mt-2">
+          <View className="flex items-center gap-1">
+            <Image src={starFilledUri(10)} style={{ width: 10, height: 10 }} />
+            <Text className="text-[10px] text-gray-400">{spu.rating || 0}</Text>
+            <Text className="text-[10px] text-gray-300">({spu.review_count || 0})</Text>
           </View>
           <View className="flex items-center gap-2">
-            <Text className="text-orange-600 font-bold text-sm">
+            <Text className="text-orange-600 font-bold text-base">
               ¥{spu.price_min || 0}
             </Text>
             {showCompare && (

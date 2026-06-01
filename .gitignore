@@ -15,8 +15,13 @@ build/
 
 # Environment
 .env
+.env.dev
 .env.local
+.env.prod
 .env.*.local
+
+# Backup files
+*.bak
 
 # Logs
 *.log

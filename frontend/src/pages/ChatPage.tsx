@@ -42,7 +42,7 @@ const TOOL_NAMES: Record<string, string> = {
 
 const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
   ? 'https://api.your-domain.com/v1'
-  : 'http://127.0.0.1:8001/v1'
+  : 'http://127.0.0.1:8000/v1'
 
 function parseSSEChunk(chunk: string): { type: string; data: any }[] {
   const events: { type: string; data: any }[] = []
@@ -427,6 +427,11 @@ const ChatPage: React.FC = () => {
               <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-3.5 py-2.5 shadow-sm">
                 {renderToolStatus(activeTools)}
                 {streamSpus.length > 0 && renderProductCards(streamSpus)}
+                {currentStream && (
+                  <div className="mt-2">
+                    <div>{renderMessage(currentStream)}</div>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 mt-2">
                   <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                   <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
