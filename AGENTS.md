@@ -40,10 +40,16 @@ netsh interface portproxy show all          # 验证
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/007-production-launch-prep/plan.md
+specs/008-xhs-review-enhancement/plan.md
 
 Also refer to:
-- Feature specification: specs/007-production-launch-prep/spec.md
+- Feature specification: specs/008-xhs-review-enhancement/spec.md
+- Feature 008 data model: specs/008-xhs-review-enhancement/data-model.md
+- Feature 008 API contracts: specs/008-xhs-review-enhancement/contracts/api-contracts.md
+- Feature 008 quickstart: specs/008-xhs-review-enhancement/quickstart.md
+- Feature 008 research notes: specs/008-xhs-review-enhancement/research.md
+- Feature 007 plan: specs/007-production-launch-prep/plan.md
+- Feature 007 specification: specs/007-production-launch-prep/spec.md
 - Feature 007 data model: specs/007-production-launch-prep/data-model.md
 - Feature 007 deployment checklist: specs/007-production-launch-prep/contracts/deployment-checklist.md
 - Feature 007 quickstart: specs/007-production-launch-prep/quickstart.md

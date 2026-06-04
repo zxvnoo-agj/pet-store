@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import { useToastStore } from '../../stores/toastStore'
-import { adminCategoryApi } from '../../services/api'
+import { adminCategoryApi, adminCollectApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
 
@@ -31,6 +31,7 @@ export default function Spus() {
   const [filterPetType, setFilterPetType] = useState(filters.pet_type || '')
   const [filterStatus, setFilterStatus] = useState(filters.status || '')
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [collectingSpuIds, setCollectingSpuIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     // Reset filters on mount to show all SPUs
@@ -135,6 +136,26 @@ export default function Spus() {
       setSelectedIds(new Set())
     } else {
       setSelectedIds(new Set(spus.map((s: any) => s.id)))
+    }
+  }
+
+  const handleTriggerXHS = async (e: React.MouseEvent, spuId: number) => {
+    e.stopPropagation()
+    if (collectingSpuIds.has(spuId)) return
+    setCollectingSpuIds(prev => new Set(prev).add(spuId))
+    try {
+      const res = await adminCollectApi.triggerXHSForSpu(spuId)
+      const data = res.data?.data || res.data
+      addToast(`采集任务已启动 (Job #${data.job_id})`, 'success')
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || '采集触发失败'
+      addToast(msg, 'error')
+    } finally {
+      setCollectingSpuIds(prev => {
+        const next = new Set(prev)
+        next.delete(spuId)
+        return next
+      })
     }
   }
 
@@ -394,6 +415,14 @@ export default function Spus() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleTriggerXHS(e, spu.id) }}
+                                disabled={collectingSpuIds.has(spu.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-purple-500 hover:bg-purple-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="评论采集"
+                              >
+                                <RefreshCw className={`w-4 h-4 ${collectingSpuIds.has(spu.id) ? 'animate-spin' : ''}`} />
+                              </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditSpu(spu); setShowForm(true) }}
                                 className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"

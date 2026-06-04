@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView, Button } from '@tarojs/components'
 import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
-import { apiClient } from '../../services/api'
+import { apiClient, getSpuReviews, AiReviewSummary, XHSNote } from '../../services/api'
 import { useCompareStore } from '../../stores/compareStore'
 import { useAuthStore } from '../../stores/authStore'
 import { checkLoginStatus } from '../../services/auth'
@@ -67,9 +67,14 @@ function SpuDetailContent() {
   const [spu, setSpu] = useState<any>(null)
   const [listings, setListings] = useState<any[]>([])
   const [reviews, setReviews] = useState<any[]>([])
+  const [aiSummary, setAiSummary] = useState<AiReviewSummary | null>(null)
+  const [reviewPage, setReviewPage] = useState(1)
+  const [reviewTotal, setReviewTotal] = useState(0)
+  const [reviewTotalPages, setReviewTotalPages] = useState(1)
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Set<number>>(new Set())
   const [isFavorited, setIsFavorited] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'links' | 'reviews'>('overview')
-  const [showAllReviews, setShowAllReviews] = useState(false)
+  
   const [loading, setLoading] = useState(true)
 
   const [imageExpanded, setImageExpanded] = useState(true)
@@ -137,13 +142,38 @@ function SpuDetailContent() {
     }
   }
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (page: number = 1) => {
     try {
-      const res = await apiClient.get(`/spus/${id}/reviews`)
-      setReviews(res.items || [])
+      const res = await getSpuReviews(Number(id), page)
+      if (page === 1) {
+        setReviews(res.notes || [])
+      } else {
+        setReviews(prev => [...prev, ...(res.notes || [])])
+      }
+      setAiSummary(res.ai_summary || null)
+      setReviewPage(res.pagination.page)
+      setReviewTotal(res.pagination.total)
+      setReviewTotalPages(res.pagination.total_pages)
     } catch (error) {
       console.error('Failed to fetch reviews:', error)
     }
+  }
+
+  const toggleNoteComments = (noteId: number) => {
+    setExpandedNoteIds(prev => {
+      const next = new Set(prev)
+      if (next.has(noteId)) {
+        next.delete(noteId)
+      } else {
+        next.add(noteId)
+      }
+      return next
+    })
+  }
+
+  const loadMoreReviews = () => {
+    const nextPage = reviewPage + 1
+    fetchReviews(nextPage)
   }
 
   const goBack = () => {
@@ -223,7 +253,7 @@ function SpuDetailContent() {
     (reviews.filter((r: any) => r.is_recommended).length / (reviews.length || 1)) * 100
   )
 
-  const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3)
+  
 
   return (
     <View className="flex flex-col h-screen bg-white">
@@ -547,62 +577,173 @@ function SpuDetailContent() {
           </View>
         )}
 
-        {/* 评价内容 */}
+        {/* 评价内容 - 小红书笔记 */}
         {activeTab === 'reviews' && (
           <View className="px-4 py-4 space-y-4">
-            <View className="bg-gray-50 rounded-xl p-3">
-              <View className="flex items-center justify-between mb-2">
-                <Text className="text-lg font-bold text-gray-800">
-                  {spu.rating || 0}
-                  <Text className="text-sm text-gray-400 font-normal">/5</Text>
-                </Text>
-                <Text className="text-xs text-orange-500 font-medium">
-                  {recommendRate}% 的人推荐
-                </Text>
-              </View>
-              <View className="flex flex-wrap gap-1.5">
-                {['适口性好', '营养均衡', '性价比高', '便便正常', '毛色变亮'].map((tag) => (
-                  <Text key={tag} className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[10px] rounded-full">
-                    {tag}
+            {/* AI 总结卡片 */}
+            {aiSummary ? (
+              <View className="bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 rounded-2xl p-4 border border-purple-100">
+                <View className="flex items-center gap-2 mb-3">
+                  <View className="w-2 h-2 rounded-full bg-purple-400" />
+                  <Text className="text-sm font-bold text-purple-700">AI 综合总结</Text>
+                  <Text className="text-[10px] text-gray-400 ml-auto">
+                    基于 {aiSummary.review_count} 条笔记
                   </Text>
-                ))}
-              </View>
-            </View>
-
-            {displayedReviews.map((review: any) => (
-              <View key={review.id} className="border-b border-gray-50 last:border-0 pb-4 last:pb-0">
-                <View className="flex items-center gap-2 mb-2">
-                  <View className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Text className="text-xs font-bold text-orange-600">{review.user?.nickname?.[0] || 'U'}</Text>
-                  </View>
-                  <Text className="text-xs font-medium text-gray-700">{review.user?.nickname || '匿名用户'}</Text>
-                  <View className="ml-auto flex items-center gap-0.5">
-                    <Text className="text-xs text-orange-400">{'★'.repeat(Math.round(review.rating || 0))}</Text>
-                  </View>
                 </View>
-                <Text className="text-xs text-gray-600 leading-relaxed" userSelect>{review.content}</Text>
-                <View className="flex flex-wrap gap-1.5 mt-2">
-                  {review.tags?.map((tag: string) => (
-                    <Text key={tag} className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded">
-                      #{tag}
+
+                <Text className="text-xs text-gray-700 leading-relaxed mb-3">{aiSummary.summary}</Text>
+
+                {aiSummary.overall_pros.length > 0 && (
+                  <View className="mb-2">
+                    <Text className="text-[10px] font-medium text-green-600 mb-1">优点</Text>
+                    <View className="flex flex-wrap gap-1.5">
+                      {aiSummary.overall_pros.map((pro, i) => (
+                        <Text key={i} className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full">
+                          {pro}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {aiSummary.overall_cons.length > 0 && (
+                  <View className="mb-2">
+                    <Text className="text-[10px] font-medium text-red-500 mb-1">缺点</Text>
+                    <View className="flex flex-wrap gap-1.5">
+                      {aiSummary.overall_cons.map((con, i) => (
+                        <Text key={i} className="px-2 py-0.5 bg-red-50 text-red-500 text-[10px] rounded-full">
+                          {con}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <View className="flex items-center gap-2 mt-2 pt-2 border-t border-white/50">
+                  <Text className={`text-xs font-medium ${aiSummary.recommendation === '推荐' ? 'text-green-600' : aiSummary.recommendation === '不推荐' ? 'text-red-500' : 'text-gray-500'}`}>
+                    {aiSummary.recommendation === '推荐' ? '推荐' : aiSummary.recommendation === '不推荐' ? '不推荐' : '中性'}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    推荐率 {Math.round(aiSummary.recommend_rate * 100)}%
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-2xl p-4 border border-purple-100/30">
+                <View className="flex items-center gap-2 mb-1">
+                  <View className="w-2 h-2 rounded-full bg-purple-300" />
+                  <Text className="text-sm font-bold text-purple-400">AI 综合总结</Text>
+                </View>
+                <Text className="text-xs text-gray-400">暂无 AI 总结，评论采集后将自动生成</Text>
+              </View>
+            )}
+
+            {/* 笔记列表 */}
+            {reviews.length === 0 ? (
+              <View className="flex flex-col items-center justify-center py-10">
+                <Text className="text-gray-400 text-sm">暂无小红书笔记</Text>
+                <Text className="text-xs text-gray-300 mt-1">管理员采集后将在此展示</Text>
+              </View>
+            ) : (
+              reviews.map((note: XHSNote) => {
+                const isExpanded = expandedNoteIds.has(note.id)
+                const truncated = note.content.length > 200
+                return (
+                  <View key={note.id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+                    {/* 作者和信息头 */}
+                    <View className="flex items-center gap-2">
+                      <View className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                        <Text className="text-xs font-bold text-purple-600">{note.author?.[0] || '?'}</Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-xs font-medium text-gray-700">{note.author || '匿名'}</Text>
+                        <Text className="text-[10px] text-gray-400">
+                          {note.note_published_at ? new Date(note.note_published_at).toLocaleDateString('zh-CN') : ''}
+                        </Text>
+                      </View>
+                      <View className="flex items-center gap-1">
+                        <Text className="text-xs text-gray-400">❤️ {note.note_likes || 0}</Text>
+                      </View>
+                    </View>
+
+                    {/* 笔记内容 */}
+                    <Text className={`text-xs text-gray-600 leading-relaxed ${isExpanded || !truncated ? '' : 'line-clamp-3'}`}>
+                      {isExpanded ? note.content : (truncated ? note.content.slice(0, 200) + '...' : note.content)}
                     </Text>
-                  ))}
-                </View>
-                <View className="flex items-center justify-between mt-2">
-                  <Text className="text-[10px] text-gray-400">{review.created_at}</Text>
-                  <View className="flex items-center gap-1 text-gray-400">
-                    <Text className="text-[10px]">赞 {review.helpful_count || 0}</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
+                    {truncated && (
+                      <Text
+                        className="text-[10px] text-purple-500 font-medium"
+                        onClick={() => toggleNoteComments(note.id)}
+                      >
+                        {isExpanded ? '收起' : '展开全文'}
+                      </Text>
+                    )}
 
-            {!showAllReviews && reviews.length > 3 && (
+                    {/* Tags */}
+                    {note.tags.length > 0 && (
+                      <View className="flex flex-wrap gap-1.5">
+                        {note.tags.slice(0, 4).map((tag, i) => (
+                          <Text key={i} className="px-1.5 py-0.5 bg-orange-50 text-orange-500 text-[10px] rounded">
+                            #{tag}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* 推荐态度 */}
+                    {note.is_recommended !== null && note.is_recommended !== undefined && (
+                      <Text className={`text-[10px] ${note.is_recommended ? 'text-green-500' : 'text-red-400'}`}>
+                        {note.is_recommended ? '推荐' : '不推荐'}
+                      </Text>
+                    )}
+
+                    {/* 来源链接 */}
+                    {note.source_url && (
+                      <Text
+                        className="text-[10px] text-blue-500 underline"
+                        onClick={() => Taro.setClipboardData({ data: note.source_url || '' })}
+                      >
+                        查看小红书原文
+                      </Text>
+                    )}
+
+                    {/* 评论折叠区域 */}
+                    {note.comments.length > 0 && (
+                      <View
+                        className="bg-gray-50 rounded-xl p-3 mt-1"
+                        onClick={() => toggleNoteComments(note.id + 100000)}
+                      >
+                        <View className="flex items-center justify-between mb-1">
+                          <Text className="text-[10px] font-medium text-gray-500">
+                            评论 ({note.comments.length})
+                          </Text>
+                          <Text className="text-[10px] text-gray-400">
+                            {expandedNoteIds.has(note.id + 100000) ? '收起 ▲' : '展开 ▼'}
+                          </Text>
+                        </View>
+                        {expandedNoteIds.has(note.id + 100000) && (
+                          <View className="space-y-2">
+                            {note.comments.slice(0, 10).map((comment, i) => (
+                              <Text key={i} className="text-[10px] text-gray-600 leading-relaxed block">
+                                {comment}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )
+              })
+            )}
+
+            {/* 加载更多 */}
+            {reviewPage < reviewTotalPages && (
               <View
                 className="w-full py-2.5 text-xs text-orange-500 font-medium border border-orange-200 rounded-xl text-center"
-                onClick={() => setShowAllReviews(true)}
+                onClick={loadMoreReviews}
               >
-                <Text>查看全部 {reviews.length} 条评价</Text>
+                <Text>加载更多笔记</Text>
               </View>
             )}
           </View>

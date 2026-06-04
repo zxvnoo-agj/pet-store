@@ -118,4 +118,42 @@ export async function searchSpusByKeywords(
   return apiClient.get('/spus/search', params)
 }
 
+export interface XHSNote {
+  id: number
+  external_note_id?: string
+  content: string
+  author?: string
+  note_likes?: number
+  note_published_at?: string
+  source_url?: string
+  tags: string[]
+  is_recommended?: boolean
+  comments: string[]
+}
+
+export interface AiReviewSummary {
+  overall_pros: string[]
+  overall_cons: string[]
+  recommendation: string
+  recommend_rate: number
+  summary: string
+  generated_at?: string
+  review_count: number
+}
+
+export interface SpuReviewsResponse {
+  ai_summary: AiReviewSummary | null
+  notes: XHSNote[]
+  pagination: {
+    page: number
+    page_size: number
+    total: number
+    total_pages: number
+  }
+}
+
+export async function getSpuReviews(spuId: number, page: number = 1): Promise<SpuReviewsResponse> {
+  return apiClient.get(`/spus/${spuId}/reviews`, { page, page_size: 20 })
+}
+
 export default apiClient

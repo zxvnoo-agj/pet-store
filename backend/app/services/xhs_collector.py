@@ -1,6 +1,5 @@
 import asyncio
 from datetime import UTC, datetime
-from typing import Optional
 
 from loguru import logger
 
@@ -41,7 +40,7 @@ class XHSCollector:
             logger.error(f"XHS search failed for '{keyword}': {e}")
             return []
 
-    async def get_note_detail(self, note_id: str) -> Optional[dict]:
+    async def get_note_detail(self, note_id: str) -> dict | None:
         path = f"/api/sns/web/v1/feed?note_id={note_id}"
         try:
             data = await self._request(path)
@@ -79,33 +78,50 @@ class XHSCollector:
             ) if note.get("time") or note_card.get("time") else None,
         }
 
-    async def collect_product_reviews(self, product_name: str, brand: Optional[str] = None, max_notes: int = 30) -> list[dict]:
-        keywords = [f"{brand} {product_name}" if brand else product_name]
-        all_notes = []
+    async def collect_product_reviews(
+        self,
+        spu_id: int,
+        spu_name: str,
+        brand: str | None = None,
+        max_notes: int = 20,
+    ) -> tuple[list[dict], list[str]]:
+        keywords = [f"{brand} {spu_name}" if brand else spu_name]
+        collected = []
+        failed = []
         page = 1
 
         for keyword in keywords:
-            while len(all_notes) < max_notes:
+            while len(collected) < max_notes:
                 notes = await self.search_notes(keyword, page=page)
                 if not notes:
                     break
 
                 for note_data in notes:
-                    if len(all_notes) >= max_notes:
+                    if len(collected) >= max_notes:
                         break
 
                     note_id = note_data.get("id", "")
                     if not note_id:
                         continue
 
-                    detail = await self.get_note_detail(note_id)
-                    if not detail:
+                    try:
+                        detail = await self.get_note_detail(note_id)
+                        if not detail:
+                            continue
+                    except Exception as e:
+                        failed.append(f"note_id={note_id}: {e}")
                         continue
 
                     parsed = self.parse_note(detail)
-                    comments = await self.get_note_comments(note_id)
-                    parsed["comments"] = [c.get("content", "") for c in comments]
-                    all_notes.append(parsed)
+                    parsed["spu_id"] = spu_id
+                    try:
+                        comments = await self.get_note_comments(note_id)
+                        parsed["comments"] = [c.get("content", "") for c in comments]
+                    except Exception as e:
+                        failed.append(f"note_id={note_id}/comments: {e}")
+                        parsed["comments"] = []
+
+                    collected.append(parsed)
 
                     await asyncio.sleep(2)
 
@@ -113,8 +129,8 @@ class XHSCollector:
 
             page = 1
 
-        logger.debug(f"XHS collected {len(all_notes)} notes for product '{product_name}'")
-        return all_notes
+        logger.debug(f"XHS collected {len(collected)} notes for spu '{spu_name}' ({len(failed)} failed)")
+        return collected, failed
 
     async def close(self):
         await self.http.close()

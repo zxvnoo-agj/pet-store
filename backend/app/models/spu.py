@@ -1,4 +1,15 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, func, CheckConstraint, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -20,6 +31,7 @@ class Spu(Base):
     pros = Column(JSONB, default=list)
     cons = Column(JSONB, default=list)
     extra_attrs = Column(JSONB, default=dict)
+    ai_review_summary = Column(JSONB, nullable=True)
     price_min = Column(Numeric(10, 2), nullable=True)
     price_max = Column(Numeric(10, 2), nullable=True)
     currency = Column(String(8), default="CNY")
