@@ -1,14 +1,11 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.database import AsyncSessionLocal
 from app.services.spu_service import SpuService
 from app.services.review_service import ReviewService
 
 
 class AgentTools:
-    def __init__(self, db: AsyncSession):
-        self.db = db
-        self.spu_service = SpuService(db)
-        self.review_service = ReviewService(db)
+    def __init__(self, *_args, **_kwargs):
+        pass
 
     async def search_products(self, pet_type: str | None = None, category: str | None = None,
                              brand: str | None = None, max_price: float | None = None) -> list[dict]:
@@ -20,7 +17,8 @@ class AgentTools:
             page=1,
             page_size=5,
         )
-        spus, _ = await self.spu_service.get_spus_for_miniprogram(filters)
+        async with AsyncSessionLocal() as db:
+            spus, _ = await SpuService(db).get_spus_for_miniprogram(filters)
         return [{
             "id": s.id,
             "name": s.name,
@@ -36,7 +34,8 @@ class AgentTools:
         } for s in spus]
 
     async def get_spu_detail(self, spu_id: int) -> dict | None:
-        spu = await self.spu_service.get_spu_for_miniprogram(spu_id)
+        async with AsyncSessionLocal() as db:
+            spu = await SpuService(db).get_spu_for_miniprogram(spu_id)
         if spu:
             return {
                 "id": spu.id,
@@ -55,15 +54,18 @@ class AgentTools:
         return None
 
     async def get_reviews_summary(self, spu_id: int) -> dict:
-        summary = await self.review_service.get_review_summary(spu_id)
+        async with AsyncSessionLocal() as db:
+            summary = await ReviewService(db).get_review_summary(spu_id)
         return summary.model_dump()
 
     async def compare_products(self, spu_ids: list[int]) -> list[dict]:
         spus = []
-        for sid in spu_ids:
-            spu = await self.spu_service.get_spu_for_miniprogram(sid)
-            if spu:
-                spus.append(spu)
+        async with AsyncSessionLocal() as db:
+            service = SpuService(db)
+            for sid in spu_ids:
+                spu = await service.get_spu_for_miniprogram(sid)
+                if spu:
+                    spus.append(spu)
         return [{
             "id": s.id,
             "name": s.name,

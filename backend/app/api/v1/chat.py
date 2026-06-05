@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.agent import AIAgent
-from app.core.database import get_db
+from app.core.database import AsyncSessionLocal, get_db
 from app.core.deps import get_optional_current_user
 from app.models.user import User
 from app.schemas.chat import ChatSessionCreate, ChatStreamRequest
@@ -62,48 +62,70 @@ async def clear_session(
 @router.post("/chat/stream")
 async def chat_stream(
     data: ChatStreamRequest,
-    db: AsyncSession = Depends(get_db),
     current_user: User | None = Depends(get_optional_current_user),
 ):
-    service = ChatService(db)
-    agent = AIAgent(db)
+    user_id = current_user.id if current_user else None
 
-    # Get chat history
-    messages = await service.get_session_messages(data.session_id)
-    history = [{"role": msg.role, "content": msg.content} for msg in messages[-10:]]
+    async with AsyncSessionLocal() as db:
+        service = ChatService(db)
 
-    # Save user message
-    await service.add_message(data.session_id, "user", data.content)
+        # Get chat history before saving the new user message.
+        messages = await service.get_session_messages(data.session_id)
+        history = [{"role": msg.role, "content": msg.content} for msg in messages[-10:]]
+
+        await service.add_message(data.session_id, "user", data.content)
 
     async def event_generator():
-        full_response = ""
-        referenced_spus = []
-        async for chunk in agent.chat_stream(
-            data.content, history, user_id=current_user.id if current_user else None
-        ):
-            if chunk.startswith("event: message\ndata: "):
-                import json
-                try:
-                    msg_data = json.loads(chunk[len("event: message\ndata: "):])
-                    if msg_data.get("content"):
-                        full_response += msg_data["content"]
-                except json.JSONDecodeError:
-                    pass
-            elif chunk.startswith("event: spus\ndata: "):
-                import json
-                try:
-                    spus_data = json.loads(chunk[len("event: spus\ndata: "):])
-                    referenced_spus = spus_data.get("spus", [])
-                except json.JSONDecodeError:
-                    pass
-            yield chunk
+        import json
 
-        # Save assistant message with referenced SPUs
-        spu_ids = [p["id"] for p in referenced_spus if "id" in p]
-        await service.add_message(
-            data.session_id, "assistant", full_response,
-            referenced_spus=spu_ids or None
-        )
+        final_response = ""
+        referenced_spus = []
+        try:
+            async with AsyncSessionLocal() as agent_db:
+                agent = AIAgent(agent_db)
+                async for chunk in agent.chat_stream(data.content, history, user_id=user_id):
+                    if chunk.startswith("event: message\ndata: "):
+                        try:
+                            msg_data = json.loads(chunk[len("event: message\ndata: "):])
+                            if msg_data.get("content"):
+                                final_response += msg_data["content"]
+                        except json.JSONDecodeError:
+                            pass
+                    elif chunk.startswith("event: tool_call\ndata: "):
+                        # Text emitted before a tool call is process narration; keep it out
+                        # of the persisted final answer shown in future history loads.
+                        final_response = ""
+                    elif chunk.startswith("event: spus\ndata: "):
+                        try:
+                            spus_data = json.loads(chunk[len("event: spus\ndata: "):])
+                            referenced_spus = spus_data.get("spus", [])
+                        except json.JSONDecodeError:
+                            pass
+                    yield chunk
+
+            # Save assistant message with referenced SPUs after streaming completes.
+            if final_response:
+                spu_ids = [p["id"] for p in referenced_spus if "id" in p]
+                async with AsyncSessionLocal() as save_db:
+                    await ChatService(save_db).add_message(
+                        data.session_id, "assistant", final_response,
+                        referenced_spus=spu_ids or None
+                    )
+        except Exception as exc:
+            error_text = "抱歉，刚才处理对话时出现异常，请稍后再试。"
+            if not final_response:
+                final_response = error_text
+                yield f"event: message\ndata: {json.dumps({'content': error_text}, ensure_ascii=False)}\n\n"
+
+            async with AsyncSessionLocal() as save_db:
+                await ChatService(save_db).add_message(
+                    data.session_id,
+                    "assistant",
+                    final_response,
+                )
+
+            yield f"event: error\ndata: {json.dumps({'message': str(exc)}, ensure_ascii=False)}\n\n"
+            yield "event: done\ndata: {\"status\": \"failed\"}\n\n"
 
     return StreamingResponse(
         event_generator(),

@@ -25,6 +25,12 @@ interface ToolCall {
   status: 'started' | 'completed'
 }
 
+interface ReasoningStep {
+  id: number
+  content: string
+  tools: ToolCall[]
+}
+
 interface Message {
   id: number
   role: 'user' | 'assistant'
@@ -32,6 +38,7 @@ interface Message {
   isComplete?: boolean
   referencedSpus?: Spu[]
   toolCalls?: ToolCall[]
+  reasoningSteps?: ReasoningStep[]
 }
 
 const TOOL_NAMES: Record<string, string> = {
@@ -114,6 +121,8 @@ export default function ChatPage() {
   const [currentStream, setCurrentStream] = useState('')
   const [streamProducts, setStreamProducts] = useState<Spu[]>([])
   const [activeTools, setActiveTools] = useState<ToolCall[]>([])
+  const [streamSteps, setStreamSteps] = useState<ReasoningStep[]>([])
+  const [expandedProcessIds, setExpandedProcessIds] = useState<Record<number, boolean>>({})
   const [quickQuestions, setQuickQuestions] = useState<string[]>(DEFAULT_QUESTIONS)
   const [questionsLoading, setQuestionsLoading] = useState(false)
   const [systemInfo, setSystemInfo] = useState<{
@@ -278,13 +287,74 @@ export default function ChatPage() {
     setCurrentStream('')
     setStreamProducts([])
     setActiveTools([])
+    setStreamSteps([])
+
+    let pendingText = ''
+    let spus: Spu[] = []
+    let toolCalls: ToolCall[] = []
+    let reasoningSteps: ReasoningStep[] = []
+    let currentStepId: number | null = null
+    let stepSeq = 0
+
+    const publishSteps = () => {
+      setStreamSteps(reasoningSteps.map((step) => ({
+        ...step,
+        tools: [...step.tools],
+      })))
+    }
+
+    const ensureStep = (initialContent = '') => {
+      if (currentStepId === null) {
+        stepSeq += 1
+        currentStepId = stepSeq
+        reasoningSteps = [
+          ...reasoningSteps,
+          { id: currentStepId, content: initialContent.trim(), tools: [] },
+        ]
+        return
+      }
+
+      reasoningSteps = reasoningSteps.map((step) =>
+        step.id === currentStepId && initialContent.trim() && !step.content
+          ? { ...step, content: initialContent.trim() }
+          : step
+      )
+    }
+
+    const addToolToCurrentStep = (tool: ToolCall) => {
+      ensureStep(pendingText)
+      pendingText = ''
+      setCurrentStream('')
+      reasoningSteps = reasoningSteps.map((step) =>
+        step.id === currentStepId
+          ? { ...step, tools: [...step.tools, tool] }
+          : step
+      )
+      publishSteps()
+    }
+
+    const completeToolInSteps = (toolName: string) => {
+      let updated = false
+      reasoningSteps = reasoningSteps.map((step) => ({
+        ...step,
+        tools: step.tools.map((tool) => {
+          if (!updated && tool.tool === toolName && tool.status === 'started') {
+            updated = true
+            return { ...tool, status: 'completed' as const }
+          }
+          return tool
+        }),
+      }))
+      publishSteps()
+    }
+
+    const startNextStep = () => {
+      currentStepId = null
+    }
 
     try {
       const baseURL = API_BASE_URL
       const token = useAuthStore.getState().token
-      let accumulated = ''
-      let spus: Spu[] = []
-      let toolCalls: ToolCall[] = []
 
       const utf8Decode = createUTF8Decoder()
 
@@ -321,20 +391,22 @@ export default function ChatPage() {
                 try {
                   const data = JSON.parse(event.data)
                   if (data.content) {
-                    accumulated += data.content
-                    setCurrentStream(accumulated)
+                    pendingText += data.content
+                    setCurrentStream(pendingText)
                   }
                 } catch {
-                  accumulated += event.data
-                  setCurrentStream(accumulated)
+                  pendingText += event.data
+                  setCurrentStream(pendingText)
                 }
                 break
 
               case 'tool_call':
                 try {
                   const data = JSON.parse(event.data)
-                  toolCalls = [...toolCalls, { tool: data.tool, status: 'started' }]
+                  const newTool = { tool: data.tool, status: 'started' as const }
+                  toolCalls = [...toolCalls, newTool]
                   setActiveTools([...toolCalls])
+                  addToolToCurrentStep(newTool)
                 } catch {
                 }
                 break
@@ -346,6 +418,8 @@ export default function ChatPage() {
                     t.tool === data.tool ? { ...t, status: 'completed' } : t
                   )
                   setActiveTools([...toolCalls])
+                  completeToolInSteps(data.tool)
+                  startNextStep()
                 } catch {
                 }
                 break
@@ -358,6 +432,15 @@ export default function ChatPage() {
                 } catch {
                 }
                 break
+
+              case 'error':
+                try {
+                  const data = JSON.parse(event.data)
+                  console.error('Chat stream error:', data.message)
+                } catch {
+                  console.error('Chat stream error:', event.data)
+                }
+                break
             }
           }
         })
@@ -366,19 +449,37 @@ export default function ChatPage() {
       const newMessage: Message = {
         id: Date.now(),
         role: 'assistant',
-        content: accumulated,
+        content: pendingText,
         isComplete: true,
         referencedSpus: spus.length > 0 ? spus : undefined,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+        reasoningSteps: reasoningSteps.length > 0 ? reasoningSteps : undefined,
       }
 
       setMessages((prev) => [...prev, newMessage])
       setCurrentStream('')
       setStreamProducts([])
       setActiveTools([])
+      setStreamSteps([])
     } catch (error) {
       console.error('Chat error:', error)
-      Taro.showToast({ title: '发送失败，请重试', icon: 'none' })
+      if (pendingText || reasoningSteps.length > 0) {
+        setMessages((prev) => [...prev, {
+          id: Date.now(),
+          role: 'assistant',
+          content: pendingText || '抱歉，刚才处理对话时出现异常，请稍后再试。',
+          isComplete: true,
+          referencedSpus: spus.length > 0 ? spus : undefined,
+          toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+          reasoningSteps: reasoningSteps.length > 0 ? reasoningSteps : undefined,
+        }])
+        setCurrentStream('')
+        setStreamProducts([])
+        setActiveTools([])
+        setStreamSteps([])
+      } else {
+        Taro.showToast({ title: '发送失败，请重试', icon: 'none' })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -492,6 +593,114 @@ export default function ChatPage() {
     )
   }
 
+  const renderToolPills = (tools: ToolCall[]) => {
+    if (tools.length === 0) return null
+
+    return (
+      <View className="flex flex-row flex-wrap gap-1.5 mt-2">
+        {tools.map((tool, i) => (
+          <View
+            key={`${tool.tool}-${i}`}
+            className={`px-2 py-0.5 rounded-full border ${
+              tool.status === 'completed'
+                ? 'bg-green-50 text-green-600 border-green-100'
+                : 'bg-blue-50 text-blue-600 border-blue-100'
+            }`}
+          >
+            <Text className="text-[10px]">
+              {tool.status === 'completed' ? '✓' : '…'} {TOOL_NAMES[tool.tool] || tool.tool}
+            </Text>
+          </View>
+        ))}
+      </View>
+    )
+  }
+
+  const renderProcessTimeline = (
+    steps: ReasoningStep[],
+    collapsed: boolean,
+    onToggle?: () => void,
+    liveContent = '',
+  ) => {
+    const allTools = steps.reduce<ToolCall[]>((tools, step) => [...tools, ...step.tools], [])
+    const completedCount = allTools.filter((tool) => tool.status === 'completed').length
+    const totalCount = allTools.length
+    const stepCount = steps.length + (liveContent.trim() ? 1 : 0)
+
+    if (steps.length === 0 && !liveContent.trim()) return null
+
+    if (collapsed) {
+      return (
+        <View
+          className="mt-3 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2 flex flex-row items-center justify-between"
+          onClick={onToggle}
+        >
+          <View className="flex flex-row items-center gap-2 min-w-0">
+            <Text className="text-xs text-gray-500">▸</Text>
+            <Text className="text-xs text-gray-600 font-medium truncate">
+              思考与工具过程
+            </Text>
+          </View>
+          <Text className="text-[10px] text-gray-400 shrink-0">
+            {stepCount} 步 · {completedCount}/{totalCount} 工具
+          </Text>
+        </View>
+      )
+    }
+
+    return (
+      <View className="mt-3 rounded-xl bg-gray-50 border border-gray-100 px-3 py-2">
+        <View
+          className="flex flex-row items-center justify-between mb-2"
+          onClick={onToggle}
+        >
+          <Text className="text-xs text-gray-600 font-medium">
+            {onToggle ? '▾ ' : ''}思考与工具过程
+          </Text>
+          <Text className="text-[10px] text-gray-400">
+            {stepCount} 步
+          </Text>
+        </View>
+
+        {steps.map((step, index) => (
+          <View key={step.id} className="pb-3 mb-3 border-b border-gray-100">
+            <View className="flex flex-row items-center gap-2 mb-1.5">
+              <View className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                <Text className="text-[10px] text-gray-500">{index + 1}</Text>
+              </View>
+              <Text className="text-xs text-gray-500">思考</Text>
+            </View>
+            {step.content ? (
+              <View className="pl-7">
+                <MarkdownRenderer content={step.content} />
+              </View>
+            ) : null}
+            {step.tools.length > 0 && (
+              <View className="pl-7">
+                <Text className="text-[10px] text-gray-400">工具调用</Text>
+                {renderToolPills(step.tools)}
+              </View>
+            )}
+          </View>
+        ))}
+
+        {liveContent.trim() ? (
+          <View>
+            <View className="flex flex-row items-center gap-2 mb-1.5">
+              <View className="w-5 h-5 rounded-full bg-white border border-blue-100 flex items-center justify-center">
+                <View className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              </View>
+              <Text className="text-xs text-blue-500">正在思考</Text>
+            </View>
+            <View className="pl-7">
+              <MarkdownRenderer content={liveContent} />
+            </View>
+          </View>
+        ) : null}
+      </View>
+    )
+  }
+
   const topOffset = systemInfo.statusBarHeight + systemInfo.navBarHeight
 
   return (
@@ -557,7 +766,7 @@ export default function ChatPage() {
           <ScrollView
             ref={scrollViewRef}
             style={{ height: '100%' }}
-            className="px-4"
+            className="px-0"
             scrollY
             scrollWithAnimation
             scrollIntoView={messages.length > 0 ? `msg-${messages[messages.length - 1].id}` : undefined}
@@ -572,8 +781,8 @@ export default function ChatPage() {
                 <View
                   style={
                     msg.role === 'user'
-                      ? { maxWidth: '82%', marginRight: '8px' }
-                      : { width: '100%', maxWidth: '100%' }
+                      ? { maxWidth: '78%', marginRight: '16px', marginLeft: '48px', boxSizing: 'border-box' }
+                      : { width: 'calc(100% - 32px)', maxWidth: '100%', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }
                   }
                   className={`min-w-0 ${
                     msg.role === 'user'
@@ -585,9 +794,18 @@ export default function ChatPage() {
                     <Text className="text-sm leading-relaxed text-white" style={{ wordBreak: 'break-word' }}>{msg.content}</Text>
                   ) : (
                     <View>
-                      <MarkdownRenderer content={msg.content} />
+                      {msg.content ? <MarkdownRenderer content={msg.content} /> : null}
                       {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
-                      {msg.toolCalls && msg.toolCalls.length > 0 && (
+                      {msg.reasoningSteps && msg.reasoningSteps.length > 0 ? (
+                        renderProcessTimeline(
+                          msg.reasoningSteps,
+                          !expandedProcessIds[msg.id],
+                          () => setExpandedProcessIds((prev) => ({
+                            ...prev,
+                            [msg.id]: !prev[msg.id],
+                          })),
+                        )
+                      ) : msg.toolCalls && msg.toolCalls.length > 0 && (
                         renderToolStatus(msg.toolCalls, true)
                       )}
                     </View>
@@ -596,16 +814,14 @@ export default function ChatPage() {
               </View>
             ))}
 
-            {isLoading && activeTools.length > 0 && (
+            {isLoading && streamSteps.length > 0 && (
               <View className="flex justify-center mb-5">
-                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
-                  {currentStream ? (
-                    <View>
-                      <MarkdownRenderer content={currentStream} />
-                    </View>
-                  ) : null}
+                <View
+                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
+                >
+                  {renderProcessTimeline(streamSteps, false, undefined, currentStream)}
                   {streamProducts.length > 0 && renderProductCards(streamProducts)}
-                  {renderToolStatus(activeTools)}
                   <View className="flex items-center gap-1 mt-2">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
@@ -615,9 +831,12 @@ export default function ChatPage() {
               </View>
             )}
 
-            {isLoading && activeTools.length === 0 && currentStream && (
+            {isLoading && streamSteps.length === 0 && currentStream && (
               <View className="flex justify-center mb-5">
-                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
+                <View
+                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
+                >
                   <MarkdownRenderer content={currentStream} />
                   <View className="flex items-center gap-1 mt-1">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
@@ -628,9 +847,12 @@ export default function ChatPage() {
               </View>
             )}
 
-            {isLoading && activeTools.length === 0 && !currentStream && (
+            {isLoading && streamSteps.length === 0 && !currentStream && (
               <View className="flex justify-center mb-5">
-                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
+                <View
+                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
+                >
                   <View className="flex items-center gap-2">
                     <View className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm text-gray-500">正在思考...</Text>
