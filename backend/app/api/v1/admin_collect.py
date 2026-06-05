@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,10 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import AsyncSessionLocal, get_db
+from app.models.category import Category
 from app.models.collection import ExternalProduct, SearchStrategy
 from app.models.data_source import DataFetchJob, DataSource
-from app.models.product import Product
 from app.models.review import Review
+from app.models.spu import Spu
 from app.schemas.collection import (
     AggregationTriggerResponse,
     CollectionJobResponse,
@@ -24,25 +26,21 @@ from app.schemas.collection import (
     ProductCollectionStatus,
     ProductSeed,
     ProductSeedResponse,
-    RetryResponse,
     SchedulerStatus,
     SearchStrategyCreate,
     SearchStrategyResponse,
-    StrategyExecuteResponse,
     XHSCollectResponse,
 )
 from app.schemas.common import ApiResponse, Pagination
-from app.services.collection_service import (
-    aggregate_product_tags,
-    discover_products,
-    retry_product_collection,
-    run_post_discovery_enrichment,
-    seed_product,
-)
 from app.services.llm_analyzer import analyze_review, generate_spu_summary
 from app.services.xhs_collector import XHSCollector
 
 router = APIRouter()
+
+
+def _parse_pdd_goods_id(url: str) -> str | None:
+    match = re.search(r"goods_id=(\d+)", url)
+    return match.group(1) if match else None
 
 
 # === 1. Search Strategies ===
@@ -103,24 +101,9 @@ async def execute_strategy(
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
 
-    job = DataFetchJob(
-        data_source_id=strategy.data_source_id,
-        job_type="discovery",
-        status="pending",
-        params={"strategy_id": strategy_id, "keyword": " ".join(strategy.keywords or [])},
-    )
-    db.add(job)
-    await db.commit()
-    await db.refresh(job)
-
-    asyncio.create_task(_run_discovery(strategy_id, job.id))
-
-    return ApiResponse(
-        data=StrategyExecuteResponse(
-            job_id=job.id,
-            status="pending",
-            message="Strategy execution started. Products will be discovered and enriched asynchronously.",
-        ).model_dump()
+    raise HTTPException(
+        status_code=410,
+        detail="Product discovery has been retired after the SPU migration. Use SPU-based collection endpoints.",
     )
 
 
@@ -147,12 +130,57 @@ async def seed_product_endpoint(
     current_admin = Depends(get_current_admin),
 ):
     try:
-        product = await seed_product(db, body.category_id, body.product_name, body.pdd_url, pet_type=body.pet_type)
+        goods_id = _parse_pdd_goods_id(body.pdd_url)
+        if not goods_id:
+            raise HTTPException(status_code=400, detail="Invalid PDD URL: could not extract goods_id")
+
+        existing = await db.execute(
+            select(ExternalProduct).where(
+                ExternalProduct.platform == "pdd",
+                ExternalProduct.external_id == goods_id,
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail=f"SPU with goods_id {goods_id} already exists")
+
+        cat_result = await db.execute(select(Category).where(Category.id == body.category_id))
+        category = cat_result.scalar_one_or_none()
+        if not category:
+            category = Category(name="通用", pet_type=body.pet_type, level=1, sort_order=99)
+            db.add(category)
+            await db.flush()
+
+        spu = Spu(
+            category_id=category.id,
+            brand="未知品牌",
+            name=body.product_name,
+            model="默认规格",
+            pet_type=body.pet_type,
+            status="pending",
+            extra_attrs={"source_platform": "pdd", "source_url": body.pdd_url},
+        )
+        db.add(spu)
+        await db.flush()
+
+        ds_result = await db.execute(select(DataSource).where(DataSource.platform == "pdd").limit(1))
+        ds = ds_result.scalar_one_or_none()
+        ext = ExternalProduct(
+            spu_id=spu.id,
+            source_id=ds.id if ds else 1,
+            platform="pdd",
+            external_id=goods_id,
+            external_url=body.pdd_url,
+            is_primary=True,
+        )
+        db.add(ext)
+        await db.commit()
+        await db.refresh(spu)
+
         return ApiResponse(
             data=ProductSeedResponse(
-                product_id=product.id,
+                product_id=spu.id,
                 status="pending",
-                message="Product seeded. Data collection will begin shortly.",
+                message="SPU seeded. Product enrichment is retired after the SPU migration.",
             ).model_dump()
         )
     except ValueError as e:
@@ -167,33 +195,33 @@ async def list_collection_products(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    query = select(Product).order_by(Product.created_at.desc())
-    count_query = select(func.count(Product.id))
+    query = select(Spu).order_by(Spu.created_at.desc())
+    count_query = select(func.count(Spu.id))
     if status:
-        query = query.where(Product.status == status)
-        count_query = count_query.where(Product.status == status)
+        query = query.where(Spu.status == status)
+        count_query = count_query.where(Spu.status == status)
 
     offset = (page - 1) * page_size
     result = await db.execute(query.offset(offset).limit(page_size))
-    products = result.scalars().all()
+    spus = result.scalars().all()
     count_result = await db.execute(count_query)
     total = count_result.scalar()
     total_pages = (total + page_size - 1) // page_size
 
     items = []
-    for p in products:
+    for p in spus:
         ext_result = await db.execute(
             select(ExternalProduct).where(
-                ExternalProduct.product_id == p.id,
+                ExternalProduct.spu_id == p.id,
                 ExternalProduct.platform == "pdd",
             ).limit(1)
         )
         ext = ext_result.scalar_one_or_none()
         goods_id = ext.external_id if ext else None
-        note = (p.specifications or {}).get("_crawl_note") if p.specifications else None
+        note = (p.extra_attrs or {}).get("_crawl_note") if p.extra_attrs else None
         items.append(ProductCollectionStatus(
             product_id=p.id, name=p.name, status=p.status,
-            brand=p.brand, source_platform=p.source_platform,
+            brand=p.brand, source_platform="pdd" if ext else None,
             created_at=p.created_at,
             goods_id=goods_id,
             note=note,
@@ -211,17 +239,10 @@ async def retry_product(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    try:
-        product = await retry_product_collection(db, product_id)
-        return ApiResponse(
-            data=RetryResponse(
-                product_id=product.id,
-                status="pending",
-                message="Product collection retry triggered.",
-            ).model_dump()
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    raise HTTPException(
+        status_code=410,
+        detail="Product retry has been retired after the SPU migration.",
+    )
 
 
 @router.get("/admin/collect/products/discovery-progress")
@@ -521,53 +542,19 @@ async def trigger_aggregation(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    await aggregate_product_tags(db, product_id=product_id)
+    spu = await db.get(Spu, product_id)
+    if not spu:
+        raise HTTPException(status_code=404, detail="SPU not found")
+    summary = await generate_spu_summary(product_id, db)
+    if summary:
+        spu.ai_review_summary = summary
+        await db.commit()
     return ApiResponse(
         data=AggregationTriggerResponse(
             product_id=product_id,
-            message="Tag aggregation completed.",
+            message="SPU review aggregation completed." if summary else "Not enough approved reviews to aggregate.",
         ).model_dump()
     )
-
-
-# === Internal helpers ===
-
-async def _run_discovery(strategy_id: int, job_id: int):
-    async with AsyncSessionLocal() as db:
-        job = await db.get(DataFetchJob, job_id)
-        if not job:
-            return
-        strategy = await db.get(SearchStrategy, strategy_id)
-        if not strategy:
-            return
-
-        job.status = "running"
-        job.started_at = datetime.now(UTC)
-        await db.commit()
-
-        try:
-            result = await discover_products(db, strategy)
-
-            matched_for_003: list[dict] = result.pop("matched_for_003", [])  # type: ignore
-            asyncio.create_task(
-                run_post_discovery_enrichment(
-                    db, strategy_id, job_id, matched_for_003
-                )
-            )
-
-            job.status = "completed"
-            job.result = result
-            job.completed_at = datetime.now(UTC)
-
-            strategy.last_run_at = datetime.now(UTC)
-            strategy.last_result = result
-            await db.commit()
-        except Exception as e:
-            logger.error(f"Discovery job {job_id} failed: {type(e).__name__}: {e}")
-            job.status = "failed"
-            job.error_message = f"{type(e).__name__}: {e}"
-            job.completed_at = datetime.now(UTC)
-            await db.commit()
 
 
 async def _run_xhs_collection(spu, job_id: int):

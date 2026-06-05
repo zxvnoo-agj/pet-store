@@ -6,7 +6,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon } from '../../components/Icons'
-import { API_HOST } from '../../config/env'
+import { API_BASE_URL } from '../../config/env'
 
 interface Spu {
   id: number
@@ -280,7 +280,7 @@ export default function ChatPage() {
     setActiveTools([])
 
     try {
-      const baseURL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production' ? 'https://api.pawpalai.cn/v1' : `http://${API_HOST}:8000/v1`
+      const baseURL = API_BASE_URL
       const token = useAuthStore.getState().token
       let accumulated = ''
       let spus: Spu[] = []
@@ -451,41 +451,48 @@ export default function ChatPage() {
     const labels = tools.map((t) => {
       const name = TOOL_NAMES[t.tool] || t.tool
       seen[name] = (seen[name] || 0) + 1
-      const count = seen[t.tool] > 1 && seen[name] > 1 ? seen[name] : undefined
+      const count = seen[name] > 1 ? seen[name] : undefined
       return count ? `${name}${count}` : name
     })
 
     return (
-      <View className={`${isHistory ? 'mt-2 pt-2 border-t border-gray-100' : 'mb-2'}`}>
-        <View className="flex items-center gap-2 mb-1.5">
-          {activeCount > 0 ? (
-            <View className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Text className="text-xs">✅</Text>
+      <View className={`${isHistory ? 'mb-3' : 'mb-3'} rounded-xl bg-blue-50 border border-blue-100 px-3 py-2`}>
+        <View className="flex items-center justify-between gap-2 mb-1.5">
+          <View className="flex items-center gap-2 min-w-0">
+            {activeCount > 0 ? (
+              <View className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin shrink-0" />
+            ) : (
+              <Text className="text-xs text-green-600 shrink-0">✓</Text>
+            )}
+            <Text className="text-xs text-blue-700 font-medium truncate">
+              {activeCount > 0
+                ? `正在${TOOL_NAMES[tools[tools.length - 1]?.tool] || '处理'}...`
+                : `已完成 ${completedCount} 个工具调用`}
+            </Text>
+          </View>
+          {tools.length > 1 && (
+            <Text className="text-[10px] text-blue-400 shrink-0">{tools.length} 步</Text>
           )}
-          <Text className="text-xs text-blue-700 font-medium">
-            {activeCount > 0
-              ? `正在${TOOL_NAMES[tools[tools.length - 1]?.tool] || '处理'}...`
-              : `已完成 ${completedCount} 个工具调用`}
-          </Text>
         </View>
-        <View className="flex flex-wrap gap-1.5">
+        <View className="flex flex-row flex-wrap gap-1.5">
           {tools.map((tool, i) => (
             <View
               key={i}
-              className={`px-2 py-1 rounded-full text-[10px] ${
+              className={`px-2 py-0.5 rounded-full max-w-full ${
                 tool.status === 'completed'
-                  ? 'bg-green-50 text-green-600 border border-green-200'
-                  : 'bg-blue-50 text-blue-600 border border-blue-200'
+                  ? 'bg-white text-green-600 border border-green-100'
+                  : 'bg-white text-blue-600 border border-blue-100'
               }`}
             >
-              <Text>{tool.status === 'completed' ? '✓' : '⏳'} {labels[i]}</Text>
+              <Text className="text-[10px]">{tool.status === 'completed' ? '✓' : '…'} {labels[i]}</Text>
             </View>
           ))}
         </View>
       </View>
     )
   }
+
+  const topOffset = systemInfo.statusBarHeight + systemInfo.navBarHeight
 
   return (
     <View
@@ -532,14 +539,17 @@ export default function ChatPage() {
         </View>
       </View>
 
-      {/* 内容区 - 使用 windowHeight，已自动避开状态栏和 TabBar */}
+      {/* 内容区 */}
       <View
         style={{
-          height: systemInfo.windowHeight ? `${systemInfo.windowHeight}px` : '100vh',
+          position: 'fixed',
+          top: topOffset ? `${topOffset}px` : '88px',
+          left: 0,
+          right: 0,
+          bottom: 0,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          paddingTop: systemInfo.statusBarHeight + systemInfo.navBarHeight ? `${systemInfo.statusBarHeight + systemInfo.navBarHeight}px` : '88px',
         }}
       >
         {/* 消息区域 - 占据剩余空间，内部可滚动 */}
@@ -557,27 +567,29 @@ export default function ChatPage() {
               <View
                 key={msg.id}
                 id={`msg-${msg.id}`}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-5`}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-center'} mb-5`}
               >
                 <View
-                  className={`max-w-[75%] ${
+                  style={
+                    msg.role === 'user'
+                      ? { maxWidth: '82%', marginRight: '8px' }
+                      : { width: '100%', maxWidth: '100%' }
+                  }
+                  className={`min-w-0 ${
                     msg.role === 'user'
                       ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3'
-                      : 'bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
+                      : 'bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm'
                   }`}
                 >
                   {msg.role === 'user' ? (
-                    <Text className="text-sm leading-relaxed text-white">{msg.content}</Text>
+                    <Text className="text-sm leading-relaxed text-white" style={{ wordBreak: 'break-word' }}>{msg.content}</Text>
                   ) : (
                     <View>
-                      {msg.toolCalls && msg.toolCalls.length > 0 && (
-                        <>
-                          {renderToolStatus(msg.toolCalls, true)}
-                          {msg.content && <View className="my-2 border-t border-gray-200" />}
-                        </>
-                      )}
                       <MarkdownRenderer content={msg.content} />
                       {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
+                      {msg.toolCalls && msg.toolCalls.length > 0 && (
+                        renderToolStatus(msg.toolCalls, true)
+                      )}
                     </View>
                   )}
                 </View>
@@ -585,15 +597,15 @@ export default function ChatPage() {
             ))}
 
             {isLoading && activeTools.length > 0 && (
-              <View className="flex justify-start mb-5">
-                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                  {renderToolStatus(activeTools)}
-                  {streamProducts.length > 0 && renderProductCards(streamProducts)}
+              <View className="flex justify-center mb-5">
+                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
                   {currentStream ? (
-                    <View className="mt-2">
+                    <View>
                       <MarkdownRenderer content={currentStream} />
                     </View>
                   ) : null}
+                  {streamProducts.length > 0 && renderProductCards(streamProducts)}
+                  {renderToolStatus(activeTools)}
                   <View className="flex items-center gap-1 mt-2">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
@@ -604,8 +616,8 @@ export default function ChatPage() {
             )}
 
             {isLoading && activeTools.length === 0 && currentStream && (
-              <View className="flex justify-start mb-5">
-                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <View className="flex justify-center mb-5">
+                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
                   <MarkdownRenderer content={currentStream} />
                   <View className="flex items-center gap-1 mt-1">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
@@ -617,8 +629,8 @@ export default function ChatPage() {
             )}
 
             {isLoading && activeTools.length === 0 && !currentStream && (
-              <View className="flex justify-start mb-5">
-                <View className="max-w-[75%] bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <View className="flex justify-center mb-5">
+                <View className="w-full min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm">
                   <View className="flex items-center gap-2">
                     <View className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
                     <Text className="text-sm text-gray-500">正在思考...</Text>
@@ -662,9 +674,9 @@ export default function ChatPage() {
           )}
 
           {/* 输入栏 */}
-          <View className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3">
+          <View className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
             <Input
-              className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-sm"
+              className="flex-1 min-w-0 bg-gray-100 rounded-full px-4 py-3 text-sm"
               placeholder="请输入问题，如：幼猫吃什么粮好？"
               value={inputValue}
               onInput={(e) => setInputValue(e.detail.value)}

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { AiAssistantIcon } from '../components/Icons';
+import { API_BASE_URL } from '../config/env';
 
 interface Spu {
   id: number
@@ -39,10 +40,6 @@ const TOOL_NAMES: Record<string, string> = {
   get_reviews_summary: '分析用户评价',
   compare_spus: '对比产品',
 }
-
-const API_BASE_URL = process.env.TARO_ENV === 'h5' && process.env.NODE_ENV === 'production'
-  ? 'https://api.your-domain.com/v1'
-  : 'http://127.0.0.1:8000/v1'
 
 function parseSSEChunk(chunk: string): { type: string; data: any }[] {
   const events: { type: string; data: any }[] = []

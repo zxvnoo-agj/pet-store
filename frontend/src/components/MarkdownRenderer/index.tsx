@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text, Image, ScrollView } from '@tarojs/components'
 import MarkdownIt from 'markdown-it'
 import Taro from '@tarojs/taro'
 
@@ -261,9 +261,11 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     }
 
     return (
-      <View key={keyPrefix} className="my-3 border border-gray-200 rounded-lg overflow-hidden">
-        {rows}
-      </View>
+      <ScrollView key={keyPrefix} className="my-3 w-full" scrollX enhanced showScrollbar={false}>
+        <View className="border border-gray-200 rounded-lg overflow-hidden" style={{ minWidth: '520px' }}>
+          {rows}
+        </View>
+      </ScrollView>
     )
   }
 

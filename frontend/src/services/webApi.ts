@@ -1,8 +1,6 @@
-import { API_HOST } from '../config/env'
+import { API_BASE_URL } from '../config/env'
 
-const API_BASE_URL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production'
-  ? 'https://api.pawpalai.cn/v1'
-  : `http://${API_HOST}:8000/v1`
+const BASE_URL = API_BASE_URL
 
 interface ApiResponse<T = any> {
   code: number
@@ -68,4 +66,4 @@ class WebApiClient {
   }
 }
 
-export const webApi = new WebApiClient(API_BASE_URL)
+export const webApi = new WebApiClient(BASE_URL)
