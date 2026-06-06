@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import get_db
@@ -12,6 +11,22 @@ from app.schemas.common import ApiResponse, Pagination
 router = APIRouter()
 
 
+def _cat_to_dict(cat: Category) -> dict:
+    return {c.key: getattr(cat, c.key) for c in inspect(cat).mapper.column_attrs}
+
+
+def _build_tree(categories, cat_dicts: list[dict]) -> list[CategoryResponse]:
+    flat = {d["id"]: CategoryResponse(**d) for d in cat_dicts}
+    roots: list[CategoryResponse] = []
+    for cat in categories:
+        node = flat[cat.id]
+        if cat.parent_id and cat.parent_id in flat:
+            flat[cat.parent_id].children.append(node)
+        else:
+            roots.append(node)
+    return sorted(roots, key=lambda x: x.sort_order)
+
+
 @router.get("/admin/categories", response_model=ApiResponse[dict])
 async def admin_list_categories(
     page: int = Query(1, ge=1),
@@ -20,10 +35,7 @@ async def admin_list_categories(
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
-    query = (
-        select(Category)
-        .options(selectinload(Category.children))
-    )
+    query = select(Category)
     count_query = select(func.count(Category.id))
 
     if pet_type:
@@ -38,7 +50,7 @@ async def admin_list_categories(
     categories = result.scalars().all()
 
     count_result = await db.execute(count_query)
-    total = count_result.scalar()
+    total = count_result.scalar() or 0
 
     total_pages = (total + page_size - 1) // page_size
     pagination = Pagination(
@@ -48,8 +60,11 @@ async def admin_list_categories(
         total_pages=total_pages,
     )
 
+    cat_dicts = [_cat_to_dict(c) for c in categories]
+    tree = _build_tree(categories, cat_dicts)
+
     return ApiResponse(
-        data={"categories": [CategoryResponse.model_validate(c) for c in categories]},
+        data={"categories": tree},
         pagination=pagination,
     )
 
@@ -64,7 +79,6 @@ async def admin_create_category(
     db.add(category)
     await db.commit()
     await db.refresh(category, ["id", "name", "pet_type", "parent_id", "level", "icon", "sort_order", "is_active", "created_at"])
-    from sqlalchemy import inspect
     col_data = {c.key: getattr(category, c.key) for c in inspect(category).mapper.column_attrs}
     return ApiResponse(data={"category": CategoryResponse.model_validate(col_data)})
 
@@ -76,14 +90,21 @@ async def admin_get_category(
     current_admin = Depends(get_current_admin),
 ):
     result = await db.execute(
-        select(Category)
-        .options(selectinload(Category.children))
-        .where(Category.id == category_id)
+        select(Category).where(Category.id == category_id)
     )
     category = result.scalar_one_or_none()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return ApiResponse(data={"category": CategoryResponse.model_validate(category)})
+
+    children_result = await db.execute(
+        select(Category).where(Category.parent_id == category_id).order_by(Category.sort_order)
+    )
+    children = children_result.scalars().all()
+
+    cat_dict = _cat_to_dict(category)
+    cat_resp = CategoryResponse(**cat_dict)
+    cat_resp.children = [CategoryResponse(**(_cat_to_dict(c))) for c in children]
+    return ApiResponse(data={"category": cat_resp})
 
 
 @router.put("/admin/categories/{category_id}", response_model=ApiResponse[dict])
@@ -94,9 +115,7 @@ async def admin_update_category(
     current_admin = Depends(get_current_admin),
 ):
     result = await db.execute(
-        select(Category)
-        .options(selectinload(Category.children))
-        .where(Category.id == category_id)
+        select(Category).where(Category.id == category_id)
     )
     category = result.scalar_one_or_none()
     if not category:
@@ -107,7 +126,8 @@ async def admin_update_category(
 
     await db.commit()
     await db.refresh(category, ["id", "name", "pet_type", "parent_id", "level", "icon", "sort_order", "is_active", "created_at"])
-    return ApiResponse(data={"category": CategoryResponse.model_validate(category)})
+    col_data = {c.key: getattr(category, c.key) for c in inspect(category).mapper.column_attrs}
+    return ApiResponse(data={"category": CategoryResponse.model_validate(col_data)})
 
 
 @router.delete("/admin/categories/{category_id}", response_model=ApiResponse[dict])
