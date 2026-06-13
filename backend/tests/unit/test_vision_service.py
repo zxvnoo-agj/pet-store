@@ -27,6 +27,7 @@ async def test_batch_analyze_empty():
 
 @pytest.mark.asyncio
 async def test_vision_client_init():
+    from app.core.config import settings
     from app.services.vision_service import QwenVLClient
     client = QwenVLClient()
-    assert client.model == "qwen-vl-plus"
+    assert client.model == settings.DEEPSEEK_MODEL

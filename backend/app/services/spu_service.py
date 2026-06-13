@@ -301,8 +301,10 @@ class SpuService:
         return list(result.scalars().all())
 
     async def link_listing(self, listing_id: int, spu_id: int) -> SpuListing | None:
-        result = await self.db.execute(select(SpuListing).where(SpuListing.id == listing_id))
-        listing = result.scalar_one_or_none()
+        result = await self.db.execute(
+            select(SpuListing).options(joinedload(SpuListing.spu)).where(SpuListing.id == listing_id)
+        )
+        listing = result.unique().scalar_one_or_none()
         if not listing:
             return None
         listing.spu_id = spu_id
@@ -334,7 +336,7 @@ class SpuService:
     async def get_matching_queue(
         self, match_status: str, page: int = 1, page_size: int = 50
     ) -> tuple[list[SpuListing], int]:
-        from sqlalchemy.orm import selectinload
+        from sqlalchemy.orm import joinedload, selectinload
 
         query = (
             select(SpuListing)

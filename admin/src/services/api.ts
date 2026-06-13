@@ -92,6 +92,11 @@ export interface PromotionUrlResponse {
   cached: boolean
 }
 
+export const adminImportApi = {
+  importForSpu: (spuId: number, data: { keyword?: string; max_results?: number; source?: string }) =>
+    apiClient.post(`/admin/goods/spus/${spuId}/import-listings`, data),
+}
+
 export interface SeedProductParams {
   category_id: number
   product_name: string

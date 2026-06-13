@@ -12,11 +12,11 @@ class SpuAIExtractor:
 
     def __init__(self):
         self.client = AsyncOpenAI(
-            api_key=settings.DASHSCOPE_API_KEY,
-            base_url=settings.DASHSCOPE_BASE_URL,
+            api_key=settings.DEEPSEEK_API_KEY,
+            base_url=settings.DEEPSEEK_BASE_URL,
         )
-        self.vision_model = "qwen-vl-plus"
-        self.text_model = settings.DASHSCOPE_MODEL or "qwen-turbo"
+        self.vision_model = settings.DEEPSEEK_MODEL
+        self.text_model = settings.DEEPSEEK_MODEL
 
     async def parse_ingredients_from_image(self, image_base64: str) -> list[str]:
         """Extract ingredient list from a product image using vision LLM."""

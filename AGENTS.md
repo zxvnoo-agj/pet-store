@@ -1,6 +1,7 @@
 Entire design of this project:
 /PROJECT_REFERENCE.md
 
+不要进行任何删除表的操作，若要删除务必征得用户同意后再执行
 ## WSL2 + 微信开发者工具 网络调试
 
 ### 架构
@@ -32,6 +33,40 @@ netsh interface portproxy add v4tov4 ^
   connectport=8000 connectaddress=<WSL2_IP>
 netsh interface portproxy show all          # 验证
 ```
+
+## 产品数据导入（SPU）
+
+将 JSON 格式的产品数据导入 SPU 表的固定流程：
+
+```bash
+cd backend
+venv/bin/python scripts/import_products.py /path/to/products.json
+# 支持多个文件：file1.json file2.json
+# 先验证不写入：--dry-run / -n
+```
+
+### JSON 格式要求
+
+每个产品需包含以下字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `brand` | string | 是 | 品牌名 |
+| `name` | string | 是 | 产品名 |
+| `model` | string | 是 | 型号（唯一标识） |
+| `pet_type` | string | 是 | `cat` 或 `dog` |
+| `category_id` | int | 是 | 对应 `categories` 表的 ID |
+| `description` | string | 否 | 产品描述 |
+| `ingredients` | array | 否 | 成分列表 |
+| `nutrition` | object | 否 | 营养成分 |
+| `pros` | array | 否 | 优点列表 |
+| `cons` | array | 否 | 缺点列表 |
+| `extra_attrs` | object | 否 | 额外属性 |
+| `status` | string | 否 | 默认 `active` |
+
+### 去重逻辑
+
+基于 `(brand, category_id, name, model)` 唯一约束自动跳过已存在的记录。
 
 ### 报错排查
 - `net::ERR_CONNECTION_TIMED_OUT` → 端口转发未设置，或 API_HOST 指向了无服务的 IP

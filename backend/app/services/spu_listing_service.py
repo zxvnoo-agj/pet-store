@@ -2,14 +2,29 @@ import asyncio
 import uuid
 from dataclasses import dataclass
 
+from asyncpg.exceptions import DeadlockDetectedError
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.spu import Spu
 from app.models.spu_listing import SpuListing
 from app.services.spu_matching_service import SpuMatchingService
+
+
+MAX_DEADLOCK_RETRIES = 3
+
+
+def _is_deadlock(e: Exception) -> bool:
+    """Check if an exception is a PostgreSQL deadlock error."""
+    if isinstance(e, DeadlockDetectedError):
+        return True
+    if isinstance(e, DBAPIError) and e.orig:
+        return "deadlock detected" in str(e.orig)
+    return False
 
 
 @dataclass
@@ -120,34 +135,39 @@ class SpuListingService:
 
             # Step 2: Save listings and deduplicate
             imported_count = 0
-            for item in listings_data:
-                existing = await self.db.execute(
-                    select(SpuListing).where(
-                        SpuListing.platform == platform,
-                        SpuListing.goods_id == item["goods_id"],
-                    )
-                )
-                if existing.scalar_one_or_none():
-                    continue  # Skip duplicates
-
-                listing = SpuListing(
-                    spu_id=None,  # Will be updated after matching
-                    platform=platform,
-                    shop_name=item.get("shop_name", ""),
-                    goods_id=item.get("goods_id"),
-                    goods_sign=item.get("goods_sign"),
-                    title=item.get("title", ""),
-                    price=item.get("price", 0),
-                    original_price=item.get("original_price"),
-                    url=item.get("url", ""),
-                    image_url=item.get("image_url"),
-                    sales_count=item.get("sales_count"),
-                    sku_specs=item.get("sku_specs"),
-                    service_tags=item.get("service_tags"),
-                    match_status="unmatched",
-                )
-                self.db.add(listing)
-                imported_count += 1
+            for attempt in range(MAX_DEADLOCK_RETRIES):
+                try:
+                    for item in listings_data:
+                        stmt = pg_insert(SpuListing).values(
+                            spu_id=None,
+                            platform=platform,
+                            shop_name=item.get("shop_name", ""),
+                            goods_id=item.get("goods_id"),
+                            goods_sign=item.get("goods_sign"),
+                            title=item.get("title", ""),
+                            price=item.get("price", 0),
+                            original_price=item.get("original_price"),
+                            url=item.get("url", ""),
+                            image_url=item.get("image_url"),
+                            sales_count=item.get("sales_count"),
+                            sku_specs=item.get("sku_specs"),
+                            service_tags=item.get("service_tags"),
+                            match_status="unmatched",
+                        ).on_conflict_do_nothing(
+                            constraint="uq_spu_listings_platform_goods_id"
+                        )
+                        r = await self.db.execute(stmt)
+                        if r.rowcount:
+                            imported_count += 1
+                    break
+                except DBAPIError as e:
+                    if _is_deadlock(e) and attempt < MAX_DEADLOCK_RETRIES - 1:
+                        await self.db.rollback()
+                        wait = 0.1 * (2 ** attempt)
+                        logger.warning(f"Deadlock on import, retrying in {wait:.1f}s (attempt {attempt + 1})")
+                        await asyncio.sleep(wait)
+                        continue
+                    raise
 
             await self.db.commit()
             logger.info(f"Import job {job_id}: saved {imported_count} new listings")
@@ -220,66 +240,72 @@ class SpuListingService:
             imported_count = 0
             linked_count = 0
 
-            for item in listings_data:
-                # Check duplicate
-                existing = await self.db.execute(
-                    select(SpuListing).where(
-                        SpuListing.platform == platform,
-                        SpuListing.goods_id == item["goods_id"],
-                    )
-                )
-                if existing.scalar_one_or_none():
-                    continue
+            for attempt in range(MAX_DEADLOCK_RETRIES):
+                try:
+                    for item in listings_data:
+                        # Check if matches this specific SPU
+                        match_result = await asyncio.to_thread(
+                            self.matching_service.match_listing_to_spu_sync,
+                            item["title"],
+                            [spu],
+                        )
 
-                # Check if matches this specific SPU
-                match_result = await asyncio.to_thread(
-                    self.matching_service.match_listing_to_spu_sync,
-                    item["title"],
-                    [spu],  # Only check against this one SPU
-                )
-
-                if match_result.confidence >= 0.75:
-                    # Link to this SPU
-                    listing = SpuListing(
-                        spu_id=spu_id,
-                        platform=platform,
-                        shop_name=item.get("shop_name", ""),
-                        goods_id=item.get("goods_id"),
-                        goods_sign=item.get("goods_sign"),
-                        title=item.get("title", ""),
-                        price=item.get("price", 0),
-                        original_price=item.get("original_price"),
-                        url=item.get("url", ""),
-                        image_url=item.get("image_url"),
-                        sales_count=item.get("sales_count"),
-                        sku_specs=item.get("sku_specs"),
-                        service_tags=item.get("service_tags"),
-                        match_confidence=match_result.confidence,
-                        match_status="linked",
-                    )
-                    linked_count += 1
-                else:
-                    # Unmatched
-                    listing = SpuListing(
-                        spu_id=None,
-                        platform=platform,
-                        shop_name=item.get("shop_name", ""),
-                        goods_id=item.get("goods_id"),
-                        goods_sign=item.get("goods_sign"),
-                        title=item.get("title", ""),
-                        price=item.get("price", 0),
-                        original_price=item.get("original_price"),
-                        url=item.get("url", ""),
-                        image_url=item.get("image_url"),
-                        sales_count=item.get("sales_count"),
-                        sku_specs=item.get("sku_specs"),
-                        service_tags=item.get("service_tags"),
-                        match_confidence=match_result.confidence,
-                        match_status="unmatched",
-                    )
-
-                self.db.add(listing)
-                imported_count += 1
+                        if match_result.confidence >= 0.75:
+                            stmt = pg_insert(SpuListing).values(
+                                spu_id=spu_id,
+                                platform=platform,
+                                shop_name=item.get("shop_name", ""),
+                                goods_id=item.get("goods_id"),
+                                goods_sign=item.get("goods_sign"),
+                                title=item.get("title", ""),
+                                price=item.get("price", 0),
+                                original_price=item.get("original_price"),
+                                url=item.get("url", ""),
+                                image_url=item.get("image_url"),
+                                sales_count=item.get("sales_count"),
+                                sku_specs=item.get("sku_specs"),
+                                service_tags=item.get("service_tags"),
+                                match_confidence=match_result.confidence,
+                                match_status="linked",
+                            ).on_conflict_do_nothing(
+                                constraint="uq_spu_listings_platform_goods_id"
+                            )
+                            r = await self.db.execute(stmt)
+                            if r.rowcount:
+                                imported_count += 1
+                                linked_count += 1
+                        else:
+                            stmt = pg_insert(SpuListing).values(
+                                spu_id=None,
+                                platform=platform,
+                                shop_name=item.get("shop_name", ""),
+                                goods_id=item.get("goods_id"),
+                                goods_sign=item.get("goods_sign"),
+                                title=item.get("title", ""),
+                                price=item.get("price", 0),
+                                original_price=item.get("original_price"),
+                                url=item.get("url", ""),
+                                image_url=item.get("image_url"),
+                                sales_count=item.get("sales_count"),
+                                sku_specs=item.get("sku_specs"),
+                                service_tags=item.get("service_tags"),
+                                match_confidence=match_result.confidence,
+                                match_status="unmatched",
+                            ).on_conflict_do_nothing(
+                                constraint="uq_spu_listings_platform_goods_id"
+                            )
+                            r = await self.db.execute(stmt)
+                            if r.rowcount:
+                                imported_count += 1
+                    break
+                except DBAPIError as e:
+                    if _is_deadlock(e) and attempt < MAX_DEADLOCK_RETRIES - 1:
+                        await self.db.rollback()
+                        wait = 0.1 * (2 ** attempt)
+                        logger.warning(f"Deadlock on import, retrying in {wait:.1f}s (attempt {attempt + 1})")
+                        await asyncio.sleep(wait)
+                        continue
+                    raise
 
             await self.db.commit()
             logger.info(
@@ -336,29 +362,7 @@ class SpuListingService:
                 for goods in goods_list:
                     parsed = client.parse_goods(goods)
                     goods_id = parsed["external_id"]
-
-                    # Fetch detail to get goods_sign, sku_specs, service_tags
                     goods_sign = goods.get("goods_sign", "")
-                    sku_specs = None
-                    service_tags = None
-
-                    if goods_sign:
-                        try:
-                            detail = await client.get_goods_detail(goods_sign)
-                            if detail:
-                                sku_list = detail.get("sku_list", [])
-                                sku_specs = [
-                                    {
-                                        "spec": sku.get("spec", ""),
-                                        "price": float(sku.get("group_price", 0)) / 100 if sku.get("group_price") else None,
-                                        "stock": sku.get("stock", 0),
-                                    }
-                                    for sku in sku_list
-                                ]
-                                service_tags = detail.get("service_tags", [])
-                                logger.debug(f"Fetched detail for goods_sign={goods_sign}: {len(sku_specs)} SKUs, {len(service_tags)} tags")
-                        except Exception as e:
-                            logger.warning(f"Failed to fetch detail for goods_sign={goods_sign}: {e}")
 
                     all_goods.append({
                         "goods_id": goods_id,
@@ -370,8 +374,8 @@ class SpuListingService:
                         "url": parsed["external_url"],
                         "image_url": parsed["image_urls"][0] if parsed["image_urls"] else None,
                         "sales_count": self._parse_sales_count(parsed["sales_tip"]),
-                        "sku_specs": sku_specs,
-                        "service_tags": service_tags,
+                        "sku_specs": None,
+                        "service_tags": None,
                     })
 
                 if len(goods_list) < page_size:
