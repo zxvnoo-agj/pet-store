@@ -3,7 +3,7 @@ import { View, Text, Block } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import ScenarioSection from '../../components/ScenarioSection'
-import { SearchIcon, SparkleIcon, PawIcon } from '../../components/Icons'
+import { SearchIcon, SparkleIcon, PawIcon, PetTypeIcon } from '../../components/Icons'
 import { apiClient, searchSpusByKeywords, type Spu } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
 import { getMyPets, getLastSelectedPet, setLastSelectedPet } from '../../services/petApi'
@@ -33,16 +33,6 @@ const SPECIES_LABELS: Record<string, string> = {
 }
 
 const SPECIES_OPTIONS = ['cat', 'dog', 'bird', 'fish', 'reptile', 'small_pet']
-
-const PET_MARKERS: Record<string, string> = {
-  cat: '猫',
-  dog: '狗',
-  bird: '鸟',
-  fish: '鱼',
-  reptile: '爬',
-  small_pet: '宠',
-  other: '全',
-}
 
 export default function HomePage() {
   const { isLoggedIn } = useAuthStore()
@@ -184,7 +174,6 @@ export default function HomePage() {
   }
 
   const hasPets = pets.length > 0 && petsLoaded
-  const getPetMarker = (species: string) => PET_MARKERS[species] || '宠'
 
   const navigateToSearch = () => {
     Taro.navigateTo({ url: '/pages/search/index' })
@@ -278,9 +267,7 @@ export default function HomePage() {
                     <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
                       isActive ? 'bg-white/20' : 'bg-orange-50'
                     }`}>
-                      <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-orange-500'}`}>
-                        {getPetMarker(pet.species)}
-                      </Text>
+                      <PetTypeIcon type={pet.species} size={17} color={isActive ? '#ffffff' : '#f97316'} />
                     </View>
                     <View className="text-left">
                       <Text className={`text-sm font-medium ${isActive ? 'text-white' : ''}`}>
@@ -329,9 +316,7 @@ export default function HomePage() {
                     <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
                       isActive ? 'bg-white/20' : 'bg-orange-50'
                     }`}>
-                      <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-orange-500'}`}>
-                        {getPetMarker(p.id)}
-                      </Text>
+                      <PetTypeIcon type={p.id} size={17} color={isActive ? '#ffffff' : '#f97316'} />
                     </View>
                     <Text className="text-sm font-medium">{p.name}</Text>
                   </View>
@@ -381,9 +366,9 @@ export default function HomePage() {
                     onClick={() => handleSpeciesSelect(species)}
                     className="flex flex-col items-center gap-2 py-4 rounded-xl bg-gray-50 active:bg-gray-100"
                   >
-            <View className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center">
-              <Text className="text-sm font-bold text-orange-500">{getPetMarker(species)}</Text>
-            </View>
+                    <View className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <PetTypeIcon type={species} size={23} color="#f97316" />
+                    </View>
                     <Text className="text-sm text-gray-700">{info?.name || species}</Text>
                   </View>
                 )

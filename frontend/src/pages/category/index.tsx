@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { apiClient } from '../../services/api'
-import { SearchIcon, PackageIcon, ArrowRightIcon } from '../../components/Icons'
+import { SearchIcon, ArrowRightIcon, PetTypeIcon, CategoryIcon } from '../../components/Icons'
 
 const petTypes = [
-  { id: 'cat', name: '猫咪', marker: '猫' },
-  { id: 'dog', name: '狗狗', marker: '狗' },
-  { id: 'bird', name: '鸟类', marker: '鸟' },
-  { id: 'fish', name: '水族', marker: '鱼' },
+  { id: 'cat', name: '猫咪' },
+  { id: 'dog', name: '狗狗' },
+  { id: 'bird', name: '鸟类' },
+  { id: 'fish', name: '水族' },
 ]
 
 interface Category {
@@ -103,9 +103,7 @@ export default function CategoryPage() {
               <View className={`w-9 h-9 rounded-2xl flex items-center justify-center ${
                 activePet === pet.id ? 'bg-orange-500' : 'bg-gray-50'
               }`}>
-                <Text className={`text-sm font-bold ${activePet === pet.id ? 'text-white' : 'text-gray-500'}`}>
-                  {pet.marker}
-                </Text>
+                <PetTypeIcon type={pet.id} size={21} color={activePet === pet.id ? '#ffffff' : '#6b7280'} />
               </View>
               <Text className="text-xs">{pet.name}</Text>
               {activePet === pet.id && (
@@ -138,7 +136,7 @@ export default function CategoryPage() {
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
                     <View className="w-11 h-11 rounded-2xl bg-orange-50 flex items-center justify-center">
-                      <PackageIcon size={22} color="#f97316" />
+                      <CategoryIcon name={cat.name} size={23} color="#f97316" />
                     </View>
                     <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
                   </View>
@@ -159,7 +157,7 @@ export default function CategoryPage() {
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
                     <View className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center">
-                      <PackageIcon size={22} color="#94a3b8" />
+                      <CategoryIcon name={cat.name} size={23} color="#94a3b8" />
                     </View>
                     <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
                   </View>
