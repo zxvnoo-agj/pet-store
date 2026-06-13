@@ -50,6 +50,7 @@
   "libVersion": "3.7.2",
   "appid": "wx9a12d190d37a3b1a",
   "projectname": "pet-shop-mp",
+  "miniprogramRoot": "dist/",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
