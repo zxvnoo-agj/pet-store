@@ -5,7 +5,7 @@ import { apiClient } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
 import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
-import { AiAssistantIcon } from '../../components/Icons'
+import { AiAssistantIcon, SendIcon, SparkleIcon } from '../../components/Icons'
 import { API_BASE_URL } from '../../config/env'
 
 interface Spu {
@@ -120,7 +120,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [currentStream, setCurrentStream] = useState('')
   const [streamProducts, setStreamProducts] = useState<Spu[]>([])
-  const [activeTools, setActiveTools] = useState<ToolCall[]>([])
+  const [, setActiveTools] = useState<ToolCall[]>([])
   const [streamSteps, setStreamSteps] = useState<ReasoningStep[]>([])
   const [expandedProcessIds, setExpandedProcessIds] = useState<Record<number, boolean>>({})
   const [quickQuestions, setQuickQuestions] = useState<string[]>(DEFAULT_QUESTIONS)
@@ -213,7 +213,7 @@ export default function ChatPage() {
     Taro.navigateTo({ url: '/pages/chat/list' })
   }
 
-  const fetchQuestions = async () => {
+  async function fetchQuestions() {
     lastFetchRef.current = Date.now()
     setQuestionsLoading(true)
     try {
@@ -708,7 +708,7 @@ export default function ChatPage() {
       style={{
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#f9fafb',
+        backgroundColor: '#fff8f2',
       }}
     >
       {/* 自定义导航栏 - 独立 Fixed 在顶部 */}
@@ -721,14 +721,14 @@ export default function ChatPage() {
           zIndex: 20,
           paddingTop: systemInfo.statusBarHeight ? `${systemInfo.statusBarHeight}px` : 0,
         }}
-        className="bg-white"
+        className="bg-white/95"
       >
         <View
           style={{ height: systemInfo.navBarHeight ? `${systemInfo.navBarHeight}px` : '44px', paddingRight: systemInfo.menuRight ? `${systemInfo.menuRight}px` : '0px' }}
-          className="flex items-center justify-between px-4 border-b border-gray-100"
+          className="flex items-center justify-between px-4 border-b border-orange-100"
         >
           <View className="flex items-center gap-2">
-            <View className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
+            <View className="w-8 h-8 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
               <AiAssistantIcon size={16} color="white" />
             </View>
             <View>
@@ -740,7 +740,7 @@ export default function ChatPage() {
             </View>
           </View>
           <View
-            className="px-2.5 py-1 bg-orange-50 rounded-full"
+            className="px-3 py-1.5 bg-orange-50 rounded-full mini-press"
             onClick={navigateToSessions}
           >
             <Text className="text-xs text-orange-600 font-medium">历史</Text>
@@ -786,8 +786,8 @@ export default function ChatPage() {
                   }
                   className={`min-w-0 ${
                     msg.role === 'user'
-                      ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3'
-                      : 'bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm'
+                      ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-md shadow-orange-100'
+                      : 'bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -817,7 +817,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length > 0 && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   {renderProcessTimeline(streamSteps, false, undefined, currentStream)}
@@ -834,7 +834,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <MarkdownRenderer content={currentStream} />
@@ -850,7 +850,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && !currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <View className="flex items-center gap-2">
@@ -870,14 +870,17 @@ export default function ChatPage() {
         <View style={{ flexShrink: 0 }}>
           {/* 快捷问题 - 在输入框上方且相邻 */}
           {messages.length <= 1 && !isLoading && (
-            <View className="px-4 pt-3 pb-2 bg-gray-50 border-t border-gray-100">
-              <Text className="text-xs text-gray-400 mb-2 font-medium">你可以这样问</Text>
+            <View className="px-4 pt-3 pb-3 bg-[#fff8f2] border-t border-orange-100 mini-fade-up">
+              <View className="flex items-center gap-2 mb-2">
+                <SparkleIcon size={15} color="#f97316" />
+                <Text className="text-xs text-gray-500 font-medium">你可以这样问</Text>
+              </View>
               <View className="flex flex-col gap-2 pb-1">
                 {questionsLoading
                   ? Array.from({ length: 3 }).map((_, i) => (
                       <View
                         key={i}
-                        className="px-4 py-2.5 bg-gray-100 rounded-xl animate-pulse"
+                        className="px-4 py-2.5 bg-white rounded-2xl animate-pulse"
                       >
                         <Text className="text-sm text-transparent">加载中...</Text>
                       </View>
@@ -885,10 +888,11 @@ export default function ChatPage() {
                   : quickQuestions.slice(0, 3).map((q, i) => (
                       <View
                         key={i}
-                        className="text-orange-600 text-sm active:opacity-70"
+                        className="bg-white border border-orange-100 rounded-2xl px-4 py-2.5 flex items-center justify-between mini-card mini-press"
                         onClick={() => handleSend(q)}
                       >
-                        <Text>{q}</Text>
+                        <Text className="text-orange-600 text-sm">{q}</Text>
+                        <Text className="text-xs text-orange-300 mini-caret">→</Text>
                       </View>
                     ))}
               </View>
@@ -896,23 +900,23 @@ export default function ChatPage() {
           )}
 
           {/* 输入栏 */}
-          <View className="bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
+          <View className="bg-white border-t border-orange-100 px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
             <Input
-              className="flex-1 min-w-0 bg-gray-100 rounded-full px-4 py-3 text-sm"
+              className="flex-1 min-w-0 bg-gray-50 rounded-full px-4 py-3 text-sm border border-gray-100"
               placeholder="请输入问题，如：幼猫吃什么粮好？"
               value={inputValue}
               onInput={(e) => setInputValue(e.detail.value)}
               onConfirm={() => handleSend()}
             />
             <View
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm mini-press ${
                 inputValue.trim() && !isLoading
                   ? 'bg-orange-500 text-white active:bg-orange-600'
                   : 'bg-gray-200 text-gray-400'
               }`}
               onClick={() => handleSend()}
             >
-              <Text className="text-lg">➤</Text>
+              <SendIcon size={18} color={inputValue.trim() && !isLoading ? '#ffffff' : '#9ca3af'} />
             </View>
           </View>
         </View>

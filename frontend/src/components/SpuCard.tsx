@@ -20,7 +20,7 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
     Taro.navigateTo({ url: `/pages/product/detail?id=${spu.id}` });
   };
 
-  const handleCompare = (e: any) => {
+  const handleCompare = (e: { stopPropagation: () => void }) => {
     e.stopPropagation();
     addToCompare(spu.id);
   };
@@ -28,7 +28,7 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
   if (variant === 'vertical') {
     return (
       <View
-        className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.98] transition-transform"
+        className="bg-white rounded-2xl overflow-hidden border border-orange-100/70 mini-card mini-press"
         onClick={navigateToDetail}
       >
         <View className="aspect-square overflow-hidden bg-gray-100">
@@ -67,24 +67,40 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
 
   return (
     <View
-      className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex gap-3 active:bg-gray-50 transition-colors"
+      className="bg-white rounded-2xl p-3 border border-orange-100/80 flex gap-3 mini-card mini-press"
       onClick={navigateToDetail}
     >
-      <View className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-        <Image
-          src={spu.image_urls?.[0] || ''}
-          className="w-full h-full"
-          mode="aspectFill"
-        />
+      <View className="w-24 h-24 rounded-2xl overflow-hidden bg-orange-50 shrink-0 relative">
+        {spu.image_urls?.[0] ? (
+          <Image
+            src={spu.image_urls[0]}
+            className="w-full h-full"
+            mode="aspectFill"
+            lazyLoad
+          />
+        ) : (
+          <View className="w-full h-full flex items-center justify-center">
+            <Text className="text-xs text-orange-300">暂无图片</Text>
+          </View>
+        )}
       </View>
         <View className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
         <View>
+          <View className="flex items-center gap-1.5 mb-1">
+            <Text className="text-[10px] px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded-full font-medium">
+              {spu.brand || '精选'}
+            </Text>
+            {spu.listing_count ? (
+              <Text className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full">
+                {spu.listing_count} 个报价
+              </Text>
+            ) : null}
+          </View>
           <Text className="text-sm font-bold text-gray-900 leading-tight block">{spu.name}</Text>
-          <Text className="text-xs text-gray-400 mt-0.5 block">{spu.brand}</Text>
 
           <View className="flex flex-wrap gap-1 mt-1.5">
             {spu.pros?.slice(0, 2).map((pro, i) => (
-              <Text key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full">
+              <Text key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full">
                 +{pro}
               </Text>
             ))}
@@ -99,12 +115,13 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
         <View className="flex items-end justify-between mt-2">
           <View className="flex items-center gap-1">
             <Image src={starFilledUri(10)} style={{ width: 10, height: 10 }} />
-            <Text className="text-[10px] text-gray-400">{spu.rating || 0}</Text>
-            <Text className="text-[10px] text-gray-300">({spu.review_count || 0})</Text>
+            <Text className="text-[10px] text-gray-600 font-medium">{spu.rating || 0}</Text>
+            <Text className="text-[10px] text-gray-400">({spu.review_count || 0})</Text>
           </View>
           <View className="flex items-center gap-2">
-            <Text className="text-orange-600 font-bold text-base">
+            <Text className="text-orange-600 font-bold text-lg">
               ¥{spu.price_min || 0}
+              {(spu.price_max || 0) > (spu.price_min || 0) && <Text className="text-xs font-medium">起</Text>}
             </Text>
             {showCompare && (
               <Text

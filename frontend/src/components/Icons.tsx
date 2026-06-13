@@ -29,9 +29,38 @@ export const ShareIcon: React.FC<IconProps> = ({ size = 24, className = '', colo
   <Image src={dataUri(ShareSvg, size, color)} className={className} style={{ width: size, height: size }} />
 )
 
-const AiAssistantSvg = `<path d="M20 10c0-3.31-3.58-6-8-6S4 6.69 4 10c0 1.89 1.08 3.56 2.78 4.66L6 20l3.87-2.71c.66.13 1.34.2 2.03.21.34 0 .67-.02 1-.06"/><path d="M17.5 14l.5-1.5.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5z"/><path d="M8 4.5L6.5 2"/><path d="M10 4.2L9.5 1.5"/><path d="M14 4.2L14.5 1.5"/><path d="M16 4.5L17.5 2"/><circle cx="9" cy="10" r=".8" fill="${'color'}" stroke="none"/><circle cx="15" cy="10" r=".8" fill="${'color'}" stroke="none"/><path d="M9.5 12.5c.6.5 1.4.8 2.25.8s1.65-.3 2.25-.8"/>`
+const AiAssistantSvg = (fillColor: string) => `<path d="M20 10c0-3.31-3.58-6-8-6S4 6.69 4 10c0 1.89 1.08 3.56 2.78 4.66L6 20l3.87-2.71c.66.13 1.34.2 2.03.21.34 0 .67-.02 1-.06"/><path d="M17.5 14l.5-1.5.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5z"/><path d="M8 4.5L6.5 2"/><path d="M10 4.2L9.5 1.5"/><path d="M14 4.2L14.5 1.5"/><path d="M16 4.5L17.5 2"/><circle cx="9" cy="10" r=".8" fill="${fillColor}" stroke="none"/><circle cx="15" cy="10" r=".8" fill="${fillColor}" stroke="none"/><path d="M9.5 12.5c.6.5 1.4.8 2.25.8s1.65-.3 2.25-.8"/>`
 
 export const AiAssistantIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => {
-  const svg = AiAssistantSvg.replace(/'color'/g, color)
-  return <Image src={dataUri(svg, size, color)} className={className} style={{ width: size, height: size }} />
+  return <Image src={dataUri(AiAssistantSvg(color), size, color)} className={className} style={{ width: size, height: size }} />
 }
+
+const SearchSvg = `<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>`
+export const SearchIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(SearchSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const PawSvg = `<path d="M8.5 10.5c1.1 0 2-.95 2-2.1s-.9-2.1-2-2.1-2 .95-2 2.1.9 2.1 2 2.1z"/><path d="M15.5 10.5c1.1 0 2-.95 2-2.1s-.9-2.1-2-2.1-2 .95-2 2.1.9 2.1 2 2.1z"/><path d="M5.7 14.3c.9 0 1.6-.78 1.6-1.75S6.6 10.8 5.7 10.8s-1.6.78-1.6 1.75.7 1.75 1.6 1.75z"/><path d="M18.3 14.3c.9 0 1.6-.78 1.6-1.75s-.7-1.75-1.6-1.75-1.6.78-1.6 1.75.7 1.75 1.6 1.75z"/><path d="M8.2 16.2c.85-1.35 1.7-2.2 3.8-2.2s2.95.85 3.8 2.2c.95 1.48.15 3.3-1.55 3.3-.85 0-1.35-.35-2.25-.35s-1.4.35-2.25.35c-1.7 0-2.5-1.82-1.55-3.3z"/>`
+export const PawIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(PawSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const PackageSvg = `<path d="M21 8.5l-9-5-9 5 9 5 9-5z"/><path d="M3 8.5v7l9 5 9-5v-7"/><path d="M12 13.5v7"/><path d="M7.5 6l9 5"/>`
+export const PackageIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(PackageSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const SparkleSvg = `<path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z"/><path d="M5 16l.7 2.3L8 19l-2.3.7L5 22l-.7-2.3L2 19l2.3-.7L5 16z"/><path d="M19 2l.6 1.9L21.5 4.5l-1.9.6L19 7l-.6-1.9-1.9-.6 1.9-.6L19 2z"/>`
+export const SparkleIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(SparkleSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const ArrowRightSvg = `<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>`
+export const ArrowRightIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(ArrowRightSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const SendSvg = `<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4 18-7z"/>`
+export const SendIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(SendSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)

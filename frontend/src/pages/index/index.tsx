@@ -3,6 +3,7 @@ import { View, Text, Block } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import ScenarioSection from '../../components/ScenarioSection'
+import { SearchIcon, SparkleIcon, PawIcon } from '../../components/Icons'
 import { apiClient, searchSpusByKeywords, type Spu } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
 import { getMyPets, getLastSelectedPet, setLastSelectedPet } from '../../services/petApi'
@@ -10,20 +11,20 @@ import { getScenariosByPetType } from '../../config/scenarios'
 import type { Pet } from '../../types'
 
 const defaultPetChoices = [
-  { id: 'cat', name: '猫咪', icon: '🐱' },
-  { id: 'dog', name: '狗狗', icon: '🐶' },
-  { id: 'bird', name: '鸟类', icon: '🐦' },
-  { id: 'fish', name: '水族', icon: '🐟' },
+  { id: 'cat', name: '猫咪' },
+  { id: 'dog', name: '狗狗' },
+  { id: 'bird', name: '鸟类' },
+  { id: 'fish', name: '水族' },
 ]
 
-const PET_TYPE_MAP: Record<string, { name: string; icon: string }> = {
-  cat: { name: '猫咪', icon: '🐱' },
-  dog: { name: '狗狗', icon: '🐶' },
-  bird: { name: '鸟类', icon: '🐦' },
-  fish: { name: '水族', icon: '🐟' },
-  reptile: { name: '爬宠', icon: '🦎' },
-  small_pet: { name: '小宠', icon: '🐹' },
-  other: { name: '其他', icon: '🐾' },
+const PET_TYPE_MAP: Record<string, { name: string }> = {
+  cat: { name: '猫咪' },
+  dog: { name: '狗狗' },
+  bird: { name: '鸟类' },
+  fish: { name: '水族' },
+  reptile: { name: '爬宠' },
+  small_pet: { name: '小宠' },
+  other: { name: '其他' },
 }
 
 const SPECIES_LABELS: Record<string, string> = {
@@ -32,6 +33,16 @@ const SPECIES_LABELS: Record<string, string> = {
 }
 
 const SPECIES_OPTIONS = ['cat', 'dog', 'bird', 'fish', 'reptile', 'small_pet']
+
+const PET_MARKERS: Record<string, string> = {
+  cat: '猫',
+  dog: '狗',
+  bird: '鸟',
+  fish: '鱼',
+  reptile: '爬',
+  small_pet: '宠',
+  other: '全',
+}
 
 export default function HomePage() {
   const { isLoggedIn } = useAuthStore()
@@ -173,6 +184,7 @@ export default function HomePage() {
   }
 
   const hasPets = pets.length > 0 && petsLoaded
+  const getPetMarker = (species: string) => PET_MARKERS[species] || '宠'
 
   const navigateToSearch = () => {
     Taro.navigateTo({ url: '/pages/search/index' })
@@ -217,43 +229,59 @@ export default function HomePage() {
   const isBrowsingOther = browsingOther && browsingSpecies
 
   return (
-    <View className="bg-gray-50 min-h-screen">
+    <View className="bg-[#fff8f2] min-h-screen">
       {/* 顶部欢迎区 */}
-      <View className="px-5 pt-6 pb-2">
-        <View>
-          <Text className="text-xs text-gray-400">下午好</Text>
-          <Text className="text-lg font-bold text-gray-900 mt-0.5 leading-snug">
-            今天给<Text className="text-orange-500">{getActivePetName()}</Text>挑点什么？
-          </Text>
-        </View>
-        <View
-          onClick={navigateToSearch}
-          className="mt-3 flex items-center gap-2 bg-white rounded-full px-4 py-2.5 shadow-sm border border-gray-100"
-        >
-          <Text className="text-gray-400 text-sm">🔍</Text>
-          <Text className="text-sm text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
+      <View className="px-5 pt-6 pb-2 mini-fade-up">
+        <View className="bg-white rounded-3xl px-4 py-4 border border-orange-100 mini-card">
+          <View className="flex items-start justify-between gap-3">
+            <View className="flex-1">
+              <Text className="text-xs text-orange-500 font-medium">下午好</Text>
+              <Text className="text-xl font-bold text-gray-900 mt-1 leading-snug">
+                今天给<Text className="text-orange-500">{getActivePetName()}</Text>挑点什么？
+              </Text>
+              <Text className="text-xs text-gray-500 mt-2 leading-relaxed">
+                搜索、场景推荐和对比都在这里，先从最常买的需求开始。
+              </Text>
+            </View>
+            <View className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
+              <SparkleIcon size={24} color="#f97316" />
+            </View>
+          </View>
+          <View
+            onClick={navigateToSearch}
+            className="mt-4 flex items-center gap-2 bg-gray-50 rounded-full px-4 py-3 border border-gray-100 mini-press"
+          >
+            <SearchIcon size={17} color="#f97316" />
+            <Text className="text-sm text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
+            <Text className="text-xs text-orange-400 mini-caret">→</Text>
+          </View>
         </View>
       </View>
 
       {/* 宠物卡片/种类选择 */}
-      <View className="px-5 pt-4 pb-2">
+      <View className="px-5 pt-4 pb-2 mini-fade-up">
         <View className="flex items-center gap-3 overflow-x-auto py-1">
           {hasPets ? (
             <Block>
               {pets.map((pet) => {
                 const isActive = activePetId === pet.id && !browsingOther
-                const typeInfo = PET_TYPE_MAP[pet.species] || { name: pet.species, icon: '🐾' }
                 return (
                   <View
                     key={pet.id}
                     onClick={() => handlePetClick(pet.id)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                       isActive
-                        ? 'bg-orange-500 border-orange-500 text-white'
-                        : 'bg-white border-gray-100 text-gray-700'
+                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
+                        : 'bg-white border-orange-100 text-gray-700'
                     }`}
                   >
-                    <Text className="text-lg">{typeInfo.icon}</Text>
+                    <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-white/20' : 'bg-orange-50'
+                    }`}>
+                      <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-orange-500'}`}>
+                        {getPetMarker(pet.species)}
+                      </Text>
+                    </View>
                     <View className="text-left">
                       <Text className={`text-sm font-medium ${isActive ? 'text-white' : ''}`}>
                         {pet.nickname}
@@ -274,10 +302,11 @@ export default function HomePage() {
                 onClick={() => handlePetClick('other')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                   browsingOther
-                    ? 'bg-orange-500 border-orange-500 text-white'
-                    : 'border-dashed border-gray-200 bg-white text-gray-400'
+                    ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
+                    : 'border-dashed border-orange-200 bg-white text-gray-400'
                 }`}
               >
+                <PawIcon size={15} color={browsingOther ? '#ffffff' : '#f97316'} />
                 <Text className={`text-sm font-medium ${browsingOther ? 'text-white' : ''}`}>
                   选择其他
                 </Text>
@@ -293,11 +322,17 @@ export default function HomePage() {
                     onClick={() => handlePetClick(p.id)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                       isActive
-                        ? 'bg-orange-500 border-orange-500 text-white'
-                        : 'bg-white border-gray-100 text-gray-700'
+                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
+                        : 'bg-white border-orange-100 text-gray-700'
                     }`}
                   >
-                    <Text className="text-lg">{p.icon}</Text>
+                    <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-white/20' : 'bg-orange-50'
+                    }`}>
+                      <Text className={`text-xs font-bold ${isActive ? 'text-white' : 'text-orange-500'}`}>
+                        {getPetMarker(p.id)}
+                      </Text>
+                    </View>
                     <Text className="text-sm font-medium">{p.name}</Text>
                   </View>
                 )
@@ -305,8 +340,9 @@ export default function HomePage() {
               <View
                 key="other"
                 onClick={() => {}}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed border-gray-200 bg-white text-gray-400 shrink-0"
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed border-orange-200 bg-white text-gray-400 shrink-0"
               >
+                <PawIcon size={15} color="#f97316" />
                 <Text className="text-sm font-medium">其他</Text>
               </View>
             </Block>
@@ -317,7 +353,7 @@ export default function HomePage() {
       {/* 浏览其他物种指示器 */}
       {isBrowsingOther && (
         <View className="px-5 pt-1">
-          <View className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-1.5">
+        <View className="bg-white border border-orange-200 rounded-2xl px-3 py-2 mini-scale-in">
             <Text className="text-xs text-orange-600">
               正在浏览{SPECIES_LABELS[browsingSpecies!] || browsingSpecies}用品 · 点击宠物卡片切换回专属推荐
             </Text>
@@ -345,7 +381,9 @@ export default function HomePage() {
                     onClick={() => handleSpeciesSelect(species)}
                     className="flex flex-col items-center gap-2 py-4 rounded-xl bg-gray-50 active:bg-gray-100"
                   >
-                    <Text className="text-2xl">{info?.icon || '🐾'}</Text>
+            <View className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center">
+              <Text className="text-sm font-bold text-orange-500">{getPetMarker(species)}</Text>
+            </View>
                     <Text className="text-sm text-gray-700">{info?.name || species}</Text>
                   </View>
                 )
@@ -365,9 +403,9 @@ export default function HomePage() {
       />
 
       {/* 为你推荐 / 场景搜索结果 */}
-      <View className="px-5 pt-6 pb-4">
+      <View className="px-5 pt-6 pb-4 mini-fade-up">
         <View className="flex items-center justify-between mb-3">
-          <Text className="text-sm text-gray-800">
+          <Text className="text-base text-gray-900 font-bold">
             {activeScenarioId ? (
               <>
                 <Text className="text-orange-500 font-medium">场景精选</Text>
@@ -382,7 +420,7 @@ export default function HomePage() {
           </Text>
           {!activeScenarioId && (
             <Text
-              className="text-[11px] text-gray-400"
+              className="text-[11px] text-orange-500 font-medium"
               onClick={() => navigateToProducts(activeSpecies)}
             >
               更多 →

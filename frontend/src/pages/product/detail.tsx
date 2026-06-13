@@ -256,27 +256,27 @@ function SpuDetailContent() {
   
 
   return (
-    <View className="flex flex-col h-screen bg-white">
+    <View className="flex flex-col h-screen bg-[#fff8f2]">
       {/* 导航栏 */}
       <View className="shrink-0 absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
         <View
-          className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center"
+          className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm"
           onClick={goBack}
         >
-          <Text className="text-white">←</Text>
+          <Text className="text-gray-900">←</Text>
         </View>
         <View className="flex gap-2">
           <View
-            className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center"
+            className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm"
             onClick={toggleFavorite}
           >
             <Text className={isFavorited ? 'text-red-400' : 'text-white'}>
-              {isFavorited ? <FavoriteFilledIcon size={18} color="#f87171" /> : <FavoriteIcon size={18} color="white" />}
+              {isFavorited ? <FavoriteFilledIcon size={18} color="#f87171" /> : <FavoriteIcon size={18} color="#111827" />}
             </Text>
           </View>
-          <View className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center">
+          <View className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm">
             <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent">
-              <ShareIcon size={16} color="white" />
+              <ShareIcon size={16} color="#111827" />
             </Button>
           </View>
         </View>
@@ -284,7 +284,7 @@ function SpuDetailContent() {
 
       <ScrollView className="flex-1" scrollY style={{ paddingBottom: '60px' }}>
         {/* 产品图片 */}
-        <View className="bg-gray-100">
+        <View className="bg-orange-50">
           {imageExpanded ? (
             <Image src={spu.image_urls?.[0] || ''} className="w-full" mode="widthFix" />
           ) : (
@@ -294,26 +294,26 @@ function SpuDetailContent() {
         {/* 展开/折叠图片按钮 */}
         <View className="flex items-center justify-center py-2 bg-white">
           <View
-            className="flex items-center gap-1 px-4 py-1.5 bg-gray-100 rounded-full active:bg-gray-200"
+            className="flex items-center gap-1 px-4 py-1.5 bg-orange-50 rounded-full mini-press"
             onClick={() => setImageExpanded(!imageExpanded)}
           >
-            <Text className="text-xs text-gray-600">{imageExpanded ? '收起图片' : '展开查看完整图片'}</Text>
-            <Text className="text-xs text-gray-400">{imageExpanded ? '▲' : '▼'}</Text>
+            <Text className="text-xs text-orange-600">{imageExpanded ? '收起图片' : '展开查看完整图片'}</Text>
+            <Text className="text-xs text-orange-400">{imageExpanded ? '▲' : '▼'}</Text>
           </View>
         </View>
 
         {/* SPU 基本信息 */}
-        <View className="px-4 pt-4 pb-3">
+        <View className="mx-4 mt-3 px-4 pt-4 pb-4 bg-white rounded-3xl border border-orange-100 mini-card mini-fade-up">
           {/* 品牌标签 */}
           <View className="flex items-center gap-2 mb-2">
-            <Text className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded font-medium">
+            <Text className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
               {spu.brand}
             </Text>
-            <Text className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded font-medium">
+            <Text className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full font-medium">
               {getPetTypeLabel(spu.pet_type)}
             </Text>
             {spu.model && (
-              <Text className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded font-medium">
+              <Text className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
                 型号: {spu.model}
               </Text>
             )}
@@ -325,21 +325,26 @@ function SpuDetailContent() {
 
           {/* 价格区间 */}
           <View className="flex items-baseline gap-2 mt-3">
-            <Text className="text-2xl font-bold text-orange-600">{getPriceRange()}</Text>
+            <Text className="text-3xl font-bold text-orange-600">{getPriceRange()}</Text>
             {listings.length > 0 && (
               <Text className="text-xs text-gray-400">({listings.length}个平台在售)</Text>
             )}
           </View>
 
           {/* 评分和评价 */}
-          <View className="flex items-center gap-4 mt-3">
-            <View className="flex items-center gap-1">
-              <Text className="text-sm font-bold text-gray-800">评分 {spu.rating || 0}</Text>
+          <View className="grid grid-cols-3 gap-2 mt-4">
+            <View className="bg-orange-50 rounded-2xl px-3 py-2">
+              <Text className="text-sm font-bold text-orange-600">{spu.rating || 0}</Text>
+              <Text className="text-[10px] text-orange-700/60 mt-0.5">综合评分</Text>
             </View>
-            <Text className="text-xs text-gray-400">{spu.review_count || 0}条评价</Text>
-            {reviews.length > 0 && (
-              <Text className="text-xs text-orange-500 font-medium">{recommendRate}%推荐</Text>
-            )}
+            <View className="bg-blue-50 rounded-2xl px-3 py-2">
+              <Text className="text-sm font-bold text-blue-600">{spu.review_count || 0}</Text>
+              <Text className="text-[10px] text-blue-700/60 mt-0.5">条评价</Text>
+            </View>
+            <View className="bg-green-50 rounded-2xl px-3 py-2">
+              <Text className="text-sm font-bold text-green-600">{reviews.length > 0 ? `${recommendRate}%` : '-'}</Text>
+              <Text className="text-[10px] text-green-700/60 mt-0.5">推荐率</Text>
+            </View>
           </View>
 
           {/* 分类信息 */}
@@ -353,7 +358,7 @@ function SpuDetailContent() {
         </View>
 
         {/* Tab切换 */}
-        <View className="flex border-b border-gray-100 px-4">
+        <View className="flex border-b border-orange-100 px-4 mt-3 bg-white">
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
               activeTab === 'overview'
@@ -391,7 +396,7 @@ function SpuDetailContent() {
           <View className="px-4 py-4 space-y-4">
             {/* 优点 */}
             {spu.pros && spu.pros.length > 0 && (
-              <View>
+              <View className="bg-white rounded-3xl p-4 border border-green-100 mini-card">
                 <Text className="text-sm font-bold text-green-700 mb-2">优点</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.pros.map((pro: string, i: number) => (
@@ -405,7 +410,7 @@ function SpuDetailContent() {
 
             {/* 缺点 */}
             {spu.cons && spu.cons.length > 0 && (
-              <View>
+              <View className="bg-white rounded-3xl p-4 border border-red-100 mini-card">
                 <Text className="text-sm font-bold text-red-600 mb-2">缺点</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.cons.map((con: string, i: number) => (
@@ -419,7 +424,7 @@ function SpuDetailContent() {
 
             {/* 成分 */}
             {spu.ingredients && spu.ingredients.length > 0 && (
-              <View>
+              <View className="bg-white rounded-3xl p-4 border border-gray-100 mini-card">
                 <Text className="text-sm font-bold text-gray-800 mb-2">主要成分</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.ingredients.map((ing: string, i: number) => (
@@ -433,7 +438,7 @@ function SpuDetailContent() {
 
             {/* 产品描述 */}
             {spu.description && (
-              <View>
+              <View className="bg-white rounded-3xl p-4 border border-gray-100 mini-card">
                 <Text className="text-sm font-bold text-gray-800 mb-2">产品描述</Text>
                 <Text className="text-xs text-gray-600 leading-relaxed" userSelect>{spu.description}</Text>
               </View>
@@ -441,7 +446,7 @@ function SpuDetailContent() {
 
             {/* 营养成分 */}
             {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
-              <View>
+              <View className="bg-white rounded-3xl p-4 border border-gray-100 mini-card">
                 <Text className="text-sm font-bold text-gray-800 mb-2">营养成分</Text>
                 <View className="bg-gray-50 rounded-xl p-4 space-y-3">
                   {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
@@ -662,7 +667,7 @@ function SpuDetailContent() {
                         </Text>
                       </View>
                       <View className="flex items-center gap-1">
-                        <Text className="text-xs text-gray-400">❤️ {note.note_likes || 0}</Text>
+                        <Text className="text-xs text-gray-400">赞 {note.note_likes || 0}</Text>
                       </View>
                     </View>
 
