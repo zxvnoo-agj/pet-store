@@ -39,16 +39,13 @@ async def invalidate_cache(user_id: int):
 
 
 def _get_llm():
-    if settings.DASHSCOPE_API_KEY:
-        return ChatOpenAI(
-            model=settings.DASHSCOPE_MODEL,
-            api_key=settings.DASHSCOPE_API_KEY,
-            base_url=settings.DASHSCOPE_BASE_URL,
-            temperature=0.7,
-        )
+    api_key = settings.DEEPSEEK_API_KEY or settings.OPENAI_API_KEY
+    base_url = settings.DEEPSEEK_BASE_URL if settings.DEEPSEEK_API_KEY else None
+    model = settings.DEEPSEEK_MODEL or settings.OPENAI_MODEL
     return ChatOpenAI(
-        model=settings.OPENAI_MODEL,
-        api_key=settings.OPENAI_API_KEY,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
         temperature=0.7,
     )
 

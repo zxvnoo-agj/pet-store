@@ -19,22 +19,18 @@ class AIAgent:
     def __init__(self, db):
         self.db = db
         self.tools = AgentTools(db)
-        # Use DashScope (Aliyun) if API key is configured, otherwise fallback to OpenAI
-        if settings.DASHSCOPE_API_KEY:
-            self.llm = ChatOpenAI(
-                model=settings.DASHSCOPE_MODEL,
-                api_key=settings.DASHSCOPE_API_KEY,
-                base_url=settings.DASHSCOPE_BASE_URL,
-                temperature=0.7,
-                streaming=True,
-            )
-        else:
-            self.llm = ChatOpenAI(
-                model=settings.OPENAI_MODEL,
-                api_key=settings.OPENAI_API_KEY,
-                temperature=0.7,
-                streaming=True,
-            )
+        api_key = settings.DEEPSEEK_API_KEY or settings.OPENAI_API_KEY
+        base_url = settings.DEEPSEEK_BASE_URL if settings.DEEPSEEK_API_KEY else None
+        model = settings.DEEPSEEK_MODEL or settings.OPENAI_MODEL
+        self.llm = ChatOpenAI(
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+            temperature=0.7,
+            streaming=True,
+            reasoning_effort="high",
+            extra_body={"thinking": {"type": "enabled"}},
+        )
 
     async def _build_pet_context(self, user_id: int) -> str:
         from app.models.pet import Pet

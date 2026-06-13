@@ -29,9 +29,9 @@ class SpuMatchingService:
             from langchain_openai import ChatOpenAI
 
             self.llm = ChatOpenAI(
-                model=settings.DASHSCOPE_MODEL or settings.OPENAI_MODEL,
-                api_key=settings.DASHSCOPE_API_KEY or settings.OPENAI_API_KEY,
-                base_url=settings.DASHSCOPE_BASE_URL or None,
+                model=settings.DEEPSEEK_MODEL or settings.OPENAI_MODEL,
+                api_key=settings.DEEPSEEK_API_KEY or settings.OPENAI_API_KEY,
+                base_url=settings.DEEPSEEK_BASE_URL if settings.DEEPSEEK_API_KEY else None,
                 temperature=0.1,
             )
         return self.llm

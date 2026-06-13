@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { wechatLogin } from '../../services/auth'
 import { getMyPets } from '../../services/petApi'
-import { FavoriteIcon } from '../../components/Icons'
+import { FavoriteIcon, PawIcon, PackageIcon, ArrowRightIcon } from '../../components/Icons'
 
 export default function MinePage() {
   const { user, isLoggedIn, logout } = useAuthStore()
@@ -62,74 +62,103 @@ export default function MinePage() {
   }
 
   return (
-    <View className="flex flex-col h-screen bg-gray-50">
+    <View className="flex flex-col h-screen bg-[#fff8f2]">
       {/* 用户信息 */}
-      <View className="bg-white px-4 py-8">
-        <View className="flex items-center gap-4">
-          <View className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-            <Text className="text-2xl">{isLoggedIn ? '👤' : '🐱'}</Text>
+      <View className="px-4 pt-8 pb-4 mini-fade-up">
+        <View className="bg-white rounded-3xl p-5 border border-orange-100 mini-card">
+          <View className="flex items-center gap-4">
+            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center">
+              <PawIcon size={30} color="#f97316" />
+            </View>
+            <View className="flex-1">
+              {isLoggedIn ? (
+                <>
+                  <View className="flex items-center gap-2">
+                    <Text className="text-xl font-bold text-gray-900">{user?.nickname || '微信用户'}</Text>
+                    <Text className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">已登录</Text>
+                  </View>
+                  <Text className="text-xs text-gray-500 mt-1">管理宠物档案、收藏和对比清单</Text>
+                </>
+              ) : (
+                <>
+                  <Text className="text-xl font-bold text-gray-900">欢迎回来</Text>
+                  <Text className="text-xs text-gray-500 mt-1">登录后同步宠物档案和收藏</Text>
+                </>
+              )}
+            </View>
           </View>
-          <View className="flex-1">
-            {isLoggedIn ? (
-              <>
-                <Text className="text-lg font-bold text-gray-800">{user?.nickname || '用户'}</Text>
-                <Text className="text-xs text-gray-400 mt-1">已登录</Text>
-              </>
-            ) : (
-              <>
-                <Text className="text-lg font-bold text-gray-800">未登录</Text>
-                <Text className="text-xs text-gray-400 mt-1">点击登录享受更多功能</Text>
-              </>
-            )}
+
+          <View className="grid grid-cols-3 gap-2 mt-5">
+            <View className="bg-orange-50 rounded-2xl py-3 text-center">
+              <Text className="text-lg font-bold text-orange-600">{petCount}</Text>
+              <Text className="text-[10px] text-orange-700/70 mt-0.5">宠物档案</Text>
+            </View>
+            <View className="bg-blue-50 rounded-2xl py-3 text-center">
+              <Text className="text-lg font-bold text-blue-600">AI</Text>
+              <Text className="text-[10px] text-blue-700/70 mt-0.5">顾问记录</Text>
+            </View>
+            <View className="bg-green-50 rounded-2xl py-3 text-center">
+              <Text className="text-lg font-bold text-green-600">比</Text>
+              <Text className="text-[10px] text-green-700/70 mt-0.5">商品对比</Text>
+            </View>
           </View>
         </View>
       </View>
 
       {/* 功能列表 */}
-      <View className="mt-4 bg-white">
+      <View className="mx-4 mt-2 bg-white rounded-3xl overflow-hidden border border-orange-100 mini-card mini-fade-up">
         <View
-          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
+          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press"
           onClick={navigateToPets}
         >
           <View className="flex items-center gap-2">
-            <Text className="text-lg">🐾</Text>
+            <View className="w-8 h-8 rounded-2xl bg-orange-50 flex items-center justify-center">
+              <PawIcon size={17} color="#f97316" />
+            </View>
             <Text className="text-sm text-gray-800">宠物管理</Text>
           </View>
           <View className="flex items-center gap-1">
             {petCount > 0 && (
               <Text className="text-xs text-orange-500">{petCount}只</Text>
             )}
-            <Text className="text-gray-400">→</Text>
+            <ArrowRightIcon size={15} color="#9ca3af" />
           </View>
         </View>
 
         <View
-          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
+          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press"
           onClick={navigateToFavorites}
         >
           <View className="flex items-center gap-2">
-            <FavoriteIcon size={18} color="#6b7280" />
+            <View className="w-8 h-8 rounded-2xl bg-red-50 flex items-center justify-center">
+              <FavoriteIcon size={17} color="#ef4444" />
+            </View>
             <Text className="text-sm text-gray-800">我的收藏</Text>
           </View>
-          <Text className="text-gray-400">→</Text>
+          <ArrowRightIcon size={15} color="#9ca3af" />
         </View>
 
         <View
-          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 active:bg-gray-50"
+          className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press"
           onClick={navigateToCompare}
         >
-          <Text className="text-sm text-gray-800">商品对比</Text>
-          <Text className="text-gray-400">→</Text>
+          <View className="flex items-center gap-2">
+            <View className="w-8 h-8 rounded-2xl bg-blue-50 flex items-center justify-center">
+              <PackageIcon size={17} color="#2563eb" />
+            </View>
+            <Text className="text-sm text-gray-800">商品对比</Text>
+          </View>
+          <ArrowRightIcon size={15} color="#9ca3af" />
         </View>
 
         <View className="px-4 py-4 flex items-center justify-between border-b border-gray-100">
           <Text className="text-sm text-gray-800">浏览历史</Text>
-          <Text className="text-gray-400">→</Text>
+          <ArrowRightIcon size={15} color="#9ca3af" />
         </View>
 
         <View className="px-4 py-4 flex items-center justify-between">
           <Text className="text-sm text-gray-800">设置</Text>
-          <Text className="text-gray-400">→</Text>
+          <ArrowRightIcon size={15} color="#9ca3af" />
         </View>
       </View>
 
@@ -137,14 +166,14 @@ export default function MinePage() {
       <View className="mt-8 px-4">
         {isLoggedIn ? (
           <View
-            className="w-full py-3 bg-gray-200 text-gray-600 text-sm font-medium rounded-full text-center"
+            className="w-full py-3 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-full text-center mini-press"
             onClick={handleLogout}
           >
             <Text>退出登录</Text>
           </View>
         ) : (
           <View
-            className="w-full py-3 bg-orange-500 text-white text-sm font-medium rounded-full text-center"
+            className="w-full py-3 bg-orange-500 text-white text-sm font-medium rounded-full text-center shadow-lg shadow-orange-200 mini-press"
             onClick={handleLogin}
           >
             <Text>{loading ? '登录中...' : '微信登录'}</Text>

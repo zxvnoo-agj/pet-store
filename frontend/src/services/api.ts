@@ -1,10 +1,8 @@
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../stores/authStore'
-import { API_HOST } from '../config/env'
+import { API_BASE_URL } from '../config/env'
 
-const API_BASE_URL = process.env.TARO_ENV === 'weapp' && process.env.NODE_ENV === 'production'
-  ? 'https://api.pawpalai.cn/v1'
-  : `http://${API_HOST}:8000/v1`
+const BASE_URL = API_BASE_URL
 
 interface RequestOptions {
   url: string
@@ -85,7 +83,7 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL)
+export const apiClient = new ApiClient(BASE_URL)
 
 export interface Spu {
   id: number
@@ -116,6 +114,44 @@ export async function searchSpusByKeywords(
     params.pet_type = petType
   }
   return apiClient.get('/spus/search', params)
+}
+
+export interface XHSNote {
+  id: number
+  external_note_id?: string
+  content: string
+  author?: string
+  note_likes?: number
+  note_published_at?: string
+  source_url?: string
+  tags: string[]
+  is_recommended?: boolean
+  comments: string[]
+}
+
+export interface AiReviewSummary {
+  overall_pros: string[]
+  overall_cons: string[]
+  recommendation: string
+  recommend_rate: number
+  summary: string
+  generated_at?: string
+  review_count: number
+}
+
+export interface SpuReviewsResponse {
+  ai_summary: AiReviewSummary | null
+  notes: XHSNote[]
+  pagination: {
+    page: number
+    page_size: number
+    total: number
+    total_pages: number
+  }
+}
+
+export async function getSpuReviews(spuId: number, page: number = 1): Promise<SpuReviewsResponse> {
+  return apiClient.get(`/spus/${spuId}/reviews`, { page, page_size: 20 })
 }
 
 export default apiClient

@@ -8,9 +8,9 @@ from openai import AsyncOpenAI
 from app.core.config import settings
 
 llm = ChatOpenAI(
-    model=settings.DASHSCOPE_MODEL or settings.OPENAI_MODEL,
-    api_key=settings.DASHSCOPE_API_KEY or settings.OPENAI_API_KEY,
-    base_url=settings.DASHSCOPE_BASE_URL or None,
+    model=settings.DEEPSEEK_MODEL or settings.OPENAI_MODEL,
+    api_key=settings.DEEPSEEK_API_KEY or settings.OPENAI_API_KEY,
+    base_url=settings.DEEPSEEK_BASE_URL if settings.DEEPSEEK_API_KEY else None,
     temperature=0.1,
 )
 
@@ -102,8 +102,8 @@ async def _vision_extract_fields(image_urls: list[str]) -> dict[str, Any]:
 
     try:
         client = AsyncOpenAI(
-            api_key=settings.DASHSCOPE_API_KEY,
-            base_url=settings.DASHSCOPE_BASE_URL,
+            api_key=settings.DEEPSEEK_API_KEY,
+            base_url=settings.DEEPSEEK_BASE_URL,
         )
         vision_prompt = (
             "你是一个宠物食品和用品识别专家。查看这些商品图片，提取结构化信息，返回JSON。\n\n"
@@ -130,7 +130,7 @@ async def _vision_extract_fields(image_urls: list[str]) -> dict[str, Any]:
             },
         ]
         response = await client.chat.completions.create(
-            model="qwen-vl-plus",
+            model=settings.DEEPSEEK_MODEL,
             messages=messages,
             temperature=0.1,
             max_tokens=1000,

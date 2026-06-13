@@ -10,10 +10,10 @@ from app.core.config import settings
 class QwenVLClient:
     def __init__(self):
         self.client = AsyncOpenAI(
-            api_key=settings.DASHSCOPE_API_KEY,
-            base_url=settings.DASHSCOPE_BASE_URL,
+            api_key=settings.DEEPSEEK_API_KEY,
+            base_url=settings.DEEPSEEK_BASE_URL,
         )
-        self.model = "qwen-vl-plus"
+        self.model = settings.DEEPSEEK_MODEL
 
     async def analyze_ingredient_image(self, image_url: str) -> dict[str, Any]:
         try:

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { apiClient } from '../../services/api'
+import { SearchIcon, ArrowRightIcon, PetTypeIcon, CategoryIcon } from '../../components/Icons'
 
 const petTypes = [
-  { id: 'cat', name: '猫咪', icon: '🐱' },
-  { id: 'dog', name: '狗狗', icon: '🐶' },
-  { id: 'bird', name: '鸟类', icon: '🐦' },
-  { id: 'fish', name: '水族', icon: '🐟' },
+  { id: 'cat', name: '猫咪' },
+  { id: 'dog', name: '狗狗' },
+  { id: 'bird', name: '鸟类' },
+  { id: 'fish', name: '水族' },
 ]
 
 interface Category {
@@ -24,11 +25,7 @@ export default function CategoryPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const fetchCategories = async () => {
+  async function fetchCategories() {
     try {
       const res = await apiClient.get('/categories')
       setCategories(res.categories || [])
@@ -38,6 +35,10 @@ export default function CategoryPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
   const filteredCategories = categories.filter(
     (c) => c.pet_type === activePet && !c.children
@@ -72,35 +73,41 @@ export default function CategoryPage() {
   }
 
   return (
-    <View className="flex flex-col h-screen bg-white">
+    <View className="flex flex-col h-screen bg-[#fff8f2]">
       {/* 搜索栏 */}
-      <View className="px-4 py-2.5 border-b border-gray-100">
+      <View className="px-4 py-3 bg-white border-b border-orange-100">
         <View
-          className="flex items-center gap-2 bg-gray-100 rounded-full px-3.5 py-2"
+          className="flex items-center gap-2 bg-gray-50 rounded-full px-3.5 py-2.5 border border-gray-100 mini-press"
           onClick={navigateToSearch}
         >
-          <Text className="text-xs text-gray-400">搜索猫粮、狗粮、用品...🔍</Text>
+          <SearchIcon size={15} color="#f97316" />
+          <Text className="text-xs text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
+          <Text className="text-xs text-orange-400 mini-caret">→</Text>
         </View>
       </View>
 
       {/* 分类布局 */}
       <View className="flex flex-1 overflow-hidden">
         {/* 左侧：宠物类型 */}
-        <View className="w-20 bg-gray-50 flex flex-col items-center py-3 gap-1 shrink-0 overflow-y-auto">
+        <View className="w-20 bg-white flex flex-col items-center py-3 gap-1 shrink-0 overflow-y-auto border-r border-orange-50">
           {petTypes.map((pet) => (
             <View
               key={pet.id}
               onClick={() => setActivePet(pet.id)}
-              className={`flex flex-col items-center gap-1 py-3 px-1 w-full rounded-r-xl relative ${
+              className={`flex flex-col items-center gap-1 py-3 px-1 w-full rounded-r-2xl relative mini-press ${
                 activePet === pet.id
-                  ? 'bg-white text-orange-500 font-medium'
+                  ? 'bg-orange-50 text-orange-500 font-medium'
                   : 'text-gray-500'
               }`}
             >
-              <Text className="text-xl">{pet.icon}</Text>
+              <View className={`w-9 h-9 rounded-2xl flex items-center justify-center ${
+                activePet === pet.id ? 'bg-orange-500' : 'bg-gray-50'
+              }`}>
+                <PetTypeIcon type={pet.id} size={21} color={activePet === pet.id ? '#ffffff' : '#6b7280'} />
+              </View>
               <Text className="text-xs">{pet.name}</Text>
               {activePet === pet.id && (
-                <View className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-orange-500 rounded-r" />
+                <View className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-orange-500 rounded-r" />
               )}
             </View>
           ))}
@@ -108,11 +115,11 @@ export default function CategoryPage() {
 
         {/* 右侧：品类列表 */}
         <View className="flex-1 p-4 overflow-y-auto">
-          <View className="mb-4">
-            <Text className="text-base font-bold text-gray-800">
+          <View className="mb-4 bg-white rounded-3xl px-4 py-4 border border-orange-100 mini-card mini-fade-up">
+            <Text className="text-lg font-bold text-gray-900">
               {petTypes.find((p) => p.id === activePet)?.name}用品
             </Text>
-            <Text className="text-xs text-gray-400 mt-0.5">
+            <Text className="text-xs text-gray-500 mt-1">
               共 {filteredCategories.length + parentCategories.length} 个分类
             </Text>
           </View>
@@ -125,10 +132,12 @@ export default function CategoryPage() {
                 {parentCategories.map((cat) => (
                   <View
                     key={cat.id}
-                    className="flex flex-col items-center gap-2 py-4 bg-orange-50 rounded-xl active:bg-orange-100"
+                    className="flex flex-col items-center gap-2 py-4 bg-white border border-orange-100 rounded-2xl mini-card mini-press"
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
-                    <Text className="text-3xl">{cat.icon || '📦'}</Text>
+                    <View className="w-11 h-11 rounded-2xl bg-orange-50 flex items-center justify-center">
+                      <CategoryIcon name={cat.name} size={23} color="#f97316" />
+                    </View>
                     <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
                   </View>
                 ))}
@@ -144,10 +153,12 @@ export default function CategoryPage() {
                 {filteredCategories.map((cat) => (
                   <View
                     key={cat.id}
-                    className="flex flex-col items-center gap-2 py-4 bg-gray-50 rounded-xl active:bg-orange-50"
+                    className="flex flex-col items-center gap-2 py-4 bg-white border border-gray-100 rounded-2xl mini-press"
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
-                    <Text className="text-3xl">{cat.icon || '📦'}</Text>
+                    <View className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center">
+                      <CategoryIcon name={cat.name} size={23} color="#94a3b8" />
+                    </View>
                     <Text className="text-xs text-gray-700 font-medium">{cat.name}</Text>
                   </View>
                 ))}
@@ -156,8 +167,11 @@ export default function CategoryPage() {
           )}
 
           {/* 品牌推荐 */}
-          <View className="mt-6">
-            <Text className="text-sm font-bold text-gray-800 mb-3">热门品牌</Text>
+          <View className="mt-6 bg-white rounded-3xl p-4 border border-orange-100 mini-card">
+            <View className="flex items-center justify-between mb-3">
+              <Text className="text-sm font-bold text-gray-900">热门品牌</Text>
+              <ArrowRightIcon size={14} color="#fb923c" />
+            </View>
             <View className="flex flex-wrap gap-2">
               {['皇家', '渴望', '爱肯拿', '巅峰', '网易严选', '素力高', 'Now Fresh', 'K9'].map(
                 (brand) => (

@@ -48,3 +48,35 @@ class AdminReviewResponse(ReviewResponse):
     author: str | None = None
     note_published_at: datetime | None = None
     note_likes: int | None = None
+
+
+class AiReviewSummary(BaseModel):
+    overall_pros: list[str] = []
+    overall_cons: list[str] = []
+    recommendation: str = "中性"
+    recommend_rate: float = 0.0
+    summary: str = ""
+    generated_at: datetime | None = None
+    review_count: int = 0
+
+
+class XHSNoteOut(BaseModel):
+    id: int
+    external_note_id: str | None = None
+    content: str = ""
+    author: str | None = None
+    note_likes: int | None = None
+    note_published_at: datetime | None = None
+    source_url: str | None = None
+    tags: list[str] = []
+    is_recommended: bool | None = None
+    comments: list[str] = []
+
+    class Config:
+        from_attributes = True
+
+
+class XHSReviewPageResponse(BaseModel):
+    ai_summary: AiReviewSummary | None = None
+    notes: list[XHSNoteOut] = []
+    pagination: dict = {}

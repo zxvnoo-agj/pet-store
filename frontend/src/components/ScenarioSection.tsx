@@ -21,9 +21,12 @@ const ScenarioSection: React.FC<ScenarioSectionProps> = ({
   }
 
   return (
-    <View className="bg-[#FFF4EA] rounded-2xl mx-5 mt-4 px-4 py-3">
+    <View className="bg-[#FFF4EA] rounded-3xl mx-5 mt-4 px-4 py-3.5 mini-fade-up">
       <View className="flex items-center justify-between mb-2.5">
-        <Text className="text-sm font-bold text-gray-800">场景快捷推荐</Text>
+        <View>
+          <Text className="text-sm font-bold text-gray-900">场景快捷推荐</Text>
+          <Text className="text-[10px] text-orange-700/60 mt-0.5">按需求直接筛选更省心</Text>
+        </View>
         {activeScenarioId && (
           <Text
             className="text-xs text-orange-500 font-medium active:opacity-70"

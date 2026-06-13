@@ -72,7 +72,7 @@ export const adminCollectApi = {
   listJobs: (params?: any) => apiClient.get('/admin/collect/jobs', { params }),
   getJob: (id: number) => apiClient.get(`/admin/collect/jobs/${id}`),
   retryJob: (id: number) => apiClient.post(`/admin/collect/jobs/${id}/retry`),
-  triggerXHS: (id: number) => apiClient.post(`/admin/collect/products/${id}/xhs-collect`),
+  triggerXHSForSpu: (spuId: number) => apiClient.post(`/admin/spus/${spuId}/xhs-collect`),
   listSources: () => apiClient.get('/admin/collect/sources'),
   updateSource: (id: number, data: any) => apiClient.patch(`/admin/collect/sources/${id}`, data),
   schedulerStatus: () => apiClient.get('/admin/collect/scheduler/status'),
@@ -90,6 +90,11 @@ export interface PromotionUrlResponse {
   mobile_url: string | null
   we_app_url: string | null
   cached: boolean
+}
+
+export const adminImportApi = {
+  importForSpu: (spuId: number, data: { keyword?: string; max_results?: number; source?: string }) =>
+    apiClient.post(`/admin/goods/spus/${spuId}/import-listings`, data),
 }
 
 export interface SeedProductParams {

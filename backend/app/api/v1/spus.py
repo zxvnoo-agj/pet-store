@@ -5,9 +5,14 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.common import ApiResponse, Pagination
-from app.schemas.spu import SpuFilter, SpuMiniProgramListResponse, SpuMiniProgramDetailResponse, PromotionUrlRequest, PromotionUrlResponse
-from app.services.spu_service import SpuService
+from app.schemas.spu import (
+    PromotionUrlRequest,
+    SpuFilter,
+    SpuMiniProgramDetailResponse,
+    SpuMiniProgramListResponse,
+)
 from app.services.favorite_service import FavoriteService
+from app.services.spu_service import SpuService
 
 router = APIRouter()
 
@@ -140,17 +145,17 @@ async def get_spu_detail(
     spu = await service.get_spu_for_miniprogram(spu_id)
     if not spu:
         raise HTTPException(status_code=404, detail=f"SPU with id {spu_id} not found")
-    
+
     # Check if favorited by current user
     is_favorited = False
     if current_user:
         favorite_service = FavoriteService(db)
         is_favorited = await favorite_service.is_favorited(current_user.id, spu_id)
-    
+
     data = SpuMiniProgramDetailResponse.model_validate(spu)
     response_data = data.model_dump()
     response_data["is_favorited"] = is_favorited
-    
+
     return ApiResponse(data=response_data)
 
 
@@ -163,7 +168,7 @@ async def get_spu_listings(
 ):
     service = SpuService(db)
     listings = await service.get_listings_for_miniprogram(spu_id, platform, sort)
-    
+
     from app.schemas.spu import SpuMiniProgramListingResponse
     return ApiResponse(
         data={
@@ -178,13 +183,11 @@ async def get_spu_reviews(
     spu_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    sort: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     from app.services.review_service import ReviewService
     service = ReviewService(db)
-    reviews, total = await service.get_reviews(spu_id, sort=sort, page=page, page_size=page_size)
-    summary = await service.get_review_summary(spu_id)
+    notes, total, ai_summary = await service.get_spu_xhs_notes(spu_id, page=page, page_size=page_size)
 
     total_pages = (total + page_size - 1) // page_size
     pagination = Pagination(
@@ -196,8 +199,8 @@ async def get_spu_reviews(
 
     return ApiResponse(
         data={
-            "items": reviews,
-            "summary": summary,
+            "ai_summary": ai_summary,
+            "notes": notes,
             "pagination": pagination,
         },
     )
@@ -212,7 +215,7 @@ async def get_spu_links(
     from app.services.spu_service import SpuService
     service = SpuService(db)
     listings = await service.get_listings_for_miniprogram(spu_id, platform=None, sort=None)
-    
+
     from app.schemas.spu import SpuMiniProgramListingResponse
     return ApiResponse(
         data={
@@ -229,18 +232,18 @@ async def generate_promotion_url(
     db: AsyncSession = Depends(get_db),
 ):
     """Generate on-demand promotion URL for a listing with dual caching."""
-    from app.services.spu_service import SpuService
     from app.services.promotion_url_service import PromotionUrlService
-    
+    from app.services.spu_service import SpuService
+
     # Verify listing exists and belongs to this SPU
     spu_service = SpuService(db)
     listing = await spu_service.get_listing_by_id(request.listing_id)
     if not listing or listing.spu_id != spu_id:
         raise HTTPException(status_code=404, detail="Listing not found for this SPU")
-    
+
     if not listing.goods_sign:
         raise HTTPException(status_code=400, detail="商品暂不可用")
-    
+
     promo_service = PromotionUrlService(db)
     try:
         result = await promo_service.generate(

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import { useToastStore } from '../../stores/toastStore'
-import { adminCategoryApi } from '../../services/api'
+import { adminCategoryApi, adminCollectApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
+import BatchCollectDialog from './components/BatchCollectDialog'
 
 interface Category {
   id: number
@@ -31,6 +32,8 @@ export default function Spus() {
   const [filterPetType, setFilterPetType] = useState(filters.pet_type || '')
   const [filterStatus, setFilterStatus] = useState(filters.status || '')
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [collectingSpuIds, setCollectingSpuIds] = useState<Set<number>>(new Set())
+  const [showBatchDialog, setShowBatchDialog] = useState(false)
 
   useEffect(() => {
     // Reset filters on mount to show all SPUs
@@ -138,6 +141,31 @@ export default function Spus() {
     }
   }
 
+  const handleTriggerXHS = async (e: React.MouseEvent, spuId: number) => {
+    e.stopPropagation()
+    if (collectingSpuIds.has(spuId)) return
+    setCollectingSpuIds(prev => new Set(prev).add(spuId))
+    try {
+      const res = await adminCollectApi.triggerXHSForSpu(spuId)
+      const data = res.data?.data || res.data
+      addToast(`采集任务已启动 (Job #${data.job_id})`, 'success')
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || '采集触发失败'
+      addToast(msg, 'error')
+    } finally {
+      setCollectingSpuIds(prev => {
+        const next = new Set(prev)
+        next.delete(spuId)
+        return next
+      })
+    }
+  }
+
+  const handleBatchCollect = () => {
+    if (selectedIds.size === 0) return
+    setShowBatchDialog(true)
+  }
+
   const totalPages = Math.ceil(total / (filters.page_size || 20))
 
   return (
@@ -193,6 +221,18 @@ export default function Spus() {
             >
               <Plus className="w-4 h-4" />
               新建 SPU
+            </button>
+            <button
+              onClick={handleBatchCollect}
+              disabled={selectedIds.size === 0}
+              className={`px-6 py-3 rounded-pill text-sm font-medium pill-button flex items-center gap-2 transition-all ${
+                selectedIds.size === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-purple-500 text-white hover:bg-purple-600'
+              }`}
+            >
+              <RefreshCw className="w-4 h-4" />
+              商品采集
             </button>
           </div>
 
@@ -317,7 +357,7 @@ export default function Spus() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-peach/10">
-                        <th className="px-6 py-4 text-left">
+                        <th className="px-6 py-4 text-left" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={spus.length > 0 && selectedIds.size === spus.length}
@@ -343,7 +383,7 @@ export default function Spus() {
                           onMouseLeave={() => setHoveredRow(null)}
                           onClick={() => navigate(`/spus/${spu.id}`)}
                         >
-                          <td className="px-6 py-4">
+                          <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={selectedIds.has(spu.id)}
@@ -394,6 +434,14 @@ export default function Spus() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleTriggerXHS(e, spu.id) }}
+                                disabled={collectingSpuIds.has(spu.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-purple-500 hover:bg-purple-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="评论采集"
+                              >
+                                <RefreshCw className={`w-4 h-4 ${collectingSpuIds.has(spu.id) ? 'animate-spin' : ''}`} />
+                              </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditSpu(spu); setShowForm(true) }}
                                 className="p-2 rounded-xl text-carbon/40 hover:text-peach hover:bg-peach/10 transition-all duration-300"
@@ -446,6 +494,14 @@ export default function Spus() {
           spu={editSpu}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); fetchSpus() }}
+        />
+      )}
+
+      {showBatchDialog && (
+        <BatchCollectDialog
+          spus={spus}
+          selectedIds={selectedIds}
+          onClose={() => setShowBatchDialog(false)}
         />
       )}
     </div>
