@@ -77,7 +77,7 @@ function SpuDetailContent() {
   
   const [loading, setLoading] = useState(true)
 
-  const [imageExpanded, setImageExpanded] = useState(true)
+  const [imageExpanded, setImageExpanded] = useState(false)
 
   const { addToCompare, isInCompare } = useCompareStore()
   const { isLoggedIn } = useAuthStore()
@@ -176,10 +176,6 @@ function SpuDetailContent() {
     fetchReviews(nextPage)
   }
 
-  const goBack = () => {
-    Taro.navigateBack()
-  }
-
   const navigateToChat = () => {
     if (id) {
       Taro.setStorageSync('pendingSpuId', id)
@@ -252,43 +248,29 @@ function SpuDetailContent() {
   const recommendRate = Math.round(
     (reviews.filter((r: any) => r.is_recommended).length / (reviews.length || 1)) * 100
   )
+  const heroImage = spu.image_urls?.[0] || ''
 
   
 
   return (
     <View className="flex flex-col h-screen bg-[#fff8f2]">
-      {/* 导航栏 */}
-      <View className="shrink-0 absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3">
-        <View
-          className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm"
-          onClick={goBack}
-        >
-          <Text className="text-gray-900">←</Text>
-        </View>
-        <View className="flex gap-2">
-          <View
-            className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm"
-            onClick={toggleFavorite}
-          >
-            <Text className={isFavorited ? 'text-red-400' : 'text-white'}>
-              {isFavorited ? <FavoriteFilledIcon size={18} color="#f87171" /> : <FavoriteIcon size={18} color="#111827" />}
-            </Text>
-          </View>
-          <View className="w-9 h-9 bg-white/95 rounded-full flex items-center justify-center shadow-sm">
-            <Button openType="share" className="w-full h-full flex items-center justify-center bg-transparent">
-              <ShareIcon size={16} color="#111827" />
-            </Button>
-          </View>
-        </View>
-      </View>
-
       <ScrollView className="flex-1" scrollY style={{ paddingBottom: '60px' }}>
         {/* 产品图片 */}
-        <View className="bg-orange-50">
-          {imageExpanded ? (
-            <Image src={spu.image_urls?.[0] || ''} className="w-full" mode="widthFix" />
+        <View
+          className="bg-orange-50 flex items-center justify-center overflow-hidden"
+          style={{ height: imageExpanded ? '420px' : '240px' }}
+        >
+          {heroImage ? (
+            <Image
+              src={heroImage}
+              className="w-full h-full"
+              mode={imageExpanded ? 'aspectFit' : 'aspectFill'}
+              lazyLoad
+            />
           ) : (
-            <Image src={spu.image_urls?.[0] || ''} className="w-full" mode="aspectFill" style={{ height: '50vh' }} />
+            <View className="w-full h-full flex items-center justify-center">
+              <Text className="text-sm text-orange-300">暂无商品图片</Text>
+            </View>
           )}
         </View>
         {/* 展开/折叠图片按钮 */}
@@ -304,19 +286,36 @@ function SpuDetailContent() {
 
         {/* SPU 基本信息 */}
         <View className="mx-4 mt-3 px-4 pt-4 pb-4 bg-white rounded-3xl border border-orange-100 mini-card mini-fade-up">
-          {/* 品牌标签 */}
-          <View className="flex items-center gap-2 mb-2">
-            <Text className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
-              {spu.brand}
-            </Text>
-            <Text className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full font-medium">
-              {getPetTypeLabel(spu.pet_type)}
-            </Text>
-            {spu.model && (
-              <Text className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                型号: {spu.model}
+          <View className="flex items-start justify-between gap-3 mb-2">
+            {/* 品牌标签 */}
+            <View className="flex-1 flex flex-wrap items-center gap-2">
+              <Text className="px-2 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
+                {spu.brand}
               </Text>
-            )}
+              <Text className="px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full font-medium">
+                {getPetTypeLabel(spu.pet_type)}
+              </Text>
+              {spu.model && (
+                <Text className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                  型号: {spu.model}
+                </Text>
+              )}
+            </View>
+            <View className="flex items-center gap-2 shrink-0">
+              <View
+                className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center mini-press"
+                onClick={toggleFavorite}
+              >
+                {isFavorited ? (
+                  <FavoriteFilledIcon size={18} color="#f87171" />
+                ) : (
+                  <FavoriteIcon size={18} color="#f97316" />
+                )}
+              </View>
+              <Button openType="share" className="mini-share-button w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center">
+                <ShareIcon size={16} color="#6b7280" />
+              </Button>
+            </View>
           </View>
 
           <View className="flex items-start justify-between gap-2">

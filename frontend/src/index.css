@@ -131,6 +131,17 @@
   transform: scale(0.98);
 }
 
+.mini-share-button {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  border: 0;
+}
+
+.mini-share-button::after {
+  border: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mini-fade-up,
   .mini-scale-in,
