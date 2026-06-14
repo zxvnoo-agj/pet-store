@@ -75,9 +75,14 @@ venv/bin/python scripts/import_products.py /path/to/products.json
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/008-xhs-review-enhancement/plan.md
+specs/009-in-app-reviews/plan.md
 
 Also refer to:
+- Feature 009 specification: specs/009-in-app-reviews/spec.md
+- Feature 009 data model: specs/009-in-app-reviews/data-model.md
+- Feature 009 API contracts: specs/009-in-app-reviews/contracts/api-contracts.md
+- Feature 009 quickstart: specs/009-in-app-reviews/quickstart.md
+- Feature 009 research notes: specs/009-in-app-reviews/research.md
 - Feature specification: specs/008-xhs-review-enhancement/spec.md
 - Feature 008 data model: specs/008-xhs-review-enhancement/data-model.md
 - Feature 008 API contracts: specs/008-xhs-review-enhancement/contracts/api-contracts.md
