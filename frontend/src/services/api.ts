@@ -116,9 +116,14 @@ export async function searchSpusByKeywords(
   return apiClient.get('/spus/search', params)
 }
 
-export interface XHSNote {
+export type ReviewSource = 'user' | 'xhs_manual' | 'xhs_auto' | 'admin_seed'
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface ReviewItem {
   id: number
+  spu_id: number
   external_note_id?: string
+  rating: number
   content: string
   author?: string
   note_likes?: number
@@ -126,8 +131,16 @@ export interface XHSNote {
   source_url?: string
   tags: string[]
   is_recommended?: boolean
-  comments: string[]
+  source: ReviewSource
+  source_label: string
+  status: ReviewStatus
+  status_label: string
+  reject_reason?: string
+  created_at: string
+  comments?: string[]
 }
+
+export type XHSNote = ReviewItem
 
 export interface AiReviewSummary {
   overall_pros: string[]
@@ -141,7 +154,9 @@ export interface AiReviewSummary {
 
 export interface SpuReviewsResponse {
   ai_summary: AiReviewSummary | null
-  notes: XHSNote[]
+  reviews: ReviewItem[]
+  notes?: ReviewItem[]
+  my_review?: ReviewItem | null
   pagination: {
     page: number
     page_size: number
@@ -152,6 +167,24 @@ export interface SpuReviewsResponse {
 
 export async function getSpuReviews(spuId: number, page: number = 1): Promise<SpuReviewsResponse> {
   return apiClient.get(`/spus/${spuId}/reviews`, { page, page_size: 20 })
+}
+
+export interface SubmitReviewRequest {
+  rating: number
+  content: string
+  is_recommended?: boolean
+}
+
+export interface SubmitReviewResponse {
+  review: ReviewItem
+  message: string
+}
+
+export async function submitReview(
+  spuId: number,
+  data: SubmitReviewRequest
+): Promise<SubmitReviewResponse> {
+  return apiClient.post(`/spus/${spuId}/reviews`, data)
 }
 
 export default apiClient

@@ -20,10 +20,13 @@ class Review(Base):
     images = Column(JSONB, default=list)
     tags = Column(JSONB, default=list)
     is_recommended = Column(Boolean, nullable=True)
+    # user | xhs_manual | xhs_auto | admin_seed
     source = Column(String(32), default="user")
     source_url = Column(String(256), nullable=True)
     helpful_count = Column(Integer, default=0)
+    # pending | approved | rejected
     status = Column(String(16), default="pending", index=True)
+    reject_reason = Column(Text, nullable=True)
     llm_review_result = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, Image, ScrollView, Button } from '@tarojs/components'
-import Taro, { useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
-import { apiClient, getSpuReviews, AiReviewSummary, XHSNote } from '../../services/api'
+import Taro, { useDidShow, useRouter, useShareAppMessage, useShareTimeline } from '@tarojs/taro'
+import { apiClient, getSpuReviews, AiReviewSummary, ReviewItem } from '../../services/api'
 import { useCompareStore } from '../../stores/compareStore'
 import { useAuthStore } from '../../stores/authStore'
 import { checkLoginStatus } from '../../services/auth'
@@ -66,7 +66,10 @@ function SpuDetailContent() {
   const { id } = router.params
   const [spu, setSpu] = useState<any>(null)
   const [listings, setListings] = useState<any[]>([])
-  const [reviews, setReviews] = useState<any[]>([])
+  const [reviews, setReviews] = useState<ReviewItem[]>([])
+  const [myReview, setMyReview] = useState<ReviewItem | null>(null)
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviewError, setReviewError] = useState('')
   const [aiSummary, setAiSummary] = useState<AiReviewSummary | null>(null)
   const [reviewPage, setReviewPage] = useState(1)
   const [reviewTotal, setReviewTotal] = useState(0)
@@ -92,6 +95,12 @@ function SpuDetailContent() {
       fetchListings()
     }
   }, [id])
+
+  useDidShow(() => {
+    if (id) {
+      fetchReviews(1)
+    }
+  })
 
   const fetchFavoriteStatus = async () => {
     if (!isLoggedIn || !id) return
@@ -143,19 +152,26 @@ function SpuDetailContent() {
   }
 
   const fetchReviews = async (page: number = 1) => {
+    setReviewLoading(true)
+    setReviewError('')
     try {
       const res = await getSpuReviews(Number(id), page)
+      const items = res.reviews || res.notes || []
       if (page === 1) {
-        setReviews(res.notes || [])
+        setReviews(items)
       } else {
-        setReviews(prev => [...prev, ...(res.notes || [])])
+        setReviews(prev => [...prev, ...items])
       }
+      setMyReview(res.my_review || null)
       setAiSummary(res.ai_summary || null)
       setReviewPage(res.pagination.page)
       setReviewTotal(res.pagination.total)
       setReviewTotalPages(res.pagination.total_pages)
     } catch (error) {
       console.error('Failed to fetch reviews:', error)
+      setReviewError('评价加载失败，请稍后再试')
+    } finally {
+      setReviewLoading(false)
     }
   }
 
@@ -174,6 +190,17 @@ function SpuDetailContent() {
   const loadMoreReviews = () => {
     const nextPage = reviewPage + 1
     fetchReviews(nextPage)
+  }
+
+  const navigateToWriteReview = () => {
+    if (!isLoggedIn) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    if (!id) return
+    Taro.navigateTo({
+      url: `/pages/product/review-create?spuId=${id}&name=${encodeURIComponent(spu?.name || '')}`,
+    })
   }
 
   const navigateToChat = () => {
@@ -581,7 +608,7 @@ function SpuDetailContent() {
           </View>
         )}
 
-        {/* 评价内容 - 小红书笔记 */}
+        {/* 评价内容 */}
         {activeTab === 'reviews' && (
           <View className="px-4 py-4 space-y-4">
             {/* AI 总结卡片 */}
@@ -591,7 +618,7 @@ function SpuDetailContent() {
                   <View className="w-2 h-2 rounded-full bg-purple-400" />
                   <Text className="text-sm font-bold text-purple-700">AI 综合总结</Text>
                   <Text className="text-[10px] text-gray-400 ml-auto">
-                    基于 {aiSummary.review_count} 条笔记
+                    基于 {aiSummary.review_count} 条真实评价
                   </Text>
                 </View>
 
@@ -638,18 +665,60 @@ function SpuDetailContent() {
                   <View className="w-2 h-2 rounded-full bg-purple-300" />
                   <Text className="text-sm font-bold text-purple-400">AI 综合总结</Text>
                 </View>
-                <Text className="text-xs text-gray-400">暂无 AI 总结，评论采集后将自动生成</Text>
+                <Text className="text-xs text-gray-400">暂无 AI 总结，评价积累后将生成</Text>
               </View>
             )}
 
-            {/* 笔记列表 */}
-            {reviews.length === 0 ? (
+            <View className="bg-white rounded-2xl border border-orange-100 p-4 flex items-center justify-between">
+              <View>
+                <Text className="block text-sm font-bold text-gray-900">真实评价</Text>
+                <Text className="block text-xs text-gray-400 mt-1">
+                  {reviewTotal > 0 ? `已有 ${reviewTotal} 条公开评价` : '分享第一条使用体验'}
+                </Text>
+              </View>
+              <View
+                className="px-4 py-2 bg-orange-500 rounded-full mini-press"
+                onClick={navigateToWriteReview}
+              >
+                <Text className="text-xs text-white font-bold">写评价</Text>
+              </View>
+            </View>
+
+            {myReview && (
+              <View className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
+                <View className="flex items-center justify-between mb-2">
+                  <Text className="text-sm font-bold text-orange-700">我的评价</Text>
+                  <Text className="text-[10px] px-2 py-0.5 bg-white text-orange-600 rounded-full">
+                    {myReview.status_label}
+                  </Text>
+                </View>
+                <Text className="text-xs text-gray-700 leading-relaxed">{myReview.content}</Text>
+                {myReview.reject_reason && (
+                  <Text className="block mt-2 text-[10px] text-red-500">原因：{myReview.reject_reason}</Text>
+                )}
+              </View>
+            )}
+
+            {reviewError && (
+              <View className="bg-red-50 rounded-2xl border border-red-100 p-4">
+                <Text className="text-xs text-red-500">{reviewError}</Text>
+              </View>
+            )}
+
+            {/* 评价列表 */}
+            {reviewLoading && reviews.length === 0 ? (
               <View className="flex flex-col items-center justify-center py-10">
-                <Text className="text-gray-400 text-sm">暂无小红书笔记</Text>
-                <Text className="text-xs text-gray-300 mt-1">管理员采集后将在此展示</Text>
+                <Text className="text-gray-400 text-sm">评价加载中...</Text>
+              </View>
+            ) : reviews.length === 0 ? (
+              <View className="flex flex-col items-center justify-center py-10 bg-white rounded-2xl border border-gray-100">
+                <Text className="text-gray-500 text-sm">暂无评价，来写第一条评价吧</Text>
+                <View className="mt-3 px-4 py-2 bg-orange-50 rounded-full" onClick={navigateToWriteReview}>
+                  <Text className="text-xs text-orange-600 font-medium">去写评价</Text>
+                </View>
               </View>
             ) : (
-              reviews.map((note: XHSNote) => {
+              reviews.map((note: ReviewItem) => {
                 const isExpanded = expandedNoteIds.has(note.id)
                 const truncated = note.content.length > 200
                 return (
@@ -660,13 +729,15 @@ function SpuDetailContent() {
                         <Text className="text-xs font-bold text-purple-600">{note.author?.[0] || '?'}</Text>
                       </View>
                       <View className="flex-1">
-                        <Text className="text-xs font-medium text-gray-700">{note.author || '匿名'}</Text>
+                        <Text className="text-xs font-medium text-gray-700">{note.author || '匿名用户'}</Text>
                         <Text className="text-[10px] text-gray-400">
-                          {note.note_published_at ? new Date(note.note_published_at).toLocaleDateString('zh-CN') : ''}
+                          {new Date(note.created_at || note.note_published_at || '').toLocaleDateString('zh-CN')}
                         </Text>
                       </View>
                       <View className="flex items-center gap-1">
-                        <Text className="text-xs text-gray-400">赞 {note.note_likes || 0}</Text>
+                        <Text className="text-[10px] px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full">
+                          {note.source_label}
+                        </Text>
                       </View>
                     </View>
 
@@ -712,14 +783,14 @@ function SpuDetailContent() {
                     )}
 
                     {/* 评论折叠区域 */}
-                    {note.comments.length > 0 && (
+                    {(note.comments || []).length > 0 && (
                       <View
                         className="bg-gray-50 rounded-xl p-3 mt-1"
                         onClick={() => toggleNoteComments(note.id + 100000)}
                       >
                         <View className="flex items-center justify-between mb-1">
                           <Text className="text-[10px] font-medium text-gray-500">
-                            评论 ({note.comments.length})
+                            评论 ({(note.comments || []).length})
                           </Text>
                           <Text className="text-[10px] text-gray-400">
                             {expandedNoteIds.has(note.id + 100000) ? '收起 ▲' : '展开 ▼'}
@@ -727,7 +798,7 @@ function SpuDetailContent() {
                         </View>
                         {expandedNoteIds.has(note.id + 100000) && (
                           <View className="space-y-2">
-                            {note.comments.slice(0, 10).map((comment, i) => (
+                            {(note.comments || []).slice(0, 10).map((comment, i) => (
                               <Text key={i} className="text-[10px] text-gray-600 leading-relaxed block">
                                 {comment}
                               </Text>
@@ -747,7 +818,12 @@ function SpuDetailContent() {
                 className="w-full py-2.5 text-xs text-orange-500 font-medium border border-orange-200 rounded-xl text-center"
                 onClick={loadMoreReviews}
               >
-                <Text>加载更多笔记</Text>
+                <Text>{reviewLoading ? '加载中...' : '加载更多评价'}</Text>
+              </View>
+            )}
+            {reviews.length > 0 && reviewPage >= reviewTotalPages && (
+              <View className="py-2 text-center">
+                <Text className="text-[10px] text-gray-300">没有更多评价了</Text>
               </View>
             )}
           </View>

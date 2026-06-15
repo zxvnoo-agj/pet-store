@@ -57,7 +57,8 @@ export const adminCategoryApi = {
 export const adminReviewApi = {
   list: (params?: any) => apiClient.get('/admin/reviews', { params }),
   approve: (id: number) => apiClient.post(`/admin/reviews/${id}/approve`),
-  reject: (id: number) => apiClient.post(`/admin/reviews/${id}/reject`),
+  reject: (id: number, reason: string) => apiClient.post(`/admin/reviews/${id}/reject`, { reason }),
+  create: (data: AdminReviewCreateRequest) => apiClient.post('/admin/reviews', data),
   delete: (id: number) => apiClient.delete(`/admin/reviews/${id}`),
 }
 
@@ -73,6 +74,8 @@ export const adminCollectApi = {
   getJob: (id: number) => apiClient.get(`/admin/collect/jobs/${id}`),
   retryJob: (id: number) => apiClient.post(`/admin/collect/jobs/${id}/retry`),
   triggerXHSForSpu: (spuId: number) => apiClient.post(`/admin/spus/${spuId}/xhs-collect`),
+  regenerateReviewSummary: (spuId: number) =>
+    apiClient.post(`/admin/spus/${spuId}/reviews/summary/regenerate`),
   listSources: () => apiClient.get('/admin/collect/sources'),
   updateSource: (id: number, data: any) => apiClient.patch(`/admin/collect/sources/${id}`, data),
   schedulerStatus: () => apiClient.get('/admin/collect/scheduler/status'),
@@ -102,4 +105,18 @@ export interface SeedProductParams {
   product_name: string
   pdd_url: string
   pet_type: 'cat' | 'dog'
+}
+
+export type ReviewSource = 'user' | 'xhs_manual' | 'xhs_auto' | 'admin_seed'
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface AdminReviewCreateRequest {
+  spu_id: number
+  rating: number
+  content: string
+  is_recommended?: boolean
+  source: Extract<ReviewSource, 'admin_seed' | 'xhs_manual'>
+  source_url?: string
+  external_note_id?: string
+  author?: string
 }

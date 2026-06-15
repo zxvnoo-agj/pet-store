@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, get_optional_current_user
 from app.models.user import User
 from app.schemas.common import ApiResponse, Pagination
+from app.schemas.review import UserReviewCreate
 from app.schemas.spu import (
     PromotionUrlRequest,
     SpuFilter,
@@ -138,7 +139,7 @@ async def search_spus(
 @router.get("/spus/{spu_id}", response_model=ApiResponse[dict])
 async def get_spu_detail(
     spu_id: int,
-    current_user: User | None = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = SpuService(db)
@@ -183,11 +184,17 @@ async def get_spu_reviews(
     spu_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     from app.services.review_service import ReviewService
     service = ReviewService(db)
-    notes, total, ai_summary = await service.get_spu_xhs_notes(spu_id, page=page, page_size=page_size)
+    reviews, total, ai_summary, my_review = await service.list_spu_reviews(
+        spu_id,
+        page=page,
+        page_size=page_size,
+        current_user_id=current_user.id if current_user else None,
+    )
 
     total_pages = (total + page_size - 1) // page_size
     pagination = Pagination(
@@ -200,9 +207,29 @@ async def get_spu_reviews(
     return ApiResponse(
         data={
             "ai_summary": ai_summary,
-            "notes": notes,
+            "reviews": reviews,
+            "notes": reviews,
+            "my_review": my_review,
             "pagination": pagination,
         },
+    )
+
+
+@router.post("/spus/{spu_id}/reviews", response_model=ApiResponse[dict])
+async def submit_spu_review(
+    spu_id: int,
+    review_data: UserReviewCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.review_service import ReviewService
+    service = ReviewService(db)
+    review = await service.create_user_review(spu_id, current_user.id, review_data)
+    return ApiResponse(
+        data={
+            "review": review,
+            "message": "评价已提交，审核通过后将公开展示。",
+        }
     )
 
 

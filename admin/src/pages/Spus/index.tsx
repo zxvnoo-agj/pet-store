@@ -33,6 +33,7 @@ export default function Spus() {
   const [filterStatus, setFilterStatus] = useState(filters.status || '')
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
   const [collectingSpuIds, setCollectingSpuIds] = useState<Set<number>>(new Set())
+  const [summaryingSpuIds, setSummaryingSpuIds] = useState<Set<number>>(new Set())
   const [showBatchDialog, setShowBatchDialog] = useState(false)
 
   useEffect(() => {
@@ -154,6 +155,25 @@ export default function Spus() {
       addToast(msg, 'error')
     } finally {
       setCollectingSpuIds(prev => {
+        const next = new Set(prev)
+        next.delete(spuId)
+        return next
+      })
+    }
+  }
+
+  const handleRegenerateSummary = async (e: React.MouseEvent, spuId: number) => {
+    e.stopPropagation()
+    if (summaryingSpuIds.has(spuId)) return
+    setSummaryingSpuIds(prev => new Set(prev).add(spuId))
+    try {
+      await adminCollectApi.regenerateReviewSummary(spuId)
+      addToast('评价总结已重新生成', 'success')
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || '总结生成失败'
+      addToast(msg, 'error')
+    } finally {
+      setSummaryingSpuIds(prev => {
         const next = new Set(prev)
         next.delete(spuId)
         return next
@@ -441,6 +461,14 @@ export default function Spus() {
                                 title="评论采集"
                               >
                                 <RefreshCw className={`w-4 h-4 ${collectingSpuIds.has(spu.id) ? 'animate-spin' : ''}`} />
+                              </button>
+                              <button
+                                onClick={(e) => handleRegenerateSummary(e, spu.id)}
+                                disabled={summaryingSpuIds.has(spu.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-emerald-500 hover:bg-emerald-50 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="重生成评价总结"
+                              >
+                                <RefreshCw className={`w-4 h-4 ${summaryingSpuIds.has(spu.id) ? 'animate-spin' : ''}`} />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditSpu(spu); setShowForm(true) }}

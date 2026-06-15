@@ -10,10 +10,10 @@
 
 **Purpose**: Prepare shared review-source constants, sensitive-word assets, and test skeletons.
 
-- [ ] T001 Create review source/status constants and labels in backend/app/schemas/review.py
-- [ ] T002 [P] Create local sensitive-word seed list in backend/data/sensitive_words.txt
-- [ ] T003 [P] Add frontend review source/status TypeScript types in frontend/src/services/api.ts
-- [ ] T004 [P] Add admin review source/status TypeScript types in admin/src/services/api.ts
+- [X] T001 Create review source/status constants and labels in backend/app/schemas/review.py
+- [X] T002 [P] Create local sensitive-word seed list in backend/data/sensitive_words.txt
+- [X] T003 [P] Add frontend review source/status TypeScript types in frontend/src/services/api.ts
+- [X] T004 [P] Add admin review source/status TypeScript types in admin/src/services/api.ts
 
 ---
 
@@ -21,13 +21,13 @@
 
 **Purpose**: Database and service foundations that block all user stories.
 
-- [ ] T005 Create Alembic migration for review source/status checks, reject_reason column, user-SPU uniqueness index, and crawled-to-xhs_auto migration in backend/alembic/versions/
-- [ ] T006 Update Review model with reject_reason and formal source/status comments in backend/app/models/review.py
-- [ ] T007 [P] Implement local sensitive-word matcher in backend/app/services/sensitive_words.py
-- [ ] T008 [P] Add unit tests for sensitive-word matching in backend/tests/unit/test_sensitive_words.py
-- [ ] T009 Add shared review serialization helpers for source labels and public/admin payloads in backend/app/schemas/review.py
-- [ ] T010 Fix SPU-based relationship usage in admin reviews code by replacing stale product/product_id references in backend/app/api/v1/admin_reviews.py
-- [ ] T011 Update XHS auto collection to save source=xhs_auto instead of source=crawled in backend/app/api/v1/admin_collect.py
+- [X] T005 Create Alembic migration for review source/status checks, reject_reason column, user-SPU uniqueness index, and crawled-to-xhs_auto migration in backend/alembic/versions/
+- [X] T006 Update Review model with reject_reason and formal source/status comments in backend/app/models/review.py
+- [X] T007 [P] Implement local sensitive-word matcher in backend/app/services/sensitive_words.py
+- [X] T008 [P] Add unit tests for sensitive-word matching in backend/tests/unit/test_sensitive_words.py
+- [X] T009 Add shared review serialization helpers for source labels and public/admin payloads in backend/app/schemas/review.py
+- [X] T010 Fix SPU-based relationship usage in admin reviews code by replacing stale product/product_id references in backend/app/api/v1/admin_reviews.py
+- [X] T011 Update XHS auto collection to save source=xhs_auto instead of source=crawled in backend/app/api/v1/admin_collect.py
 - [ ] T012 Add structured logging points for review submission, moderation, and summary regeneration in backend/app/services/review_service.py
 
 **Checkpoint**: Review source model, constraints, and shared validation are ready for user stories.
@@ -44,19 +44,19 @@
 
 - [ ] T013 [P] [US1] Add contract tests for POST /v1/spus/{spu_id}/reviews validation, duplicate, auth, and sensitive-word cases in backend/tests/contract/test_review_api_contract.py
 - [ ] T014 [P] [US1] Add integration test for submit-review pending self-visible flow in backend/tests/integration/test_in_app_reviews.py
-- [ ] T015 [P] [US1] Add unit tests for duplicate prevention and pending creation in backend/tests/unit/test_review_service.py
+- [X] T015 [P] [US1] Add unit tests for duplicate prevention and pending creation in backend/tests/unit/test_review_service.py
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Add ReviewCreate request schema with rating/content/is_recommended validation in backend/app/schemas/review.py
-- [ ] T017 [US1] Implement create_user_review with auth user, duplicate check, 500-char limit, and sensitive-word validation in backend/app/services/review_service.py
-- [ ] T018 [US1] Add POST /v1/spus/{spu_id}/reviews endpoint with login requirement in backend/app/api/v1/spus.py
-- [ ] T019 [US1] Extend GET /v1/spus/{spu_id}/reviews to include authenticated current user's pending/rejected review as my_review in backend/app/api/v1/spus.py
-- [ ] T020 [US1] Add submitReview and updated SpuReviewsResponse contracts in frontend/src/services/api.ts
-- [ ] T021 [US1] Add write-review entry and login guard to product review section in frontend/src/pages/product/detail.tsx
-- [ ] T022 [US1] Implement text-only review form page or modal in frontend/src/pages/product/review-create.tsx
-- [ ] T023 [US1] Render current user's "等待审核" placeholder card in frontend/src/pages/product/detail.tsx
-- [ ] T024 [US1] Add front-end validation for required rating/content and 500-character limit in frontend/src/pages/product/review-create.tsx
+- [X] T016 [US1] Add ReviewCreate request schema with rating/content/is_recommended validation in backend/app/schemas/review.py
+- [X] T017 [US1] Implement create_user_review with auth user, duplicate check, 500-char limit, and sensitive-word validation in backend/app/services/review_service.py
+- [X] T018 [US1] Add POST /v1/spus/{spu_id}/reviews endpoint with login requirement in backend/app/api/v1/spus.py
+- [X] T019 [US1] Extend GET /v1/spus/{spu_id}/reviews to include authenticated current user's pending/rejected review as my_review in backend/app/api/v1/spus.py
+- [X] T020 [US1] Add submitReview and updated SpuReviewsResponse contracts in frontend/src/services/api.ts
+- [X] T021 [US1] Add write-review entry and login guard to product review section in frontend/src/pages/product/detail.tsx
+- [X] T022 [US1] Implement text-only review form page or modal in frontend/src/pages/product/review-create.tsx
+- [X] T023 [US1] Render current user's "等待审核" placeholder card in frontend/src/pages/product/detail.tsx
+- [X] T024 [US1] Add front-end validation for required rating/content and 500-character limit in frontend/src/pages/product/review-create.tsx
 
 **Checkpoint**: User review submission MVP is independently functional.
 
@@ -75,13 +75,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Update review serializers to return source and source_label for all mini-program/admin review payloads in backend/app/schemas/review.py
-- [ ] T028 [US2] Replace get_spu_xhs_notes with unified approved-source review query in backend/app/services/review_service.py
-- [ ] T029 [US2] Update GET /v1/spus/{spu_id}/reviews response key from notes to reviews while preserving compatibility if needed in backend/app/api/v1/spus.py
-- [ ] T030 [US2] Update mini-program review interfaces from XHSNote to unified ReviewItem in frontend/src/services/api.ts
-- [ ] T031 [US2] Update mini-program review cards to show 用户评价/小红书/运营整理 labels in frontend/src/pages/product/detail.tsx
-- [ ] T032 [US2] Add source filter parameter support to adminReviewApi.list in admin/src/services/api.ts
-- [ ] T033 [US2] Add source filter UI and source labels to admin review list in admin/src/pages/Reviews/index.tsx
+- [X] T027 [US2] Update review serializers to return source and source_label for all mini-program/admin review payloads in backend/app/schemas/review.py
+- [X] T028 [US2] Replace get_spu_xhs_notes with unified approved-source review query in backend/app/services/review_service.py
+- [X] T029 [US2] Update GET /v1/spus/{spu_id}/reviews response key from notes to reviews while preserving compatibility if needed in backend/app/api/v1/spus.py
+- [X] T030 [US2] Update mini-program review interfaces from XHSNote to unified ReviewItem in frontend/src/services/api.ts
+- [X] T031 [US2] Update mini-program review cards to show 用户评价/小红书/运营整理 labels in frontend/src/pages/product/detail.tsx
+- [X] T032 [US2] Add source filter parameter support to adminReviewApi.list in admin/src/services/api.ts
+- [X] T033 [US2] Add source filter UI and source labels to admin review list in admin/src/pages/Reviews/index.tsx
 
 **Checkpoint**: Source split and source labels work independently across backend, mini-program, and admin.
 
@@ -100,12 +100,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Ensure ReviewService list query orders approved reviews by created_at desc with page_size <= 100 in backend/app/services/review_service.py
+- [X] T036 [US3] Ensure ReviewService list query orders approved reviews by created_at desc with page_size <= 100 in backend/app/services/review_service.py
 - [ ] T037 [US3] Include review summary counts and rating metadata for all approved sources in backend/app/services/review_service.py
-- [ ] T038 [US3] Update frontend pagination state to append reviews from unified response in frontend/src/pages/product/detail.tsx
-- [ ] T039 [US3] Add empty state with "暂无评价，来写第一条评价吧" and write-review action in frontend/src/pages/product/detail.tsx
-- [ ] T040 [US3] Update AI summary display copy so it no longer implies XHS-only data in frontend/src/pages/product/detail.tsx
-- [ ] T041 [US3] Add mini-program loading, no-more, and error states for review pagination in frontend/src/pages/product/detail.tsx
+- [X] T038 [US3] Update frontend pagination state to append reviews from unified response in frontend/src/pages/product/detail.tsx
+- [X] T039 [US3] Add empty state with "暂无评价，来写第一条评价吧" and write-review action in frontend/src/pages/product/detail.tsx
+- [X] T040 [US3] Update AI summary display copy so it no longer implies XHS-only data in frontend/src/pages/product/detail.tsx
+- [X] T041 [US3] Add mini-program loading, no-more, and error states for review pagination in frontend/src/pages/product/detail.tsx
 
 **Checkpoint**: Unified real review browsing is independently usable.
 
@@ -124,15 +124,15 @@
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Add AdminReviewCreate and AdminReviewReject schemas in backend/app/schemas/review.py
-- [ ] T045 [US4] Extend GET /v1/admin/reviews with spu_id, source, and status filters using Review.spu_id in backend/app/api/v1/admin_reviews.py
-- [ ] T046 [US4] Update approve endpoint to clear reject_reason and return admin review payload in backend/app/api/v1/admin_reviews.py
-- [ ] T047 [US4] Update reject endpoint to require and persist reason in backend/app/api/v1/admin_reviews.py
-- [ ] T048 [US4] Add POST /v1/admin/reviews for admin_seed and xhs_manual review creation in backend/app/api/v1/admin_reviews.py
-- [ ] T049 [US4] Add admin API methods for create review and reject-with-reason in admin/src/services/api.ts
-- [ ] T050 [US4] Add reject reason dialog to admin review page in admin/src/pages/Reviews/index.tsx
+- [X] T044 [US4] Add AdminReviewCreate and AdminReviewReject schemas in backend/app/schemas/review.py
+- [X] T045 [US4] Extend GET /v1/admin/reviews with spu_id, source, and status filters using Review.spu_id in backend/app/api/v1/admin_reviews.py
+- [X] T046 [US4] Update approve endpoint to clear reject_reason and return admin review payload in backend/app/api/v1/admin_reviews.py
+- [X] T047 [US4] Update reject endpoint to require and persist reason in backend/app/api/v1/admin_reviews.py
+- [X] T048 [US4] Add POST /v1/admin/reviews for admin_seed and xhs_manual review creation in backend/app/api/v1/admin_reviews.py
+- [X] T049 [US4] Add admin API methods for create review and reject-with-reason in admin/src/services/api.ts
+- [X] T050 [US4] Add reject reason dialog to admin review page in admin/src/pages/Reviews/index.tsx
 - [ ] T051 [US4] Add admin seed/manual review creation dialog with SPU selection in admin/src/pages/Reviews/index.tsx
-- [ ] T052 [US4] Display reject reason and SPU name in admin review rows in admin/src/pages/Reviews/index.tsx
+- [X] T052 [US4] Display reject reason and SPU name in admin review rows in admin/src/pages/Reviews/index.tsx
 
 **Checkpoint**: Admin moderation and seeded review creation work independently.
 
@@ -151,11 +151,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T055 [US5] Update generate_spu_summary to aggregate all approved sources and include source labels in prompt context in backend/app/services/llm_analyzer.py
-- [ ] T056 [US5] Add admin summary regeneration endpoint POST /v1/admin/spus/{spu_id}/reviews/summary/regenerate in backend/app/api/v1/admin_collect.py
-- [ ] T057 [US5] Add admin API method for summary regeneration in admin/src/services/api.ts
-- [ ] T058 [US5] Add regenerate summary action to SPU or review admin UI in admin/src/pages/Spus/index.tsx
-- [ ] T059 [US5] Ensure mini-program AI summary reads regenerated multi-source summary without XHS-only assumptions in frontend/src/pages/product/detail.tsx
+- [X] T055 [US5] Update generate_spu_summary to aggregate all approved sources and include source labels in prompt context in backend/app/services/llm_analyzer.py
+- [X] T056 [US5] Add admin summary regeneration endpoint POST /v1/admin/spus/{spu_id}/reviews/summary/regenerate in backend/app/api/v1/admin_collect.py
+- [X] T057 [US5] Add admin API method for summary regeneration in admin/src/services/api.ts
+- [X] T058 [US5] Add regenerate summary action to SPU or review admin UI in admin/src/pages/Spus/index.tsx
+- [X] T059 [US5] Ensure mini-program AI summary reads regenerated multi-source summary without XHS-only assumptions in frontend/src/pages/product/detail.tsx
 
 **Checkpoint**: AI summary works with all approved review sources.
 
@@ -169,11 +169,11 @@
 - [ ] T061 [P] Update AGENTS.md notes if implementation changes quickstart commands or review workflows
 - [ ] T062 Add database index/query performance checks for review list and admin filters in backend/tests/integration/test_in_app_reviews.py
 - [ ] T063 Run backend focused tests from specs/009-in-app-reviews/quickstart.md
-- [ ] T064 Run frontend npm run build:weapp in frontend/
-- [ ] T065 Run admin npm run build in admin/
+- [X] T064 Run frontend npm run build:weapp in frontend/
+- [X] T065 Run admin npm run build in admin/
 - [ ] T066 Manually validate WeChat DevTools review submission, pending self card, and approved public display using specs/009-in-app-reviews/quickstart.md
-- [ ] T067 Review code for stale product_id/product relationship references in backend/app/api/v1/admin_reviews.py and backend/app/services/review_service.py
-- [ ] T068 Final cleanup of source labels, empty states, and admin copy across frontend/src/pages/product/detail.tsx and admin/src/pages/Reviews/index.tsx
+- [X] T067 Review code for stale product_id/product relationship references in backend/app/api/v1/admin_reviews.py and backend/app/services/review_service.py
+- [X] T068 Final cleanup of source labels, empty states, and admin copy across frontend/src/pages/product/detail.tsx and admin/src/pages/Reviews/index.tsx
 
 ---
 

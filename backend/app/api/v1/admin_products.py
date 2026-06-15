@@ -195,7 +195,7 @@ async def admin_delete_product(
         await db.delete(ext)
     for ph in (await db.execute(select(PriceHistory).where(PriceHistory.product_id == product_id))).scalars().all():
         await db.delete(ph)
-    for r in (await db.execute(select(Review).where(Review.product_id == product_id))).scalars().all():
+    for r in (await db.execute(select(Review).where(Review.spu_id == product_id))).scalars().all():
         await db.delete(r)
     await db.delete(product)
     await db.commit()
@@ -231,7 +231,7 @@ async def admin_batch_delete_products(
             await db.delete(ext)
         for ph in (await db.execute(select(PriceHistory).where(PriceHistory.product_id == product.id))).scalars().all():
             await db.delete(ph)
-        for r in (await db.execute(select(Review).where(Review.product_id == product.id))).scalars().all():
+        for r in (await db.execute(select(Review).where(Review.spu_id == product.id))).scalars().all():
             await db.delete(r)
         await db.delete(product)
 

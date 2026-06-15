@@ -1,9 +1,11 @@
 export default defineAppConfig({
+  lazyCodeLoading: 'requiredComponents',
   pages: [
     'pages/index/index',
     'pages/category/index',
     'pages/product/list',
     'pages/product/detail',
+    'pages/product/review-create',
     'pages/chat/index',
     'pages/chat/list',
     'pages/product/compare',

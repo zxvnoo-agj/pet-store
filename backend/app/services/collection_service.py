@@ -518,12 +518,12 @@ async def aggregate_product_tags(db: AsyncSession, product_id: int | None = None
     from app.models.review import Review
 
     query = select(Review).where(
-        Review.source == "crawled",
+        Review.source == "xhs_auto",
         Review.llm_review_result.isnot(None),
         Review.status == "approved",
     )
     if product_id:
-        query = query.where(Review.product_id == product_id)
+        query = query.where(Review.spu_id == product_id)
     result = await db.execute(query)
     reviews = result.scalars().all()
 
@@ -533,7 +533,7 @@ async def aggregate_product_tags(db: AsyncSession, product_id: int | None = None
     processed_products = set()
 
     for review in reviews:
-        processed_products.add(review.product_id)
+        processed_products.add(review.spu_id)
         llm_data = review.llm_review_result or {}
         confidence = llm_data.get("confidence", 0.5)
 

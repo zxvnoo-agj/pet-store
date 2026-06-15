@@ -6,9 +6,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     APP_ENV: str = "dev"
+    API_DOMAIN: str = "api.pawpalai.cn"
+    ADMIN_DOMAIN: str = "admin.pawpalai.cn"
+    STAGING_API_DOMAIN: str = "staging.api.pawpalai.cn"
+    CORS_ORIGINS: str = "http://localhost:10086,http://localhost:3001,http://localhost:3000"
     DATABASE_URL: str = "postgresql+asyncpg://petshop:petshop123@localhost:5432/petshop"
     REDIS_URL: str = "redis://localhost:6379/0"
     SECRET_KEY: str = "change-me-in-production"
+    METRICS_TOKEN: str = ""
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
     WECHAT_APP_ID: str = ""
     WECHAT_APP_SECRET: str = ""
@@ -32,6 +37,18 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     model_config = SettingsConfigDict(case_sensitive=True)
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        if self.APP_ENV == "prod":
+            production_origins = [
+                f"https://{self.API_DOMAIN}",
+                f"https://{self.ADMIN_DOMAIN}",
+                f"https://{self.STAGING_API_DOMAIN}",
+            ]
+            origins.extend(origin for origin in production_origins if origin not in origins)
+        return origins
 
 
 @lru_cache

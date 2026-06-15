@@ -1,5 +1,10 @@
 const { UnifiedWebpackPluginV5 } = require('weapp-tailwindcss/webpack')
 
+const isProd = process.env.NODE_ENV === 'production'
+const apiBaseUrl = process.env.TARO_API_BASE_URL || (
+  isProd ? 'https://api.pawpalai.cn/v1' : 'http://127.0.0.1:8001/v1'
+)
+
 const config = {
   projectName: 'pet-shop-mp',
   date: '2026-5-11',
@@ -12,7 +17,9 @@ const config = {
   sourceRoot: 'src',
   outputRoot: 'dist',
   plugins: [],
-  defineConstants: {},
+  defineConstants: {
+    __API_BASE_URL__: JSON.stringify(apiBaseUrl),
+  },
   alias: {
     '@': require('path').resolve(__dirname, '..', 'src')
   },

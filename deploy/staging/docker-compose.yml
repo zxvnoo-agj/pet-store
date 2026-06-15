@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petshop123}
       POSTGRES_DB: petshop_staging
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
     image: redis:7-alpine
     container_name: petstore-staging-redis
     ports:
-      - "6380:6379"
+      - "127.0.0.1:6380:6379"
     volumes:
       - staging_redis_data:/data
     restart: unless-stopped
@@ -41,7 +41,7 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-petshop-meili-key}
     ports:
-      - "7701:7700"
+      - "127.0.0.1:7701:7700"
     volumes:
       - staging_meilisearch_data:/meili_data
     restart: unless-stopped
@@ -54,21 +54,17 @@ services:
       dockerfile: backend/Dockerfile
     container_name: petstore-staging-backend
     environment:
+      APP_ENV: staging
+      API_DOMAIN: staging.api.pawpalai.cn
+      ADMIN_DOMAIN: admin.pawpalai.cn
+      STAGING_API_DOMAIN: staging.api.pawpalai.cn
       DATABASE_URL: postgresql+asyncpg://petshop:${POSTGRES_PASSWORD:-petshop123}@postgres:5432/petshop_staging
       REDIS_URL: redis://redis:6379/1
-      SECRET_KEY: ${SECRET_KEY}
-      WECHAT_APP_ID: ${WECHAT_APP_ID}
-      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET}
-      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
-      DASHSCOPE_MODEL: ${DASHSCOPE_MODEL:-deepseek-v4-flash}
       MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
-      APP_ENV: dev
-      DEBUG: ${DEBUG:-true}
     env_file:
-      - ../../backend/.env.dev
+      - ./.env.staging
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     depends_on:
       postgres:
         condition: service_healthy

@@ -31,7 +31,7 @@ ANALYSIS_PROMPT = """你是一个宠物用品评价分析专家。分析以下�
 
 只返回JSON，不要其他文字。"""
 
-SUMMARY_PROMPT = """你是宠物用品评价分析专家。以下是对同一商品的多条小红书笔记分析结果：
+SUMMARY_PROMPT = """你是宠物用品评价分析专家。以下是对同一商品的多来源真实评价分析结果：
 
 {notes_summary}
 
@@ -72,6 +72,7 @@ async def generate_spu_summary(spu_id: int, db: AsyncSession) -> dict[str, Any] 
     from datetime import UTC, datetime
 
     from app.models.review import Review
+    from app.schemas.review import get_review_source_label
 
     result = await db.execute(
         select(Review).where(
@@ -93,7 +94,7 @@ async def generate_spu_summary(spu_id: int, db: AsyncSession) -> dict[str, Any] 
         cons = ", ".join(analysis.get("cons", []) or [])
         rec = analysis.get("recommendation", "中性")
         summary = analysis.get("summary", "")
-        line = f"- 笔记: {r.content[:100]}..."
+        line = f"- 来源: {get_review_source_label(r.source)}\n  评价: {r.content[:100]}..."
         if pros:
             line += f"\n  优点: {pros}"
         if cons:

@@ -4,7 +4,7 @@ scrape_configs:
     metrics_path: /metrics
     scheme: https
     authorization:
-      credentials: "<your-secret-key>"
+      credentials: "<your-production-metrics-token>"
     static_configs:
       - targets: ["api.pawpalai.cn"]
         labels:
@@ -16,7 +16,7 @@ scrape_configs:
     metrics_path: /metrics
     scheme: https
     authorization:
-      credentials: "<your-staging-secret-key>"
+      credentials: "<your-staging-metrics-token>"
     static_configs:
       - targets: ["staging.api.pawpalai.cn"]
         labels:

@@ -1,6 +1,6 @@
 module.exports = {
   mini: {
-    urlCheck: false,
+    urlCheck: true,
   },
   h5: {
     publicPath: './',

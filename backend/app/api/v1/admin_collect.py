@@ -467,6 +467,28 @@ async def get_xhs_collect_status(
     )
 
 
+@router.post("/admin/spus/{spu_id}/reviews/summary/regenerate", response_model=ApiResponse[dict])
+async def regenerate_spu_review_summary(
+    spu_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    from app.models.spu import Spu
+
+    spu = await db.get(Spu, spu_id)
+    if not spu:
+        raise HTTPException(status_code=404, detail="SPU not found")
+
+    summary = await generate_spu_summary(spu_id, db)
+    if not summary:
+        raise HTTPException(status_code=400, detail="可用于总结的已审核评价不足")
+
+    spu.ai_review_summary = summary
+    await db.commit()
+    logger.info("review_summary_regenerated", spu_id=spu_id, admin_id=current_admin.id, review_count=summary.get("review_count"))
+    return ApiResponse(data={"summary": summary})
+
+
 # === 5. Data Sources ===
 
 @router.get("/admin/collect/sources", response_model=ApiResponse[dict])
@@ -620,7 +642,7 @@ async def _run_xhs_collection(spu, job_id: int):
                     images=note.get("images", []),
                     tags=tags,
                     is_recommended=is_recommended,
-                    source="crawled",
+                    source="xhs_auto",
                     source_url=f"https://www.xiaohongshu.com/explore/{ext_id}",
                     external_note_id=ext_id,
                     author=note.get("author", ""),

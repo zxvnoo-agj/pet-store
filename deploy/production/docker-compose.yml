@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petshop123}
       POSTGRES_DB: petshop
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
     image: redis:7-alpine
     container_name: petstore-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -41,7 +41,7 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-petshop-meili-key}
     ports:
-      - "7700:7700"
+      - "127.0.0.1:7700:7700"
     volumes:
       - meilisearch_data:/meili_data
     restart: unless-stopped
@@ -54,21 +54,17 @@ services:
       dockerfile: backend/Dockerfile
     container_name: petstore-backend
     environment:
+      APP_ENV: prod
+      API_DOMAIN: api.pawpalai.cn
+      ADMIN_DOMAIN: admin.pawpalai.cn
+      STAGING_API_DOMAIN: staging.api.pawpalai.cn
       DATABASE_URL: postgresql+asyncpg://petshop:${POSTGRES_PASSWORD:-petshop123}@postgres:5432/petshop
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: ${SECRET_KEY}
-      WECHAT_APP_ID: ${WECHAT_APP_ID}
-      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET}
-      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
-      DASHSCOPE_MODEL: ${DASHSCOPE_MODEL:-deepseek-v4-flash}
       MEILISEARCH_URL: http://meilisearch:7700
-      MEILISEARCH_API_KEY: ${MEILISEARCH_API_KEY}
-      APP_ENV: prod
-      DEBUG: ${DEBUG:-false}
     env_file:
-      - ../../backend/.env.prod
+      - ./.env.production
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,11 +76,44 @@ services:
     networks:
       - petstore_prod
 
+  admin:
+    build:
+      context: ../../admin
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /v1
+    container_name: petstore-admin
+    environment:
+      VITE_API_URL: /v1
+    expose:
+      - "80"
+    restart: unless-stopped
+    networks:
+      - petstore_prod
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: petstore-nginx
+    depends_on:
+      - backend
+      - admin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - nginx_logs:/var/log/nginx
+    restart: unless-stopped
+    networks:
+      - petstore_prod
+
 volumes:
   postgres_data:
   redis_data:
   meilisearch_data:
   backend_logs:
+  nginx_logs:
 
 networks:
   petstore_prod:

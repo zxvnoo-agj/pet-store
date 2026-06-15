@@ -2,6 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${1:-https://api.pawpalai.cn}"
+ENV_FILE="${ENV_FILE:-deploy/production/.env.production}"
 PASS_COUNT=0
 FAIL_COUNT=0
 
@@ -26,7 +27,25 @@ echo "=== Health Check: $BASE_URL ==="
 
 check_endpoint "$BASE_URL/health" 200 "Health endpoint"
 check_endpoint "$BASE_URL/v1/categories" 200 "Categories endpoint"
-check_endpoint "$BASE_URL/metrics" 200 "Metrics endpoint"
+
+if [ -f "$ENV_FILE" ]; then
+    METRICS_TOKEN=$(grep -E '^METRICS_TOKEN=' "$ENV_FILE" | cut -d= -f2- || true)
+fi
+
+if [ -n "${METRICS_TOKEN:-}" ]; then
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" \
+        -H "Authorization: Bearer $METRICS_TOKEN" \
+        "$BASE_URL/metrics" --connect-timeout 10 2>/dev/null || echo "000")
+    if [ "$status_code" = "200" ]; then
+        echo "  ✓ Metrics endpoint ($status_code)"
+        PASS_COUNT=$((PASS_COUNT + 1))
+    else
+        echo "  ✗ Metrics endpoint (expected 200, got $status_code)"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+else
+    echo "  - Metrics endpoint skipped (METRICS_TOKEN not found in $ENV_FILE)"
+fi
 
 echo ""
 echo "Results: $PASS_COUNT passed, $FAIL_COUNT failed"

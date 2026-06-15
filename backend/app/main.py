@@ -42,9 +42,15 @@ def validate_secret_key():
         logger.info("Skipping SECRET_KEY validation (APP_ENV={}).", settings.APP_ENV)
         return
     if settings.SECRET_KEY in ("change-me-in-production", "", "your-secret-key-here"):
-        logger.critical("SECRET_KEY is set to a default/placeholder value! Refusing to start in prd mode.")
+        logger.critical("SECRET_KEY is set to a default/placeholder value! Refusing to start in prod mode.")
         raise SystemExit(1)
     logger.info("SECRET_KEY validation passed.")
+
+
+def validate_metrics_token():
+    if settings.APP_ENV == "prod" and not settings.METRICS_TOKEN:
+        logger.critical("METRICS_TOKEN is required in prod mode.")
+        raise SystemExit(1)
 
 # Prometheus metrics
 REQUEST_COUNT = Counter(
@@ -81,6 +87,7 @@ logger.add(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     validate_secret_key()
+    validate_metrics_token()
     yield
 
 
@@ -93,13 +100,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://admin.pawpalai.cn",
-        "https://staging.api.pawpalai.cn",
-        "http://localhost:10086",
-        "http://localhost:3001",
-        "http://localhost:3000",
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -230,7 +231,8 @@ async def health_check():
 async def metrics(request: Request):
     """Prometheus metrics endpoint. Requires Bearer token auth."""
     auth_header = request.headers.get("Authorization", "")
-    expected_token = f"Bearer {settings.SECRET_KEY}"
+    metrics_token = settings.METRICS_TOKEN or settings.SECRET_KEY
+    expected_token = f"Bearer {metrics_token}"
     if auth_header != expected_token:
         raise HTTPException(status_code=403, detail="Forbidden: valid metrics token required")
     return Response(
