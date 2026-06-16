@@ -27,6 +27,25 @@ def _is_deadlock(e: Exception) -> bool:
     return False
 
 
+def _listing_values(item: dict, platform: str, **overrides) -> dict:
+    values = {
+        "platform": platform,
+        "shop_name": item.get("shop_name", ""),
+        "goods_id": item.get("goods_id"),
+        "goods_sign": item.get("goods_sign"),
+        "title": item.get("title", ""),
+        "price": item.get("price", 0),
+        "original_price": item.get("original_price"),
+        "url": item.get("url", ""),
+        "image_url": item.get("image_url"),
+        "sales_count": item.get("sales_count"),
+        "sku_specs": item.get("sku_specs") or [],
+        "service_tags": item.get("service_tags") or [],
+    }
+    values.update(overrides)
+    return values
+
+
 @dataclass
 class ImportJob:
     """Represents an import/matching job."""
@@ -139,20 +158,7 @@ class SpuListingService:
                 try:
                     for item in listings_data:
                         stmt = pg_insert(SpuListing).values(
-                            spu_id=None,
-                            platform=platform,
-                            shop_name=item.get("shop_name", ""),
-                            goods_id=item.get("goods_id"),
-                            goods_sign=item.get("goods_sign"),
-                            title=item.get("title", ""),
-                            price=item.get("price", 0),
-                            original_price=item.get("original_price"),
-                            url=item.get("url", ""),
-                            image_url=item.get("image_url"),
-                            sales_count=item.get("sales_count"),
-                            sku_specs=item.get("sku_specs"),
-                            service_tags=item.get("service_tags"),
-                            match_status="unmatched",
+                            **_listing_values(item, platform, spu_id=None, match_status="unmatched")
                         ).on_conflict_do_nothing(
                             constraint="uq_spu_listings_platform_goods_id"
                         )
@@ -251,24 +257,16 @@ class SpuListingService:
                         )
 
                         if match_result.confidence >= 0.75:
-                            stmt = pg_insert(SpuListing).values(
+                            values = _listing_values(
+                                item,
+                                platform,
                                 spu_id=spu_id,
-                                platform=platform,
-                                shop_name=item.get("shop_name", ""),
-                                goods_id=item.get("goods_id"),
-                                goods_sign=item.get("goods_sign"),
-                                title=item.get("title", ""),
-                                price=item.get("price", 0),
-                                original_price=item.get("original_price"),
-                                url=item.get("url", ""),
-                                image_url=item.get("image_url"),
-                                sales_count=item.get("sales_count"),
-                                sku_specs=item.get("sku_specs"),
-                                service_tags=item.get("service_tags"),
                                 match_confidence=match_result.confidence,
                                 match_status="linked",
-                            ).on_conflict_do_nothing(
-                                constraint="uq_spu_listings_platform_goods_id"
+                            )
+                            stmt = pg_insert(SpuListing).values(**values).on_conflict_do_update(
+                                constraint="uq_spu_listings_platform_goods_id",
+                                set_=values,
                             )
                             r = await self.db.execute(stmt)
                             if r.rowcount:
@@ -276,21 +274,13 @@ class SpuListingService:
                                 linked_count += 1
                         else:
                             stmt = pg_insert(SpuListing).values(
-                                spu_id=None,
-                                platform=platform,
-                                shop_name=item.get("shop_name", ""),
-                                goods_id=item.get("goods_id"),
-                                goods_sign=item.get("goods_sign"),
-                                title=item.get("title", ""),
-                                price=item.get("price", 0),
-                                original_price=item.get("original_price"),
-                                url=item.get("url", ""),
-                                image_url=item.get("image_url"),
-                                sales_count=item.get("sales_count"),
-                                sku_specs=item.get("sku_specs"),
-                                service_tags=item.get("service_tags"),
-                                match_confidence=match_result.confidence,
-                                match_status="unmatched",
+                                **_listing_values(
+                                    item,
+                                    platform,
+                                    spu_id=None,
+                                    match_confidence=match_result.confidence,
+                                    match_status="unmatched",
+                                )
                             ).on_conflict_do_nothing(
                                 constraint="uq_spu_listings_platform_goods_id"
                             )
@@ -306,6 +296,14 @@ class SpuListingService:
                         await asyncio.sleep(wait)
                         continue
                     raise
+
+            if linked_count > 0:
+                first_image_url = next(
+                    (item.get("image_url") for item in listings_data if item.get("image_url")),
+                    None,
+                )
+                if first_image_url and not spu.image_urls:
+                    spu.image_urls = [first_image_url]
 
             await self.db.commit()
             logger.info(
@@ -374,8 +372,8 @@ class SpuListingService:
                         "url": parsed["external_url"],
                         "image_url": parsed["image_urls"][0] if parsed["image_urls"] else None,
                         "sales_count": self._parse_sales_count(parsed["sales_tip"]),
-                        "sku_specs": None,
-                        "service_tags": None,
+                        "sku_specs": [],
+                        "service_tags": [],
                     })
 
                 if len(goods_list) < page_size:

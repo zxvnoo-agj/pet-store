@@ -26,6 +26,8 @@ deploy/staging/.env.staging
 
 # Backup files
 *.bak
+*.dump
+backend/backups/
 
 # Logs
 *.log

@@ -1,6 +1,6 @@
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.models.spu import Spu
 from app.models.spu_listing import SpuListing
@@ -130,6 +130,42 @@ class SpuService:
         return spus, total or 0
 
     # Mini-program specific methods
+    async def _hydrate_miniprogram_card_fields(self, spus: list[Spu]) -> None:
+        """Fill card image and price from linked listings when SPU fields are empty."""
+        spu_ids = [spu.id for spu in spus]
+        if not spu_ids:
+            return
+
+        listings_result = await self.db.execute(
+            select(SpuListing)
+            .where(
+                SpuListing.spu_id.in_(spu_ids),
+                SpuListing.match_status == "linked",
+            )
+            .order_by(SpuListing.spu_id.asc(), SpuListing.price.asc())
+        )
+        listings_by_spu: dict[int, list[SpuListing]] = {}
+        for listing in listings_result.scalars().all():
+            if listing.spu_id is not None:
+                listings_by_spu.setdefault(listing.spu_id, []).append(listing)
+
+        for spu in spus:
+            listings = listings_by_spu.get(spu.id, [])
+            if not listings:
+                continue
+
+            if not spu.image_urls:
+                image_url = next((listing.image_url for listing in listings if listing.image_url), None)
+                if image_url:
+                    spu.image_urls = [image_url]
+
+            prices = [listing.price for listing in listings if listing.price is not None]
+            if prices:
+                if spu.price_min is None:
+                    spu.price_min = min(prices)
+                if spu.price_max is None:
+                    spu.price_max = max(prices)
+
     async def get_spus_for_miniprogram(self, filters: SpuFilter) -> tuple[list[Spu], int]:
         """Get SPUs for mini-program with review count and rating."""
         from app.models.review import Review
@@ -202,6 +238,7 @@ class SpuService:
 
         result = await self.db.execute(query)
         spus = result.scalars().all()
+        await self._hydrate_miniprogram_card_fields(list(spus))
 
         count_result = await self.db.execute(count_query)
         total = count_result.scalar()
@@ -223,6 +260,20 @@ class SpuService:
                 .where(SpuListing.spu_id == spu_id, SpuListing.match_status == "linked")
             )
             spu.listing_count = listing_count_result.scalar() or 0
+            if not spu.image_urls:
+                image_result = await self.db.execute(
+                    select(SpuListing.image_url)
+                    .where(
+                        SpuListing.spu_id == spu_id,
+                        SpuListing.match_status == "linked",
+                        SpuListing.image_url.is_not(None),
+                    )
+                    .order_by(SpuListing.price.asc())
+                    .limit(1)
+                )
+                image_url = image_result.scalar_one_or_none()
+                if image_url:
+                    spu.image_urls = [image_url]
         return spu
 
     async def get_listings_for_miniprogram(self, spu_id: int, platform: str | None = None, sort: str | None = None) -> list[SpuListing]:
@@ -282,7 +333,8 @@ class SpuService:
         
         result = await self.db.execute(query)
         spus = result.scalars().all()
-        
+        await self._hydrate_miniprogram_card_fields(list(spus))
+
         count_result = await self.db.execute(count_query)
         total = count_result.scalar()
         

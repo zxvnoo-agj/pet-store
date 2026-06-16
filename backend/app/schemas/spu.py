@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class CategoryInfo(BaseModel):
@@ -127,8 +127,13 @@ class SpuMiniProgramListingResponse(BaseModel):
     sales_count: int | None = None
     promotion_url: str | None = None
     goods_sign: str | None = None
-    sku_specs: list[dict] = []
-    service_tags: list[int | str] = []
+    sku_specs: list[dict[str, Any]] = Field(default_factory=list)
+    service_tags: list[int | str] = Field(default_factory=list)
+
+    @field_validator("sku_specs", "service_tags", mode="before")
+    @classmethod
+    def normalize_nullable_lists(cls, value):
+        return [] if value is None else value
 
     class Config:
         from_attributes = True
