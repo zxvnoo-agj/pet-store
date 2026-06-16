@@ -2,7 +2,9 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /build
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt \
+    -i https://mirrors.cloud.tencent.com/pypi/simple \
+    --trusted-host mirrors.cloud.tencent.com
 
 FROM python:3.11-slim
 

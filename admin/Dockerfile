@@ -4,7 +4,9 @@ WORKDIR /build
 ARG VITE_API_URL=/v1
 ENV VITE_API_URL=$VITE_API_URL
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+RUN npm install -g pnpm@9.15.9 --registry=https://registry.npmmirror.com \
+    && pnpm config set registry https://registry.npmmirror.com \
+    && pnpm install --frozen-lockfile
 COPY . .
 RUN npm run build
 
