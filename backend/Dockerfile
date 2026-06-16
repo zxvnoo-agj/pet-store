@@ -1,7 +1,7 @@
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.11-slim
@@ -12,11 +12,12 @@ WORKDIR /app
 COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
-COPY ./app ./app
-COPY ./alembic ./alembic
-COPY ./alembic.ini .
-COPY ./scripts ./scripts
-COPY ./pyproject.toml .
+COPY backend/app ./app
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini .
+COPY backend/scripts ./scripts
+COPY backend/pyproject.toml .
+COPY backend/data ./data
 
 RUN mkdir -p /app/logs && chown -R petshop:petshop /app/logs
 USER petshop
