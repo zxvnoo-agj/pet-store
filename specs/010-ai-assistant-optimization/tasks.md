@@ -13,7 +13,7 @@
 - [X] T001 [P] Create AI assistant prompt evaluation fixtures in `backend/tests/fixtures/ai_assistant_prompts.json`
 - [X] T002 [P] Create backend answer card schema module skeleton in `backend/app/schemas/chat_cards.py`
 - [X] T003 [P] Create frontend chat card and memory type module skeleton in `frontend/src/types/chat.ts`
-- [ ] T004 [P] Create backend assistant memory test fixture helpers in `backend/tests/fixtures/assistant_memory.py`
+- [X] T004 [P] Create backend assistant memory test fixture helpers in `backend/tests/fixtures/assistant_memory.py`
 - [X] T005 [P] Create feature notes for evaluated assistant capabilities in `specs/010-ai-assistant-optimization/capability-evaluation.md`
 
 ---
@@ -24,14 +24,14 @@
 
 **CRITICAL**: No long-term memory or card user story work should start until schemas, types, and current-state storage are ready.
 
-- [ ] T006 Create additive Alembic migration for `assistant_memories` table and indexes in `backend/alembic/versions/010_assistant_memories.py`
-- [ ] T007 [P] Create `AssistantMemory` SQLAlchemy model in `backend/app/models/assistant_memory.py`
-- [ ] T008 Update model exports for assistant memory in `backend/app/models/__init__.py`
-- [ ] T009 [P] Create Pydantic schemas for memory sections and memory responses in `backend/app/schemas/assistant_memory.py`
+- [X] T006 Create additive Alembic migration for `assistant_memories` table and indexes in `backend/alembic/versions/010_assistant_memories.py`
+- [X] T007 [P] Create `AssistantMemory` SQLAlchemy model in `backend/app/models/assistant_memory.py`
+- [X] T008 Update model exports for assistant memory in `backend/app/models/__init__.py`
+- [X] T009 [P] Create Pydantic schemas for memory sections and memory responses in `backend/app/schemas/assistant_memory.py`
 - [X] T010 [P] Implement answer card Pydantic schemas and `card_type` enum in `backend/app/schemas/chat_cards.py`
 - [X] T011 [P] Add TypeScript discriminated unions for answer cards and assistant memory in `frontend/src/types/chat.ts`
 - [X] T012 [P] Create shared assistant observability helpers and metric names in `backend/app/services/assistant_observability.py`
-- [ ] T013 [P] Add baseline contract tests for memory schemas and answer card schemas in `backend/tests/contract/test_assistant_memory_contract.py`
+- [X] T013 [P] Add baseline contract tests for memory schemas and answer card schemas in `backend/tests/contract/test_assistant_memory_contract.py`
 - [X] T014 [P] Add baseline unit tests for answer card schema validation in `backend/tests/unit/test_answer_card_service.py`
 
 **Checkpoint**: Database, backend schemas, frontend types, and shared test scaffolding are ready.
@@ -106,21 +106,21 @@
 
 ### Tests for User Story 3
 
-- [ ] T043 [P] [US3] Add unit tests for food transition phase generation in `backend/tests/unit/test_food_transition_service.py`
-- [ ] T044 [P] [US3] Add unit tests for missing-input follow-up behavior in `backend/tests/unit/test_food_transition_service.py`
-- [ ] T045 [P] [US3] Add integration tests for food transition cards in `backend/tests/integration/test_chat_memory_flow.py`
-- [ ] T046 [P] [US3] Add evaluated candidate capability notes for product substitutes and food transition in `specs/010-ai-assistant-optimization/capability-evaluation.md`
+- [X] T043 [P] [US3] Add unit tests for food transition phase generation in `backend/tests/unit/test_food_transition_service.py`
+- [X] T044 [P] [US3] Add unit tests for missing-input follow-up behavior in `backend/tests/unit/test_food_transition_service.py`
+- [X] T045 [P] [US3] Add integration tests for food transition cards in `backend/tests/integration/test_chat_memory_flow.py`
+- [X] T046 [P] [US3] Add evaluated candidate capability notes for product substitutes and food transition in `specs/010-ai-assistant-optimization/capability-evaluation.md`
 
 ### Implementation for User Story 3
 
-- [ ] T047 [P] [US3] Implement food transition plan service in `backend/app/services/food_transition_service.py`
-- [ ] T048 [US3] Register food transition tool or capability trigger in `backend/app/agents/tools.py`
-- [ ] T049 [US3] Add food transition trigger and required-input instructions in `backend/app/agents/prompts.py`
-- [ ] T050 [US3] Add `food_transition_plan` card building support in `backend/app/services/answer_card_service.py`
-- [ ] T051 [P] [US3] Create food transition plan card component in `frontend/src/components/chat/FoodTransitionPlanCard.tsx`
-- [ ] T052 [US3] Wire `food_transition_plan` into `AnswerCardRenderer` in `frontend/src/components/chat/AnswerCardRenderer.tsx`
-- [ ] T053 [US3] Add stop-condition and vet-disclaimer copy to card output in `backend/app/services/food_transition_service.py`
-- [ ] T054 [US3] Update manual safety regression prompts in `specs/010-ai-assistant-optimization/quickstart.md`
+- [X] T047 [P] [US3] Implement food transition plan service in `backend/app/services/food_transition_service.py`
+- [X] T048 [US3] Register food transition tool or capability trigger in `backend/app/agents/tools.py`
+- [X] T049 [US3] Add food transition trigger and required-input instructions in `backend/app/agents/prompts.py`
+- [X] T050 [US3] Add `food_transition_plan` card building support in `backend/app/services/answer_card_service.py`
+- [X] T051 [P] [US3] Create food transition plan card component in `frontend/src/components/chat/FoodTransitionPlanCard.tsx`
+- [X] T052 [US3] Wire `food_transition_plan` into `AnswerCardRenderer` in `frontend/src/components/chat/AnswerCardRenderer.tsx`
+- [X] T053 [US3] Add stop-condition and vet-disclaimer copy to card output in `backend/app/services/food_transition_service.py`
+- [X] T054 [US3] Update manual safety regression prompts in `specs/010-ai-assistant-optimization/quickstart.md`
 
 **Checkpoint**: The first new AI capability is user-facing, testable, and safe-bounded.
 

@@ -1,4 +1,5 @@
 from app.core.database import Base
+from app.models.assistant_memory import AssistantMemory
 from app.models.category import Category
 from app.models.chat import ChatSession, ChatMessage
 from app.models.collection import ExternalProduct, PriceHistory, PromotionUrlCache, SearchStrategy

@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
 from app.models.category import Category
+from app.services.food_transition_service import FoodTransitionService
 from app.services.spu_service import SpuService
 from app.services.review_service import ReviewService
 
@@ -127,3 +128,21 @@ class AgentTools:
                 if spu:
                     spus.append(spu)
         return [self._spu_payload(s) for s in spus]
+
+    async def create_food_transition_plan(
+        self,
+        old_food: str | None = None,
+        new_food: str | None = None,
+        gut_status: str | None = None,
+        pet_type: str | None = None,
+        age_stage: str | None = None,
+        days: int | None = None,
+    ) -> dict:
+        return FoodTransitionService().generate_plan(
+            old_food=old_food,
+            new_food=new_food,
+            gut_status=gut_status,
+            pet_type=pet_type,
+            age_stage=age_stage,
+            days=days,
+        )

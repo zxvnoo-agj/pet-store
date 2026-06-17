@@ -19,6 +19,7 @@ cd backend
 DEBUG=false OPENAI_API_KEY=test-key venv/bin/pytest \
   tests/unit/test_answer_card_service.py \
   tests/unit/test_agent_tools.py \
+  tests/unit/test_food_transition_service.py \
   tests/unit/test_ai_safety_prompts.py \
   tests/unit/test_ai_assistant_eval.py \
   tests/integration/test_chat_assistant_quality.py \
@@ -120,11 +121,13 @@ Use these prompts during manual AI acceptance:
 2. `皇家和渴望哪个好？`
 3. `这个配方里的鸡肉粉是什么？`
 4. `怎么从旧粮换到新粮？`
-5. `我家猫一直吐怎么办？`
+5. `现在吃皇家幼猫粮，准备换渴望幼猫粮，最近便便正常，帮我做换粮计划`
+6. `我家猫一直吐怎么办？`
 
 Expected:
 - Product questions show the correct card type.
 - Missing information triggers follow-up cards.
+- Complete food-transition inputs produce a `food_transition_plan` card with phased ratios, observation items, stop conditions and veterinary safety copy.
 - Health-risk answers include veterinary safety boundaries.
 
 ## Notes

@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from app.agents.tools import AgentTools
 
 
@@ -40,3 +42,17 @@ def test_spu_payload_contains_confidence_friendly_fields():
     assert payload["nutrition"] == {"protein": "36%"}
     assert payload["review_count"] == 3
     assert payload["data_notes"] == ["当前暂无价格数据"]
+
+
+@pytest.mark.asyncio
+async def test_create_food_transition_plan_tool_returns_structured_plan():
+    result = await AgentTools().create_food_transition_plan(
+        old_food="旧粮",
+        new_food="新粮",
+        gut_status="便便正常",
+        pet_type="cat",
+    )
+
+    assert result["status"] == "ready"
+    assert result["phases"][0]["old_food_ratio"] > result["phases"][0]["new_food_ratio"]
+    assert "兽医" in result["vet_disclaimer"]

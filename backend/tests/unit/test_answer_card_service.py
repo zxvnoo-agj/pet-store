@@ -80,6 +80,45 @@ def test_follow_up_card_when_product_intent_has_no_results():
     assert len(cards[0].payload.questions) >= 2
 
 
+def test_build_food_transition_plan_card_from_tool_result():
+    cards = AnswerCardService().build_cards(
+        "帮我做一个换粮计划",
+        [{
+            "tool": "create_food_transition_plan",
+            "output": {
+                "status": "ready",
+                "title": "7天换粮计划",
+                "phases": [
+                    {"day_range": "1-2天", "old_food_ratio": 75, "new_food_ratio": 25, "note": "观察便便"}
+                ],
+                "observe": ["食欲", "便便形态"],
+                "stop_conditions": ["持续腹泻"],
+                "vet_disclaimer": "如出现持续异常，请及时咨询兽医。",
+            },
+        }],
+    )
+
+    assert cards[0].card_type == AnswerCardType.FOOD_TRANSITION_PLAN
+    assert cards[0].payload.phases[0].new_food_ratio == 25
+
+
+def test_build_follow_up_card_from_missing_food_transition_inputs():
+    cards = AnswerCardService().build_cards(
+        "怎么换粮？",
+        [{
+            "tool": "create_food_transition_plan",
+            "output": {
+                "status": "needs_input",
+                "questions": ["现在吃的旧粮是什么？", "准备换到哪款新粮？"],
+                "reason": "需要旧粮和新粮。",
+            },
+        }],
+    )
+
+    assert cards[0].card_type == AnswerCardType.FOLLOW_UP
+    assert "旧粮" in cards[0].payload.questions[0]
+
+
 def test_answer_card_discriminated_union_validates_payload():
     adapter = TypeAdapter(AnswerCard)
     card = adapter.validate_python({

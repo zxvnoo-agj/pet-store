@@ -8,6 +8,8 @@ from app.schemas.chat_cards import (
     ComparisonCardPayload,
     FollowUpAnswerCard,
     FollowUpCardPayload,
+    FoodTransitionPlanAnswerCard,
+    FoodTransitionPlanCardPayload,
     IngredientInsightAnswerCard,
     IngredientInsightCardPayload,
     RecommendationListAnswerCard,
@@ -50,6 +52,13 @@ class AnswerCardService:
                 if len(products) >= 2:
                     cards.append(self._comparison_card(products))
                     continue
+
+            if tool == "create_food_transition_plan" and isinstance(output, dict):
+                if output.get("status") == "ready":
+                    cards.append(self._food_transition_card(output))
+                elif output.get("status") == "needs_input":
+                    cards.append(self._follow_up_card(output.get("questions"), output.get("reason")))
+                continue
 
             if tool == "search_spus":
                 products = self._as_product_list(output)
@@ -186,17 +195,30 @@ class AnswerCardService:
             source="get_spu_detail",
         )
 
-    def _follow_up_card(self) -> FollowUpAnswerCard:
+    def _follow_up_card(self, questions: list[str] | None = None, reason: str | None = None) -> FollowUpAnswerCard:
         return FollowUpAnswerCard(
             card_id="card_follow_up_1",
             title="补充一下需求",
             payload=FollowUpCardPayload(
-                questions=[
+                questions=questions or [
                     "是猫还是狗？年龄或阶段是幼年、成年还是老年？",
                     "预算范围大概是多少？是否有品牌偏好或需要避开的成分？",
                     "宠物最近有没有软便、过敏、挑食或体重管理需求？",
                 ],
-                reason="商品推荐需要宠物类型、阶段、预算和耐受情况，信息越完整越不容易推荐偏。",
+                reason=reason or "商品推荐需要宠物类型、阶段、预算和耐受情况，信息越完整越不容易推荐偏。",
             ),
             source="assistant",
+        )
+
+    def _food_transition_card(self, output: dict[str, Any]) -> FoodTransitionPlanAnswerCard:
+        return FoodTransitionPlanAnswerCard(
+            card_id="card_food_transition_1",
+            title=output.get("title") or "换粮计划",
+            payload=FoodTransitionPlanCardPayload(
+                phases=output.get("phases") or [],
+                observe=output.get("observe") or [],
+                stop_conditions=output.get("stop_conditions") or [],
+                vet_disclaimer=output.get("vet_disclaimer") or "如出现持续异常，请及时咨询兽医。",
+            ),
+            source="create_food_transition_plan",
         )

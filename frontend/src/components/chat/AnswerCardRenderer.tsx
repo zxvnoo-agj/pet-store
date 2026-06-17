@@ -3,6 +3,7 @@ import { View } from '@tarojs/components'
 import type { AnswerCard } from '../../types/chat'
 import ComparisonCard from './ComparisonCard'
 import FollowUpCard from './FollowUpCard'
+import FoodTransitionPlanCard from './FoodTransitionPlanCard'
 import IngredientInsightCard from './IngredientInsightCard'
 import RecommendationListCard from './RecommendationListCard'
 import SpuAnswerCard from './SpuAnswerCard'
@@ -29,6 +30,8 @@ export default function AnswerCardRenderer({ cards, onQuestionPress }: Props) {
             return <IngredientInsightCard key={card.card_id} card={card} />
           case 'follow_up':
             return <FollowUpCard key={card.card_id} card={card} onQuestionPress={onQuestionPress} />
+          case 'food_transition_plan':
+            return <FoodTransitionPlanCard key={card.card_id} card={card} />
           default:
             return null
         }

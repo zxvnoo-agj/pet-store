@@ -99,6 +99,14 @@ class AIAgent:
                 name="compare_spus",
                 description="Compare multiple SPUs (products) by their IDs",
             ),
+            StructuredTool.from_function(
+                coroutine=self.tools.create_food_transition_plan,
+                name="create_food_transition_plan",
+                description=(
+                    "Create a safe food transition plan. Requires old_food, new_food, and gut_status; "
+                    "returns follow-up questions if any required input is missing."
+                ),
+            ),
         ]
 
     def _decode_tool_output(self, tool_result):
