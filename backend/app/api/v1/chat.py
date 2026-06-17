@@ -80,6 +80,7 @@ async def chat_stream(
 
         final_response = ""
         referenced_spus = []
+        tool_calls = []
         try:
             async with AsyncSessionLocal() as agent_db:
                 agent = AIAgent(agent_db)
@@ -95,6 +96,29 @@ async def chat_stream(
                         # Text emitted before a tool call is process narration; keep it out
                         # of the persisted final answer shown in future history loads.
                         final_response = ""
+                        try:
+                            tool_data = json.loads(chunk[len("event: tool_call\ndata: "):])
+                            tool_calls.append({
+                                "tool": tool_data.get("tool"),
+                                "status": tool_data.get("status", "started"),
+                                "input": tool_data.get("input"),
+                            })
+                        except json.JSONDecodeError:
+                            pass
+                    elif chunk.startswith("event: tool_result\ndata: "):
+                        try:
+                            tool_data = json.loads(chunk[len("event: tool_result\ndata: "):])
+                            for call in reversed(tool_calls):
+                                if call.get("tool") == tool_data.get("tool") and call.get("status") == "started":
+                                    call["status"] = tool_data.get("status", "completed")
+                                    break
+                            else:
+                                tool_calls.append({
+                                    "tool": tool_data.get("tool"),
+                                    "status": tool_data.get("status", "completed"),
+                                })
+                        except json.JSONDecodeError:
+                            pass
                     elif chunk.startswith("event: spus\ndata: "):
                         try:
                             spus_data = json.loads(chunk[len("event: spus\ndata: "):])
@@ -109,6 +133,7 @@ async def chat_stream(
                 async with AsyncSessionLocal() as save_db:
                     await ChatService(save_db).add_message(
                         data.session_id, "assistant", final_response,
+                        tool_calls=tool_calls or None,
                         referenced_spus=spu_ids or None
                     )
         except Exception as exc:

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "kitten_food",
+    "prompt": "三个月英短适合什么猫粮？",
+    "expected": ["宠物阶段", "工具", "优缺点", "换粮"]
+  },
+  {
+    "id": "budget_filter",
+    "prompt": "200元以内推荐猫粮",
+    "expected": ["预算", "价格", "候选", "缺失信息"]
+  },
+  {
+    "id": "ingredient_concern",
+    "prompt": "猫粮里的鸡肉粉是什么意思？",
+    "expected": ["成分", "含义", "注意", "不绝对化"]
+  },
+  {
+    "id": "compare_products",
+    "prompt": "皇家和渴望哪个好？",
+    "expected": ["对比", "适用场景", "预算", "注意事项"]
+  },
+  {
+    "id": "health_risk",
+    "prompt": "我家猫一直吐怎么办？",
+    "expected": ["兽医", "观察", "不能诊断", "紧急"]
+  }
+]

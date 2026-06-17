@@ -7,6 +7,8 @@ import { getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon, SendIcon, SparkleIcon } from '../../components/Icons'
 import { API_BASE_URL } from '../../config/env'
+import AnswerCardRenderer from '../../components/chat/AnswerCardRenderer'
+import type { AnswerCard } from '../../types/chat'
 
 interface Spu {
   id: number
@@ -37,6 +39,7 @@ interface Message {
   content: string
   isComplete?: boolean
   referencedSpus?: Spu[]
+  answerCards?: AnswerCard[]
   toolCalls?: ToolCall[]
   reasoningSteps?: ReasoningStep[]
 }
@@ -120,6 +123,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [currentStream, setCurrentStream] = useState('')
   const [streamProducts, setStreamProducts] = useState<Spu[]>([])
+  const [streamAnswerCards, setStreamAnswerCards] = useState<AnswerCard[]>([])
   const [, setActiveTools] = useState<ToolCall[]>([])
   const [streamSteps, setStreamSteps] = useState<ReasoningStep[]>([])
   const [expandedProcessIds, setExpandedProcessIds] = useState<Record<number, boolean>>({})
@@ -286,11 +290,13 @@ export default function ChatPage() {
     setIsLoading(true)
     setCurrentStream('')
     setStreamProducts([])
+    setStreamAnswerCards([])
     setActiveTools([])
     setStreamSteps([])
 
     let pendingText = ''
     let spus: Spu[] = []
+    let answerCards: AnswerCard[] = []
     let toolCalls: ToolCall[] = []
     let reasoningSteps: ReasoningStep[] = []
     let currentStepId: number | null = null
@@ -433,6 +439,15 @@ export default function ChatPage() {
                 }
                 break
 
+              case 'answer_cards':
+                try {
+                  const data = JSON.parse(event.data)
+                  answerCards = data.cards || []
+                  setStreamAnswerCards([...answerCards])
+                } catch {
+                }
+                break
+
               case 'error':
                 try {
                   const data = JSON.parse(event.data)
@@ -451,6 +466,7 @@ export default function ChatPage() {
         role: 'assistant',
         content: pendingText,
         isComplete: true,
+        answerCards: answerCards.length > 0 ? answerCards : undefined,
         referencedSpus: spus.length > 0 ? spus : undefined,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
         reasoningSteps: reasoningSteps.length > 0 ? reasoningSteps : undefined,
@@ -459,6 +475,7 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, newMessage])
       setCurrentStream('')
       setStreamProducts([])
+      setStreamAnswerCards([])
       setActiveTools([])
       setStreamSteps([])
     } catch (error) {
@@ -469,12 +486,14 @@ export default function ChatPage() {
           role: 'assistant',
           content: pendingText || '抱歉，刚才处理对话时出现异常，请稍后再试。',
           isComplete: true,
+          answerCards: answerCards.length > 0 ? answerCards : undefined,
           referencedSpus: spus.length > 0 ? spus : undefined,
           toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
           reasoningSteps: reasoningSteps.length > 0 ? reasoningSteps : undefined,
         }])
         setCurrentStream('')
         setStreamProducts([])
+        setStreamAnswerCards([])
         setActiveTools([])
         setStreamSteps([])
       } else {
@@ -795,7 +814,10 @@ export default function ChatPage() {
                   ) : (
                     <View>
                       {msg.content ? <MarkdownRenderer content={msg.content} /> : null}
-                      {msg.referencedSpus && renderProductCards(msg.referencedSpus)}
+                      {msg.answerCards && (
+                        <AnswerCardRenderer cards={msg.answerCards} onQuestionPress={handleSend} />
+                      )}
+                      {!msg.answerCards && msg.referencedSpus && renderProductCards(msg.referencedSpus)}
                       {msg.reasoningSteps && msg.reasoningSteps.length > 0 ? (
                         renderProcessTimeline(
                           msg.reasoningSteps,
@@ -821,7 +843,9 @@ export default function ChatPage() {
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   {renderProcessTimeline(streamSteps, false, undefined, currentStream)}
-                  {streamProducts.length > 0 && renderProductCards(streamProducts)}
+                  {streamAnswerCards.length > 0 ? (
+                    <AnswerCardRenderer cards={streamAnswerCards} onQuestionPress={handleSend} />
+                  ) : streamProducts.length > 0 && renderProductCards(streamProducts)}
                   <View className="flex items-center gap-1 mt-2">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />
@@ -838,6 +862,9 @@ export default function ChatPage() {
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <MarkdownRenderer content={currentStream} />
+                  {streamAnswerCards.length > 0 ? (
+                    <AnswerCardRenderer cards={streamAnswerCards} onQuestionPress={handleSend} />
+                  ) : null}
                   <View className="flex items-center gap-1 mt-1">
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
                     <View className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse delay-75" />

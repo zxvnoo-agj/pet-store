@@ -223,6 +223,17 @@ class SpuService:
             query = query.where(Spu.price_max <= filters.max_price)
             count_query = count_query.where(Spu.price_max <= filters.max_price)
 
+        if filters.search:
+            search_term = f"%{filters.search}%"
+            search_condition = (
+                (Spu.name.ilike(search_term)) |
+                (Spu.brand.ilike(search_term)) |
+                (Spu.model.ilike(search_term)) |
+                (Spu.description.ilike(search_term))
+            )
+            query = query.where(search_condition)
+            count_query = count_query.where(search_condition)
+
         # Sorting
         if filters.sort == "price_asc":
             query = query.order_by(asc(Spu.price_min))

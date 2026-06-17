@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+import json
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.messages import AIMessage, HumanMessage
@@ -8,6 +9,13 @@ from langchain_openai import ChatOpenAI
 from app.agents.prompts import SYSTEM_PROMPT
 from app.agents.tools import AgentTools
 from app.core.config import settings
+from app.services.answer_card_service import AnswerCardService
+from app.services.assistant_observability import (
+    log_card_generation,
+    log_health_safety_path,
+    log_tool_call,
+    log_tool_error,
+)
 
 SPECIES_CN = {
     "cat": "猫", "dog": "狗", "bird": "鸟",
@@ -93,6 +101,32 @@ class AIAgent:
             ),
         ]
 
+    def _decode_tool_output(self, tool_result):
+        if isinstance(tool_result, str):
+            try:
+                return json.loads(tool_result)
+            except json.JSONDecodeError:
+                return tool_result
+        return tool_result
+
+    def _is_health_risk_message(self, message: str) -> bool:
+        risk_terms = (
+            "一直吐",
+            "持续吐",
+            "腹泻",
+            "拉稀",
+            "便血",
+            "尿不出",
+            "抽搐",
+            "呼吸困难",
+            "精神沉郁",
+            "中毒",
+            "吞了",
+            "剂量",
+            "吃药",
+        )
+        return any(term in message for term in risk_terms)
+
     async def chat_stream(
         self, message: str, history: list[dict] | None = None, user_id: int | None = None
     ) -> AsyncIterator[str]:
@@ -123,6 +157,10 @@ class AIAgent:
                     chat_history.append(AIMessage(content=msg["content"]))
 
         referenced_spus = []
+        tool_results = []
+
+        if self._is_health_risk_message(message):
+            log_health_safety_path("health_risk_terms_detected", user_id=user_id)
 
         async for event in agent_executor.astream_events(
             {"input": message, "chat_history": chat_history},
@@ -131,29 +169,40 @@ class AIAgent:
             if event["event"] == "on_chat_model_stream":
                 content = event["data"]["chunk"].content
                 if content:
-                    import json
                     yield f"event: message\ndata: {json.dumps({'content': content}, ensure_ascii=False)}\n\n"
             elif event["event"] == "on_tool_start":
                 tool_name = event["name"]
-                yield f"event: tool_call\ndata: {{\"tool\": \"{tool_name}\", \"status\": \"started\"}}\n\n"
+                tool_input = event["data"].get("input")
+                log_tool_call(tool_name, "started", user_id=user_id)
+                payload = {"tool": tool_name, "status": "started", "input": tool_input}
+                yield f"event: tool_call\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
             elif event["event"] == "on_tool_end":
                 tool_name = event["name"]
                 tool_result = event["data"].get("output")
-                # Extract spu IDs from search_spus and compare_spus results
-                if tool_name in ("search_spus", "compare_spus") and tool_result:
-                    import json
+                decoded_result = self._decode_tool_output(tool_result)
+                tool_results.append({"tool": tool_name, "output": decoded_result})
+                log_tool_call(tool_name, "completed", user_id=user_id)
+                # Extract spu IDs from product-producing tool results.
+                if tool_name in ("search_spus", "compare_spus", "get_spu_detail") and decoded_result:
                     try:
-                        spu_list = tool_result if isinstance(tool_result, list) else json.loads(tool_result)
+                        spu_list = decoded_result if isinstance(decoded_result, list) else [decoded_result]
                         for s in spu_list:
                             if isinstance(s, dict) and "id" in s:
                                 referenced_spus.append(s)
                     except (json.JSONDecodeError, TypeError):
+                        log_tool_error(tool_name, "failed_to_parse_spu_references", user_id=user_id)
                         pass
-                yield f"event: tool_result\ndata: {{\"tool\": \"{tool_name}\", \"status\": \"completed\"}}\n\n"
+                payload = {"tool": tool_name, "status": "completed"}
+                yield f"event: tool_result\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+        cards = AnswerCardService().build_cards(message, tool_results)
+        card_payloads = [card.model_dump(mode="json") for card in cards]
+        log_card_generation(card_payloads, user_id=user_id)
+        if card_payloads:
+            yield f"event: answer_cards\ndata: {json.dumps({'cards': card_payloads}, ensure_ascii=False)}\n\n"
 
         # Send referenced spus as a final event
         if referenced_spus:
-            import json
             yield f"event: spus\ndata: {json.dumps({'spus': referenced_spus}, ensure_ascii=False)}\n\n"
 
         yield "event: done\ndata: {\"status\": \"completed\"}\n\n"

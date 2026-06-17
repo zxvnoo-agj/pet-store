@@ -75,9 +75,14 @@ venv/bin/python scripts/import_products.py /path/to/products.json
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-specs/009-in-app-reviews/plan.md
+specs/010-ai-assistant-optimization/plan.md
 
 Also refer to:
+- Feature 010 specification: specs/010-ai-assistant-optimization/spec.md
+- Feature 010 data model: specs/010-ai-assistant-optimization/data-model.md
+- Feature 010 API contracts: specs/010-ai-assistant-optimization/contracts/api-contracts.md
+- Feature 010 quickstart: specs/010-ai-assistant-optimization/quickstart.md
+- Feature 010 research notes: specs/010-ai-assistant-optimization/research.md
 - Feature 009 specification: specs/009-in-app-reviews/spec.md
 - Feature 009 data model: specs/009-in-app-reviews/data-model.md
 - Feature 009 API contracts: specs/009-in-app-reviews/contracts/api-contracts.md
