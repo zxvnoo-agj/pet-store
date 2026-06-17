@@ -134,21 +134,21 @@
 
 ### Tests for User Story 4
 
-- [ ] T055 [P] [US4] Add unit tests for memory summary composition and 500-character enforcement in `backend/tests/unit/test_assistant_memory_service.py`
-- [ ] T056 [P] [US4] Add unit tests for Dream extraction filtering and merge precedence in `backend/tests/unit/test_assistant_memory_service.py`
-- [ ] T057 [P] [US4] Add integration tests for daily Dream batch processing in `backend/tests/integration/test_dream_memory_job.py`
-- [ ] T058 [P] [US4] Add contract tests for optional admin Dream dry-run endpoint in `backend/tests/contract/test_assistant_memory_contract.py`
+- [X] T055 [P] [US4] Add unit tests for memory summary composition and 500-character enforcement in `backend/tests/unit/test_assistant_memory_service.py`
+- [X] T056 [P] [US4] Add unit tests for Dream extraction filtering and merge precedence in `backend/tests/unit/test_assistant_memory_service.py`
+- [X] T057 [P] [US4] Add integration tests for daily Dream batch processing in `backend/tests/integration/test_dream_memory_job.py`
+- [X] T058 [P] [US4] Add contract tests for optional admin Dream dry-run endpoint in `backend/tests/contract/test_assistant_memory_contract.py`
 
 ### Implementation for User Story 4
 
-- [ ] T059 [P] [US4] Implement assistant memory CRUD, section normalization, summary composition, clear, pause, and resume methods in `backend/app/services/assistant_memory_service.py`
-- [ ] T060 [P] [US4] Implement Dream extraction and merge service in `backend/app/services/dream_memory_service.py`
-- [ ] T061 [US4] Add prompt context builder for enabled assistant memory in `backend/app/services/assistant_memory_service.py`
-- [ ] T062 [US4] Inject enabled assistant memory into AI agent system context in `backend/app/agents/agent.py`
-- [ ] T063 [US4] Add daily Dream scheduler job registration in `backend/app/scheduler/jobs.py`
-- [ ] T064 [US4] Add optional admin Dream dry-run endpoint in `backend/app/api/v1/chat.py`
-- [ ] T065 [US4] Add memory extraction metrics and failure logs in `backend/app/services/dream_memory_service.py`
-- [ ] T066 [US4] Ensure Dream ignores disabled memories and does not overwrite newer manual edits in `backend/app/services/dream_memory_service.py`
+- [X] T059 [P] [US4] Implement assistant memory CRUD, section normalization, summary composition, clear, pause, and resume methods in `backend/app/services/assistant_memory_service.py`
+- [X] T060 [P] [US4] Implement Dream extraction and merge service in `backend/app/services/dream_memory_service.py`
+- [X] T061 [US4] Add prompt context builder for enabled assistant memory in `backend/app/services/assistant_memory_service.py`
+- [X] T062 [US4] Inject enabled assistant memory into AI agent system context in `backend/app/agents/agent.py`
+- [X] T063 [US4] Add daily Dream scheduler job registration in `backend/app/scheduler/jobs.py`
+- [X] T064 [US4] Add optional admin Dream dry-run endpoint in `backend/app/api/v1/chat.py`
+- [X] T065 [US4] Add memory extraction metrics and failure logs in `backend/app/services/dream_memory_service.py`
+- [X] T066 [US4] Ensure Dream ignores disabled memories and does not overwrite newer manual edits in `backend/app/services/dream_memory_service.py`
 
 **Checkpoint**: Long-term memory is generated and used by AI without adding chat-stream latency.
 
@@ -162,24 +162,24 @@
 
 ### Tests for User Story 5
 
-- [ ] T067 [P] [US5] Add contract tests for GET/PUT/PATCH/DELETE `/v1/chat/memory` endpoints in `backend/tests/contract/test_assistant_memory_contract.py`
-- [ ] T068 [P] [US5] Add integration tests for user edit, pause, resume, and clear flows in `backend/tests/integration/test_chat_memory_flow.py`
-- [ ] T069 [P] [US5] Add frontend build-time type checks for memory API payloads in `frontend/src/services/assistantMemoryApi.ts`
+- [X] T067 [P] [US5] Add contract tests for GET/PUT/PATCH/DELETE `/v1/chat/memory` endpoints in `backend/tests/contract/test_assistant_memory_contract.py`
+- [X] T068 [P] [US5] Add integration tests for user edit, pause, resume, and clear flows in `backend/tests/integration/test_chat_memory_flow.py`
+- [X] T069 [P] [US5] Add frontend build-time type checks for memory API payloads in `frontend/src/services/assistantMemoryApi.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T070 [US5] Add GET `/v1/chat/memory` endpoint in `backend/app/api/v1/chat.py`
-- [ ] T071 [US5] Add PUT `/v1/chat/memory` endpoint with classified section validation in `backend/app/api/v1/chat.py`
-- [ ] T072 [US5] Add PATCH `/v1/chat/memory/settings` endpoint for pause/resume in `backend/app/api/v1/chat.py`
-- [ ] T073 [US5] Add DELETE `/v1/chat/memory` endpoint for clearing current memory in `backend/app/api/v1/chat.py`
-- [ ] T074 [P] [US5] Create assistant memory API client in `frontend/src/services/assistantMemoryApi.ts`
-- [ ] T075 [US5] Add "AI助手对我的印象" entry to mine page in `frontend/src/pages/mine/index.tsx`
-- [ ] T076 [US5] Create AI memory page config in `frontend/src/pages/mine/ai-memory.config.ts`
-- [ ] T077 [US5] Create AI memory page with four section editors in `frontend/src/pages/mine/ai-memory.tsx`
-- [ ] T078 [US5] Add pause/resume toggle and clear confirmation in `frontend/src/pages/mine/ai-memory.tsx`
-- [ ] T079 [US5] Add 500-character counter, validation, loading, empty, and error states in `frontend/src/pages/mine/ai-memory.tsx`
-- [ ] T080 [US5] Register AI memory page route in `frontend/src/app.config.ts`
-- [ ] T081 [US5] Ensure logged-out users do not see the AI memory entry in `frontend/src/pages/mine/index.tsx`
+- [X] T070 [US5] Add GET `/v1/chat/memory` endpoint in `backend/app/api/v1/chat.py`
+- [X] T071 [US5] Add PUT `/v1/chat/memory` endpoint with classified section validation in `backend/app/api/v1/chat.py`
+- [X] T072 [US5] Add PATCH `/v1/chat/memory/settings` endpoint for pause/resume in `backend/app/api/v1/chat.py`
+- [X] T073 [US5] Add DELETE `/v1/chat/memory` endpoint for clearing current memory in `backend/app/api/v1/chat.py`
+- [X] T074 [P] [US5] Create assistant memory API client in `frontend/src/services/assistantMemoryApi.ts`
+- [X] T075 [US5] Add "AI助手对我的印象" entry to mine page in `frontend/src/pages/mine/index.tsx`
+- [X] T076 [US5] Create AI memory page config in `frontend/src/pages/mine/ai-memory.config.ts`
+- [X] T077 [US5] Create AI memory page with four section editors in `frontend/src/pages/mine/ai-memory.tsx`
+- [X] T078 [US5] Add pause/resume toggle and clear confirmation in `frontend/src/pages/mine/ai-memory.tsx`
+- [X] T079 [US5] Add 500-character counter, validation, loading, empty, and error states in `frontend/src/pages/mine/ai-memory.tsx`
+- [X] T080 [US5] Register AI memory page route in `frontend/src/app.config.ts`
+- [X] T081 [US5] Ensure logged-out users do not see the AI memory entry in `frontend/src/pages/mine/index.tsx`
 
 **Checkpoint**: Users can transparently control AI long-term memory from the mini-program.
 

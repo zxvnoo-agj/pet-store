@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { wechatLogin } from '../../services/auth'
 import { getMyPets } from '../../services/petApi'
-import { FavoriteIcon, PawIcon, PackageIcon, ArrowRightIcon } from '../../components/Icons'
+import { AiAssistantIcon, FavoriteIcon, PawIcon, PackageIcon, ArrowRightIcon } from '../../components/Icons'
 
 export default function MinePage() {
   const { user, isLoggedIn, logout } = useAuthStore()
@@ -59,6 +59,10 @@ export default function MinePage() {
 
   const navigateToPets = () => {
     Taro.navigateTo({ url: '/pages/mine/pets' })
+  }
+
+  const navigateToAiMemory = () => {
+    Taro.navigateTo({ url: '/pages/mine/ai-memory' })
   }
 
   return (
@@ -150,6 +154,24 @@ export default function MinePage() {
           </View>
           <ArrowRightIcon size={15} color="#9ca3af" />
         </View>
+
+        {isLoggedIn && (
+          <View
+            className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press"
+            onClick={navigateToAiMemory}
+          >
+            <View className="flex items-center gap-2">
+              <View className="w-8 h-8 rounded-2xl bg-purple-50 flex items-center justify-center">
+                <AiAssistantIcon size={17} color="#7c3aed" />
+              </View>
+              <View>
+                <Text className="text-sm text-gray-800">AI助手对我的印象</Text>
+                <Text className="text-[10px] text-gray-400 mt-0.5">查看和修改长期记忆</Text>
+              </View>
+            </View>
+            <ArrowRightIcon size={15} color="#9ca3af" />
+          </View>
+        )}
 
         <View className="px-4 py-4 flex items-center justify-between border-b border-gray-100">
           <Text className="text-sm text-gray-800">浏览历史</Text>

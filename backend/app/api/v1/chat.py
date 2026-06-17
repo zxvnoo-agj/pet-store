@@ -5,11 +5,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.agent import AIAgent
 from app.core.database import AsyncSessionLocal, get_db
-from app.core.deps import get_optional_current_user
+from app.core.admin_deps import get_current_admin
+from app.core.deps import get_current_user, get_optional_current_user
 from app.models.user import User
 from app.schemas.chat import ChatSessionCreate, ChatStreamRequest
 from app.schemas.common import ApiResponse
+from app.schemas.assistant_memory import (
+    AssistantMemorySettingsUpdate,
+    AssistantMemoryUpdate,
+    DreamMemoryRunRequest,
+)
+from app.services.assistant_memory_service import AssistantMemoryService
 from app.services.chat_service import ChatService
+from app.services.dream_memory_service import DreamMemoryService
 from app.services.pet_service import PetService
 from app.services.suggested_questions import get_questions as get_suggested_questions
 
@@ -19,10 +27,11 @@ router = APIRouter()
 @router.post("/chat/sessions", response_model=ApiResponse[dict])
 async def create_session(
     data: ChatSessionCreate,
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = ChatService(db)
-    session = await service.create_session(None, data.title)
+    session = await service.create_session(current_user.id if current_user else None, data.title)
     return ApiResponse(data={
         "session_id": session.id,
         "title": session.title,
@@ -32,10 +41,11 @@ async def create_session(
 
 @router.get("/chat/sessions", response_model=ApiResponse[dict])
 async def get_sessions(
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = ChatService(db)
-    sessions = await service.get_sessions(None)
+    sessions = await service.get_sessions(current_user.id if current_user else None)
     return ApiResponse(data={"sessions": sessions})
 
 
@@ -72,6 +82,9 @@ async def chat_stream(
         # Get chat history before saving the new user message.
         messages = await service.get_session_messages(data.session_id)
         history = [{"role": msg.role, "content": msg.content} for msg in messages[-10:]]
+
+        if user_id is not None:
+            await service.bind_session_user(data.session_id, user_id)
 
         await service.add_message(data.session_id, "user", data.content)
 
@@ -156,6 +169,54 @@ async def chat_stream(
         event_generator(),
         media_type="text/event-stream",
     )
+
+
+@router.get("/chat/memory", response_model=ApiResponse[dict])
+async def get_assistant_memory(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    memory = await AssistantMemoryService(db).get_response(current_user.id)
+    return ApiResponse(data=memory.model_dump(mode="json"))
+
+
+@router.put("/chat/memory", response_model=ApiResponse[dict])
+async def update_assistant_memory(
+    data: AssistantMemoryUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    memory = await AssistantMemoryService(db).update_memory(current_user.id, data)
+    return ApiResponse(data=memory.model_dump(mode="json"))
+
+
+@router.patch("/chat/memory/settings", response_model=ApiResponse[dict])
+async def update_assistant_memory_settings(
+    data: AssistantMemorySettingsUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    settings = await AssistantMemoryService(db).update_settings(current_user.id, data.enabled)
+    return ApiResponse(data=settings.model_dump(mode="json"))
+
+
+@router.delete("/chat/memory", response_model=ApiResponse[dict])
+async def clear_assistant_memory(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    memory = await AssistantMemoryService(db).clear_memory(current_user.id)
+    return ApiResponse(data=memory.model_dump(mode="json"))
+
+
+@router.post("/admin/chat/memory/dream/run", response_model=ApiResponse[dict])
+async def run_dream_memory(
+    data: DreamMemoryRunRequest,
+    current_admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await DreamMemoryService(db).run_once(dry_run=data.dry_run, user_id=data.user_id)
+    return ApiResponse(data=result.model_dump(mode="json"))
 
 
 @router.get("/chat/suggested-questions", response_model=ApiResponse[dict])

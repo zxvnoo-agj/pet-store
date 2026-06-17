@@ -9,6 +9,7 @@ from app.core.database import AsyncSessionLocal
 from app.models.data_source import DataFetchJob, DataSource
 from app.scheduler.fetch_jobs import run_fetch_job
 from app.services.collection_service import aggregate_product_tags, update_product_prices
+from app.services.dream_memory_service import DreamMemoryService
 
 scheduler = AsyncIOScheduler()
 
@@ -57,6 +58,16 @@ async def daily_tag_aggregation():
         logger.info("Daily tag aggregation completed")
 
 
+async def daily_assistant_memory_dream():
+    async with AsyncSessionLocal() as db:
+        result = await DreamMemoryService(db).run_once(dry_run=False)
+        logger.info(
+            "Daily assistant memory Dream completed: processed={} updated={}",
+            result.processed,
+            result.updated,
+        )
+
+
 def start_scheduler():
     scheduler.add_job(
         sync_data_sources,
@@ -74,6 +85,12 @@ def start_scheduler():
         daily_tag_aggregation,
         trigger=CronTrigger(hour=4, minute=0),
         id="daily_tag_aggregation",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        daily_assistant_memory_dream,
+        trigger=CronTrigger(hour=4, minute=30),
+        id="daily_assistant_memory_dream",
         replace_existing=True,
     )
     scheduler.start()

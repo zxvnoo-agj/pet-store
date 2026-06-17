@@ -10,6 +10,7 @@ from app.agents.prompts import SYSTEM_PROMPT
 from app.agents.tools import AgentTools
 from app.core.config import settings
 from app.services.answer_card_service import AnswerCardService
+from app.services.assistant_memory_service import AssistantMemoryService
 from app.services.assistant_observability import (
     log_card_generation,
     log_health_safety_path,
@@ -143,6 +144,9 @@ class AIAgent:
         pet_context = ""
         if user_id is not None:
             pet_context = await self._build_pet_context(user_id)
+            memory_context = await AssistantMemoryService(self.db).build_prompt_context(user_id)
+            if memory_context:
+                pet_context = "\n\n".join(part for part in (pet_context, memory_context) if part)
 
         system_prompt = SYSTEM_PROMPT.replace("{pet_context}", pet_context)
 

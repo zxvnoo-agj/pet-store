@@ -3,6 +3,8 @@ from app.schemas.assistant_memory import (
     AssistantMemoryResponse,
     AssistantMemorySections,
     AssistantMemoryUpdate,
+    DreamMemoryRunRequest,
+    DreamMemoryRunResponse,
     compose_memory_summary,
 )
 from tests.fixtures.assistant_memory import (
@@ -86,3 +88,42 @@ def test_assistant_memory_update_enforces_500_character_summary():
         assert "500" in str(exc)
     else:
         raise AssertionError("oversized assistant memory summary should be rejected")
+
+
+def test_assistant_memory_endpoint_contracts_are_registered():
+    from app.main import app
+
+    routes = {(route.path, ",".join(sorted(route.methods))) for route in app.routes}
+
+    assert ("/v1/chat/memory", "GET") in routes
+    assert ("/v1/chat/memory", "DELETE") in routes
+    assert ("/v1/chat/memory", "PUT") in routes
+    assert ("/v1/chat/memory/settings", "PATCH") in routes
+    assert ("/v1/admin/chat/memory/dream/run", "POST") in routes
+
+
+def test_dream_dry_run_contract_schema():
+    request = DreamMemoryRunRequest.model_validate({"user_id": 88, "dry_run": True})
+    response = DreamMemoryRunResponse.model_validate({
+        "dry_run": True,
+        "processed": 1,
+        "updated": 0,
+        "results": [
+            {
+                "user_id": 88,
+                "latest_message_id": 103,
+                "changed": True,
+                "summary": "宠物状况：6个月布偶猫。",
+                "sections": {
+                    "pet_status": "6个月布偶猫。",
+                    "preferences_budget": "",
+                    "common_questions": "",
+                    "cautions": "",
+                },
+            }
+        ],
+    })
+
+    assert request.dry_run is True
+    assert response.results[0].user_id == 88
+    assert response.results[0].sections.pet_status == "6个月布偶猫。"

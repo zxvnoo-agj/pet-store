@@ -81,6 +81,15 @@ class ChatService:
         await self.db.refresh(message)
         return message
 
+    async def bind_session_user(self, session_id: int, user_id: int) -> None:
+        result = await self.db.execute(
+            select(ChatSession).where(ChatSession.id == session_id)
+        )
+        session = result.scalar_one_or_none()
+        if session and session.user_id is None:
+            session.user_id = user_id
+            await self.db.commit()
+
     async def clear_session(self, session_id: int):
         await self.db.execute(
             select(ChatMessage).where(ChatMessage.session_id == session_id).delete()

@@ -78,6 +78,10 @@ class ApiClient {
     return this.request<T>({ url, method: 'PUT', data })
   }
 
+  patch<T = any>(url: string, data?: any): Promise<T> {
+    return this.request<T>({ url, method: 'PATCH', data })
+  }
+
   delete<T = any>(url: string): Promise<T> {
     return this.request<T>({ url, method: 'DELETE' })
   }

@@ -20,10 +20,12 @@ DEBUG=false OPENAI_API_KEY=test-key venv/bin/pytest \
   tests/unit/test_answer_card_service.py \
   tests/unit/test_agent_tools.py \
   tests/unit/test_food_transition_service.py \
+  tests/unit/test_assistant_memory_service.py \
   tests/unit/test_ai_safety_prompts.py \
   tests/unit/test_ai_assistant_eval.py \
   tests/integration/test_chat_assistant_quality.py \
   tests/integration/test_chat_memory_flow.py \
+  tests/integration/test_dream_memory_job.py \
   tests/contract/test_assistant_memory_contract.py
 
 # Full feature suite once US3-US5 are implemented:

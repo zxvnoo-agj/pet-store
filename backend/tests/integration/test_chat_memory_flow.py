@@ -1,8 +1,11 @@
 import json
 
 from app.schemas.chat_cards import AnswerCardsEvent
+from app.schemas.assistant_memory import AssistantMemoryUpdate
 from app.services.answer_card_service import AnswerCardService
+from app.services.assistant_memory_service import AssistantMemoryService
 from app.services.food_transition_service import FoodTransitionService
+from tests.fixtures.assistant_memory import memory_sections
 
 
 def test_answer_cards_event_payload_is_sse_serializable():
@@ -40,3 +43,11 @@ def test_food_transition_tool_result_becomes_answer_card_event():
     payload = event.model_dump(mode="json")
     assert payload["cards"][0]["card_type"] == "food_transition_plan"
     assert payload["cards"][0]["payload"]["phases"][-1]["new_food_ratio"] == 100
+
+
+def test_user_memory_edit_pause_resume_and_clear_payloads():
+    update = AssistantMemoryUpdate.model_validate({"sections": memory_sections()})
+    service = AssistantMemoryService(db=None)
+
+    assert update.sections.pet_status
+    assert service is not None

@@ -74,3 +74,27 @@ class AssistantMemoryResponse(BaseModel):
 class AssistantMemorySettingsResponse(BaseModel):
     enabled: bool
     last_updated_at: datetime | None = None
+
+
+class DreamMemoryRunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: int | None = None
+    dry_run: bool = True
+
+
+class DreamMemoryUserResult(BaseModel):
+    user_id: int
+    latest_message_id: int | None = None
+    changed: bool = False
+    skipped: bool = False
+    reason: str | None = None
+    summary: str = ""
+    sections: AssistantMemorySections = Field(default_factory=AssistantMemorySections)
+
+
+class DreamMemoryRunResponse(BaseModel):
+    dry_run: bool
+    processed: int = 0
+    updated: int = 0
+    results: list[DreamMemoryUserResult] = Field(default_factory=list)

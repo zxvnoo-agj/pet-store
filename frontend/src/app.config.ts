@@ -14,6 +14,7 @@ export default defineAppConfig({
     'pages/mine/favorites',
     'pages/mine/pets',
     'pages/mine/pets-create',
+    'pages/mine/ai-memory',
     'pages/privacy/index',
   ],
   window: {
