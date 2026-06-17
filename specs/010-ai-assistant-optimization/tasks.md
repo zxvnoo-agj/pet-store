@@ -189,16 +189,16 @@
 
 **Purpose**: Documentation, validation, performance, and final cleanup across all stories.
 
-- [ ] T082 [P] Update `PROJECT_REFERENCE.md` with 010 assistant memory, cards, and Dream scheduler notes
-- [ ] T083 [P] Update `AGENTS.md` if implementation changes quickstart commands or feature references
-- [ ] T084 Add query performance checks for assistant memory and Dream message loading in `backend/tests/performance/test_assistant_memory_performance.py`
-- [ ] T085 Add structured log assertions for memory edit, pause, Dream failure, and card generation in `backend/tests/integration/test_chat_memory_flow.py`
-- [ ] T086 Run backend focused tests from `specs/010-ai-assistant-optimization/quickstart.md`
-- [ ] T087 Run `npm run build:weapp` in `frontend/`
+- [X] T082 [P] Update `PROJECT_REFERENCE.md` with 010 assistant memory, cards, and Dream scheduler notes
+- [X] T083 [P] Update `AGENTS.md` if implementation changes quickstart commands or feature references
+- [X] T084 Add query performance checks for assistant memory and Dream message loading in `backend/tests/performance/test_assistant_memory_performance.py`
+- [X] T085 Add structured log assertions for memory edit, pause, Dream failure, and card generation in `backend/tests/integration/test_chat_memory_flow.py`
+- [X] T086 Run backend focused tests from `specs/010-ai-assistant-optimization/quickstart.md`
+- [X] T087 Run `npm run build:weapp` in `frontend/`
 - [ ] T088 Manually validate WeChat DevTools flows from `specs/010-ai-assistant-optimization/quickstart.md`
-- [ ] T089 Verify no mini-program runtime code uses `process.env` in `frontend/src/`
-- [ ] T090 Verify no migration deletes tables and document additive schema approach in `specs/010-ai-assistant-optimization/quickstart.md`
-- [ ] T091 Review AI prompt wording and card copy for medical safety boundaries in `backend/app/agents/prompts.py` and `frontend/src/components/chat/FoodTransitionPlanCard.tsx`
+- [X] T089 Verify no mini-program runtime code uses `process.env` in `frontend/src/`
+- [X] T090 Verify no migration deletes tables and document additive schema approach in `specs/010-ai-assistant-optimization/quickstart.md`
+- [X] T091 Review AI prompt wording and card copy for medical safety boundaries in `backend/app/agents/prompts.py` and `frontend/src/components/chat/FoodTransitionPlanCard.tsx`
 
 ---
 

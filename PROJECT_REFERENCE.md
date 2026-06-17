@@ -1,6 +1,6 @@
 # Pet Store 项目参考文档
 
-> 最后更新：2026-05-23 | 基于 `005-spu-migration` 分支
+> 最后更新：2026-06-17 | 基于 `010-ai-assistant-optimization` 分支
 >
 > 文档自动更新规则：每次完成功能修改后，将新增/变更同步至此文件。
 
@@ -172,6 +172,26 @@ pet-store/
 | referenced_spus | JSONB DEFAULT '[]' | 引用的SPU ID列表 |
 | created_at | TIMESTAMPTZ | 创建时间 |
 
+#### `assistant_memories` — AI助手长期记忆
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| id | SERIAL PK | 主键 |
+| user_id | INT FK → users.id ON DELETE CASCADE | 用户ID，唯一 |
+| enabled | BOOLEAN DEFAULT true | 是否启用记忆 |
+| pet_status | TEXT | 宠物状况摘要 |
+| preferences_budget | TEXT | 偏好与预算摘要 |
+| common_questions | TEXT | 常问问题摘要 |
+| cautions | TEXT | 注意事项摘要 |
+| summary | TEXT | 当前长期记忆摘要，限制 500 字符以内 |
+| last_extracted_message_id | INT | Dream 已处理到的最新消息ID |
+| last_extracted_at | TIMESTAMPTZ | 最近 Dream 提取时间 |
+| last_user_edited_at | TIMESTAMPTZ | 用户最近手动编辑时间 |
+| created_at / updated_at | TIMESTAMPTZ | 创建/更新时间 |
+
+约束：`uq_assistant_memories_user_id` (user_id 唯一)
+约束：`ck_assistant_memories_summary_len` (summary <= 500 字符)
+索引：`ix_assistant_memories_user_id`、`ix_assistant_memories_enabled`、`ix_assistant_memories_enabled_extracted`
+
 ### 2.4 数据采集相关
 
 #### `data_sources` — 数据源
@@ -328,17 +348,25 @@ pet-store/
 | GET | `/chat/sessions/{session_id}/messages` | 获取会话消息 |
 | POST | `/chat/sessions/{session_id}/clear` | 清空会话 |
 | POST | `/chat/stream` | **SSE流式对话** — `{ session_id, content, context? }` |
+| GET | `/chat/memory` | 查看当前用户 AI 助手长期记忆 |
+| PUT | `/chat/memory` | 更新当前用户记忆四个分类 |
+| PATCH | `/chat/memory/settings` | 暂停/恢复长期记忆 |
+| DELETE | `/chat/memory` | 清空当前用户长期记忆 |
+| POST | `/admin/chat/memory/dream/run` | 管理员触发 Dream 批处理/dry-run |
 
 #### SSE 事件格式
 ```
 event: message
 data: {"content": "这是部分回复内容..."}
 
+event: answer_cards
+data: {"cards": [{"card_type": "recommendation_list", "payload": {...}}]}
+
 event: spus
 data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 ```
 
-> 流程：user消息在stream开始前写入 → SSE流式返回 → assistant完整回复在stream结束后写入DB
+> 流程：user消息在stream开始前写入 → SSE流式返回 `message`/`tool_call`/`tool_result`/`answer_cards`/`spus` → assistant完整回复在stream结束后写入DB。`answer_cards` 当前支持 `spu`、`comparison`、`recommendation_list`、`ingredient_insight`、`follow_up`、`food_transition_plan`。
 
 ### 3.4 收藏
 | 方法 | 路径 | 说明 |
@@ -398,6 +426,7 @@ data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 | `/pages/chat/list` | 历史会话 | 查看/切换历史对话 |
 | `/pages/category/index` | 分类导航 | 全部分类 |
 | `/pages/mine/favorites` | 我的收藏 | 收藏SPU列表 |
+| `/pages/mine/ai-memory` | AI助手对我的印象 | 查看、编辑、暂停/恢复、清空长期记忆 |
 
 ### 前端状态管理 (Zustand)
 | Store | 文件 | 管理状态 |
@@ -431,7 +460,7 @@ data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 ## 6. 关键技术决策
 
 1. **SPU vs Product**：Feature 004 将原 `products` 表重构为 `spus` + `spu_listings` 双表体系，支持跨平台比价
-2. **SSE格式**：Agent 输出 `event: message\ndata:` 和 `event: spus\ndata:` 双事件类型，chat.py 解析后分别累积内容和提取SPU IDs
+2. **SSE格式**：Agent 输出 `event: message\ndata:`、`event: answer_cards\ndata:` 和 `event: spus\ndata:` 等事件类型，chat.py 解析后分别累积内容、结构化卡片和引用SPU IDs
 3. **TabBar页面路由**：chat/index 是tabBar页面，不能通过 `navigateTo` 传参，必须用 `switchTab` + `StorageSync` 传递 sessionId
 4. **Chat会话惰性创建**：只有用户发送第一条消息时才创建会话，避免空会话污染历史记录
 5. **对比维度**：SPU体系下对比维度为 `["品牌", "适用宠物", "价格区间", "主要成分", "营养分析", "优点", "缺点"]`
@@ -440,3 +469,5 @@ data: {"spus": [{"id": 1, "name": "皇家猫粮", ...}]}
 8. **异步导入流程**：`POST /admin/goods/listings/import` 改为后台任务。端点立即返回 `job_id`，实际抓取+LLM匹配在 `asyncio.create_task` 中执行。前端通过 `/admin/goods/jobs/{job_id}` 轮询状态
 9. **SPU定向导入（2026-05-25更新）**：新增 `POST /admin/goods/spus/{id}/import-listings` 端点，导入操作从 SPU 列表页的全局关键词搜索改为 SPU 详情页的定向导入。系统默认用 SPU 的 `brand+name+model` 作为搜索关键词，且 LLM 匹配仅针对该 SPU（而非遍历全库），匹配结果直接关联到该 SPU。全局导入保留为发现式导入场景使用
 10. **SVG图标组件体系**：项目根目录 `*.svg` 为设计源文件（favorite/favorite-filled/share/ai-assistant）。`components/Icons.tsx` 导出内联SVG的React组件（`FavoriteIcon`/`FavoriteFilledIcon`/`ShareIcon`/`AiAssistantIcon`），支持 `size`/`color`/`className` 属性，同时兼容Taro小程序和Web React渲染
+11. **AI助手卡片与换粮能力（2026-06-17更新）**：商品问答通过 `answer_cards` 输出 typed cards，前端按卡片类型渲染；换粮问题优先走 `create_food_transition_plan`，缺少旧粮、新粮或肠胃状态时返回追问卡片，完整输入时返回阶段比例、观察项、停止条件和兽医安全边界
+12. **Dream长期记忆（2026-06-17更新）**：每日 04:30 调度 `daily_assistant_memory_dream`，从登录用户新增对话中提取宠物状况、偏好预算、常问问题、注意事项，写入 `assistant_memories` 当前摘要。摘要不保留历史版本，限制 500 字符以内；用户手动编辑优先于较旧 Dream 结果；暂停记忆后 Dream 与 Agent prompt 均不使用该记忆

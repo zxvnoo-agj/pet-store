@@ -26,7 +26,8 @@ DEBUG=false OPENAI_API_KEY=test-key venv/bin/pytest \
   tests/integration/test_chat_assistant_quality.py \
   tests/integration/test_chat_memory_flow.py \
   tests/integration/test_dream_memory_job.py \
-  tests/contract/test_assistant_memory_contract.py
+  tests/contract/test_assistant_memory_contract.py \
+  tests/performance/test_assistant_memory_performance.py
 
 # Full feature suite once US3-US5 are implemented:
 venv/bin/pytest tests/unit/test_assistant_memory_service.py
@@ -35,6 +36,7 @@ venv/bin/pytest tests/unit/test_food_transition_service.py
 venv/bin/pytest tests/integration/test_chat_memory_flow.py
 venv/bin/pytest tests/integration/test_dream_memory_job.py
 venv/bin/pytest tests/contract/test_assistant_memory_contract.py
+venv/bin/pytest tests/performance/test_assistant_memory_performance.py
 ```
 
 ## 3. Validate memory API
@@ -135,5 +137,10 @@ Expected:
 ## Notes
 
 - Do not delete tables during this feature.
+- Migration `backend/alembic/versions/010_assistant_memories.py` is additive: it creates only `assistant_memories` plus supporting indexes/constraints. Downgrade is intentionally non-destructive because project policy forbids table deletion without explicit user approval.
+- Before release, verify no destructive operation is present in the Feature 010 migration:
+  ```bash
+  rg "drop_table|DROP TABLE|op\\.drop" backend/alembic/versions/010_assistant_memories.py
+  ```
 - Do not use `process.env` in mini-program runtime code; use `frontend/src/config/env.ts`.
 - Long-term memory is for pet supplies and pet knowledge personalization only, not advertising targeting.

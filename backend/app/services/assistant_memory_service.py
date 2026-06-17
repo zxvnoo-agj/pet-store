@@ -13,6 +13,7 @@ from app.schemas.assistant_memory import (
     AssistantMemoryUpdate,
     compose_memory_summary,
 )
+from app.services.assistant_observability import log_memory_update
 
 
 class AssistantMemoryService:
@@ -43,6 +44,7 @@ class AssistantMemoryService:
         memory.last_user_edited_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(memory)
+        log_memory_update("edit", user_id, character_count=len(memory.summary or ""))
         return self.to_response(memory)
 
     async def update_settings(self, user_id: int, enabled: bool) -> AssistantMemorySettingsResponse:
@@ -51,6 +53,7 @@ class AssistantMemoryService:
         memory.last_user_edited_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(memory)
+        log_memory_update("settings", user_id, enabled=bool(memory.enabled))
         return AssistantMemorySettingsResponse(enabled=memory.enabled, last_updated_at=memory.updated_at)
 
     async def clear_memory(self, user_id: int) -> AssistantMemoryResponse:
@@ -59,6 +62,7 @@ class AssistantMemoryService:
         memory.last_user_edited_at = datetime.now(UTC)
         await self.db.commit()
         await self.db.refresh(memory)
+        log_memory_update("clear", user_id, character_count=0)
         return self.to_response(memory)
 
     async def build_prompt_context(self, user_id: int) -> str:

@@ -9,6 +9,9 @@ ASSISTANT_TOOL_ERROR = "assistant_tool_error"
 ASSISTANT_HEALTH_SAFETY = "assistant_health_safety"
 ASSISTANT_CARD_GENERATED = "assistant_card_generated"
 ASSISTANT_CARD_SKIPPED = "assistant_card_skipped"
+ASSISTANT_MEMORY_UPDATED = "assistant_memory_updated"
+ASSISTANT_MEMORY_SETTINGS_UPDATED = "assistant_memory_settings_updated"
+ASSISTANT_MEMORY_CLEARED = "assistant_memory_cleared"
 
 
 def log_tool_call(tool: str, status: str, **extra: Any) -> None:
@@ -31,3 +34,11 @@ def log_card_generation(cards: list[Mapping[str, Any]], **extra: Any) -> None:
         card_types=card_types,
         **extra,
     )
+
+
+def log_memory_update(action: str, user_id: int, **extra: Any) -> None:
+    event_name = {
+        "settings": ASSISTANT_MEMORY_SETTINGS_UPDATED,
+        "clear": ASSISTANT_MEMORY_CLEARED,
+    }.get(action, ASSISTANT_MEMORY_UPDATED)
+    logger.info(event_name, user_id=user_id, action=action, **extra)
