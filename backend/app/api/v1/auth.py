@@ -9,7 +9,7 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.common import ApiResponse
 from app.schemas.user import UserUpdate, WechatLoginRequest
-from app.services.auth_service import AuthService
+from app.services.auth_service import AuthService, WeChatLoginUnavailableError
 from app.services.pet_service import PetService
 
 router = APIRouter()
@@ -43,7 +43,12 @@ async def wechat_login(
     db: AsyncSession = Depends(get_db),
 ):
     service = AuthService(db)
-    result = await service.wechat_login(data.code, data.encrypted_data, data.iv)
+    try:
+        result = await service.wechat_login(data.code, data.encrypted_data, data.iv)
+    except WeChatLoginUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return ApiResponse(
         data={
             "token": result.token,

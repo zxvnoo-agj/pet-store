@@ -10,6 +10,10 @@ from app.schemas.user import UserResponse, WechatLoginResponse
 from app.utils.wechat import WeChatDecryptError, decrypt_user_info
 
 
+class WeChatLoginUnavailableError(RuntimeError):
+    """Raised when the backend cannot reach WeChat's login API."""
+
+
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -20,21 +24,33 @@ class AuthService:
         encrypted_data: str | None = None,
         iv: str | None = None,
     ) -> WechatLoginResponse:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://api.weixin.qq.com/sns/jscode2session",
-                params={
-                    "appid": settings.WECHAT_APP_ID,
-                    "secret": settings.WECHAT_APP_SECRET,
-                    "js_code": code,
-                    "grant_type": "authorization_code",
-                },
-            )
-            data = response.json()
-            openid = data.get("openid")
-            session_key = data.get("session_key")
-            if not openid:
-                raise ValueError(f"WeChat login failed: {data.get('errmsg', 'unknown error')}")
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=5.0)) as client:
+                response = await client.get(
+                    "https://api.weixin.qq.com/sns/jscode2session",
+                    params={
+                        "appid": settings.WECHAT_APP_ID,
+                        "secret": settings.WECHAT_APP_SECRET,
+                        "js_code": code,
+                        "grant_type": "authorization_code",
+                    },
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.RequestError as exc:
+            logger.exception("Failed to request WeChat jscode2session")
+            raise WeChatLoginUnavailableError("WeChat login service is temporarily unavailable") from exc
+        except ValueError as exc:
+            logger.exception("Failed to parse WeChat jscode2session response")
+            raise WeChatLoginUnavailableError("Invalid WeChat login service response") from exc
+        except httpx.HTTPStatusError as exc:
+            logger.exception("WeChat jscode2session returned non-success status")
+            raise WeChatLoginUnavailableError("WeChat login service returned an error") from exc
+
+        openid = data.get("openid")
+        session_key = data.get("session_key")
+        if not openid:
+            raise ValueError(f"WeChat login failed: {data.get('errmsg', 'unknown error')}")
 
         result = await self.db.execute(select(User).where(User.openid == openid))
         user = result.scalar_one_or_none()
