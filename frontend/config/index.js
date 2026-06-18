@@ -1,8 +1,11 @@
 const { UnifiedWebpackPluginV5 } = require('weapp-tailwindcss/webpack')
 
 const isProd = process.env.NODE_ENV === 'production'
+const isWeapp = process.env.TARO_ENV === 'weapp'
+const PROD_API_BASE_URL = 'https://api.pawpalai.cn/v1'
+const LOCAL_API_BASE_URL = 'http://127.0.0.1:8001/v1'
 const apiBaseUrl = process.env.TARO_API_BASE_URL || (
-  isProd ? 'https://api.pawpalai.cn/v1' : 'http://127.0.0.1:8001/v1'
+  isProd || isWeapp ? PROD_API_BASE_URL : LOCAL_API_BASE_URL
 )
 
 const config = {
