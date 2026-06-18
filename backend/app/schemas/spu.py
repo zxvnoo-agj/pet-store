@@ -28,6 +28,16 @@ class SpuBase(BaseModel):
     image_urls: list[str] = []
     status: str = "active"
 
+    @field_validator("ingredients", "pros", "cons", "image_urls", mode="before")
+    @classmethod
+    def normalize_nullable_lists(cls, value):
+        return [] if value is None else value
+
+    @field_validator("nutrition", "extra_attrs", mode="before")
+    @classmethod
+    def normalize_nullable_dicts(cls, value):
+        return {} if value is None else value
+
 
 class SpuCreate(SpuBase):
     category_id: int
@@ -97,6 +107,28 @@ class SpuMiniProgramListResponse(BaseModel):
     rating: float = 0.0
     review_count: int = 0
     status: str = "active"
+
+    @field_validator("image_urls", mode="before")
+    @classmethod
+    def normalize_nullable_image_urls(cls, value):
+        return [] if value is None else value
+
+    @field_validator("currency", "status", mode="before")
+    @classmethod
+    def normalize_nullable_strings(cls, value, info):
+        if value is not None:
+            return value
+        return "CNY" if info.field_name == "currency" else "active"
+
+    @field_validator("rating", mode="before")
+    @classmethod
+    def normalize_nullable_rating(cls, value):
+        return 0.0 if value is None else value
+
+    @field_validator("review_count", mode="before")
+    @classmethod
+    def normalize_nullable_review_count(cls, value):
+        return 0 if value is None else value
 
     class Config:
         from_attributes = True
