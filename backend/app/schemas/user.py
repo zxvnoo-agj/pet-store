@@ -20,6 +20,11 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+class UserUpdate(BaseModel):
+    nickname: str | None = None
+    avatar_url: str | None = None
+
+
 class WechatLoginRequest(BaseModel):
     code: str
     encrypted_data: str | None = None

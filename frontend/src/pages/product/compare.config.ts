@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '商品对比',
+  navigationBarTitleText: '选择对比',
 })

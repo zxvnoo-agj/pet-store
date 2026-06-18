@@ -3,11 +3,13 @@ import time
 import uuid
 from collections import defaultdict
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -97,6 +99,10 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+UPLOAD_ROOT = Path("uploads")
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_ROOT), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

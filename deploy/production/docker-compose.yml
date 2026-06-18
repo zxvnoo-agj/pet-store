@@ -73,6 +73,7 @@ services:
     restart: unless-stopped
     volumes:
       - backend_logs:/app/logs
+      - backend_uploads:/app/uploads
     networks:
       - petstore_prod
 
@@ -113,6 +114,7 @@ volumes:
   redis_data:
   meilisearch_data:
   backend_logs:
+  backend_uploads:
   nginx_logs:
 
 networks:

@@ -120,7 +120,15 @@
 }
 
 .mini-card {
-  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.08), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.mini-card-soft {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.035);
+}
+
+.mini-safe-bottom {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 .mini-press {
@@ -139,6 +147,17 @@
 }
 
 .mini-share-button::after {
+  border: 0;
+}
+
+.mini-avatar-button {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  border: 0;
+}
+
+.mini-avatar-button::after {
   border: 0;
 }
 

@@ -4,6 +4,7 @@ import Taro, { useRouter } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import { useCompareStore } from '../../stores/compareStore'
 import { apiClient } from '../../services/api'
+import { PackageIcon } from '../../components/Icons'
 
 type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating'
 
@@ -62,7 +63,14 @@ export default function ProductListPage() {
       if (categoryId) query.category_id = categoryId
       if (sortBy !== 'default') query.sort = sortBy
 
-      const res = await apiClient.get('/spus', query)
+      const res = searchQuery
+        ? await apiClient.get('/spus/search', {
+            keywords: searchQuery,
+            ...(petType ? { pet_type: petType } : {}),
+            page: targetPage,
+            page_size: PAGE_SIZE,
+          })
+        : await apiClient.get('/spus', query)
       const newItems = res.items || []
       const pagination = res.pagination || {}
 
@@ -122,35 +130,32 @@ export default function ProductListPage() {
   }
 
   const getPageTitle = () => {
-    if (searchQuery) return `搜索: ${searchQuery}`
-    if (petType && category) return `${petType === 'cat' ? '猫咪' : '狗狗'}${category}`
-    if (petType) return petType === 'cat' ? '猫咪用品' : '狗狗用品'
+    if (searchQuery) return `选择参考: ${searchQuery}`
     if (category) return category
-    return '全部商品'
+    if (petType) return petType === 'cat' ? '猫咪用品' : '狗狗用品'
+    return '全部参考'
   }
 
   const sortOptions: { key: SortType; label: string }[] = [
     { key: 'default', label: '综合排序' },
     { key: 'rating', label: '评分最高' },
-    { key: 'price_asc', label: '价格最低' },
-    { key: 'price_desc', label: '价格最高' },
+    { key: 'price_asc', label: '参考价低' },
+    { key: 'price_desc', label: '参考价高' },
   ]
 
-  const goBack = () => {
-    Taro.navigateBack()
-  }
-
   return (
-    <View className="flex flex-col h-screen bg-gray-50">
-      {/* 头部 */}
-      <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
-        <Text className="text-gray-600" onClick={goBack}>←</Text>
-        <Text className="flex-1 text-sm font-bold text-gray-800 truncate" userSelect>{getPageTitle()}</Text>
+    <View className="flex flex-col h-screen bg-[#f8fafc]">
+      {/* 列表工具栏：原生导航栏已提供返回和页面标题 */}
+      <View className="shrink-0 bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-100">
+        <View className="flex-1 min-w-0">
+          <Text className="text-lg font-bold text-gray-900 truncate block" userSelect>{getPageTitle()}</Text>
+          <Text className="text-sm text-gray-500 mt-0.5 block">共 {total} 个选择参考</Text>
+        </View>
         <View
-          className="flex items-center gap-1 text-xs text-gray-500"
+          className={`px-3 py-2 rounded-full mini-press ${showSortMenu ? 'bg-orange-50' : 'bg-gray-100'}`}
           onClick={() => setShowSortMenu(!showSortMenu)}
         >
-          <Text>筛选 ▼</Text>
+          <Text className={`text-sm font-medium ${showSortMenu ? 'text-orange-600' : 'text-gray-600'}`}>筛选</Text>
         </View>
       </View>
 
@@ -176,12 +181,7 @@ export default function ProductListPage() {
         </View>
       )}
 
-      {/* 结果数 */}
-      <View className="shrink-0 px-4 py-2 bg-gray-50">
-        <Text className="text-xs text-gray-400">共 {total} 件商品</Text>
-      </View>
-
-      {/* 商品列表 - 支持滚动加载 */}
+      {/* 选择参考列表 - 支持滚动加载 */}
       <ScrollView
         className="flex-1"
         scrollY
@@ -190,7 +190,7 @@ export default function ProductListPage() {
         lowerThreshold={150}
         style={{ height: '100%' }}
       >
-        <View className="px-4 pb-4 space-y-3">
+        <View className="px-4 py-4 space-y-3">
           {spus.map((spu: any) => (
             <SpuCard key={spu.id} spu={spu} />
           ))}
@@ -212,7 +212,7 @@ export default function ProductListPage() {
           {/* 空状态 */}
           {spus.length === 0 && !loading && (
             <View className="flex flex-col items-center justify-center py-20 text-gray-400">
-              <Text className="text-sm mt-3">暂无相关商品</Text>
+              <Text className="text-sm mt-3">暂无相关参考</Text>
             </View>
           )}
         </View>
@@ -223,19 +223,19 @@ export default function ProductListPage() {
         <View
           className="shrink-0 px-4 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3 z-10"
         >
-          <View className="flex items-center gap-2 flex-1">
-            <View className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-              <Text className="text-sm">📊</Text>
-            </View>
+            <View className="flex items-center gap-2 flex-1">
+              <View className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <PackageIcon size={18} color="#f97316" />
+              </View>
             <Text className="text-sm text-gray-700">
-              已选 <Text className="text-orange-500 font-bold">{compareList.length}</Text> 个商品
+              已选 <Text className="text-orange-500 font-bold">{compareList.length}</Text> 个参考
             </Text>
           </View>
           <View
             className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full"
             onClick={() => Taro.navigateTo({ url: '/pages/product/compare' })}
           >
-            <Text>去对比</Text>
+            <Text>帮我判断</Text>
           </View>
         </View>
       )}

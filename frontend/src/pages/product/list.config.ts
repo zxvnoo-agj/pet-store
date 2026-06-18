@@ -1,3 +1,3 @@
 export default definePageConfig({
-  navigationBarTitleText: '商品列表',
+  navigationBarTitleText: '选择参考',
 })

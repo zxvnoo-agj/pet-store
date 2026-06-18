@@ -4,8 +4,8 @@ interface AuthState {
   token: string | null
   user: {
     id: number
-    nickname: string
-    avatar_url: string
+    nickname: string | null
+    avatar_url: string | null
   } | null
   isLoggedIn: boolean
   hasAddedPet: boolean

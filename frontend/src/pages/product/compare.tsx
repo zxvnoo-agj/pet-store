@@ -147,13 +147,13 @@ export default function ComparePage() {
           </View>
           <Text className="text-base font-bold text-gray-700 mb-2">对比栏为空</Text>
           <Text className="text-sm text-gray-400 text-center mb-6">
-            添加 2-4 个商品进行对比，帮你选出最合适的产品
+            添加 2-4 个参考进行对比，帮你判断更适合哪一个
           </Text>
           <View
             className="px-6 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-full"
             onClick={navigateToProductList}
           >
-            <Text>去挑选商品</Text>
+            <Text>去找参考</Text>
           </View>
         </View>
       </View>
@@ -164,9 +164,9 @@ export default function ComparePage() {
     return (
       <View className="flex flex-col h-screen bg-gray-50">
         <View className="flex-1 flex flex-col items-center justify-center px-8">
-          <Text className="text-base font-bold text-gray-700 mb-2">还需添加 1 个商品</Text>
+          <Text className="text-base font-bold text-gray-700 mb-2">还需添加 1 个参考</Text>
           <Text className="text-sm text-gray-400 text-center mb-6">
-            至少需要 2 个商品才能进行对比
+            至少需要 2 个参考才能进行对比
           </Text>
           <View
             className="px-6 py-2.5 bg-orange-500 text-white text-sm font-medium rounded-full"
@@ -295,7 +295,7 @@ export default function ComparePage() {
               onClick={navigateToProductList}
             >
               <Text className="text-orange-500 text-sm">+</Text>
-              <Text className="text-orange-500 text-sm">添加更多商品对比</Text>
+              <Text className="text-orange-500 text-sm">添加更多选择参考</Text>
             </View>
           </View>
         )}

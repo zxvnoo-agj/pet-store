@@ -48,7 +48,7 @@ export default function FavoritesPage() {
       <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
         <Text className="text-gray-600" onClick={goBack}>←</Text>
         <FavoriteFilledIcon size={18} color="#f97316" />
-        <Text className="flex-1 text-sm font-bold text-gray-800">我的收藏</Text>
+        <Text className="flex-1 text-sm font-bold text-gray-800">收藏指南</Text>
       </View>
 
       <View className="flex-1 overflow-y-auto px-4 py-4">
@@ -60,7 +60,7 @@ export default function FavoritesPage() {
 
         {spus.length === 0 && (
           <View className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <Text className="text-sm">暂无收藏商品</Text>
+            <Text className="text-sm">暂无收藏参考</Text>
           </View>
         )}
       </View>

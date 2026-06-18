@@ -32,15 +32,15 @@ export default function ProductListPage() {
   const getPageTitle = () => {
     if (searchQuery) return `搜索: ${searchQuery}`;
     if (brand) return brand;
-    if (categoryId) return '商品列表';
-    return '全部商品';
+    if (categoryId) return '选择参考';
+    return '全部参考';
   };
 
   const sortOptions: { key: SortType; label: string }[] = [
     { key: 'default', label: '综合排序' },
     { key: 'rating', label: '评分最高' },
-    { key: 'price_asc', label: '价格最低' },
-    { key: 'price_desc', label: '价格最高' },
+    { key: 'price_asc', label: '参考价低' },
+    { key: 'price_desc', label: '参考价高' },
   ];
 
   return (
@@ -86,7 +86,7 @@ export default function ProductListPage() {
 
         <div className="shrink-0 px-4 py-2 bg-gray-50">
           <span className="text-xs text-gray-400">
-            {loading ? '加载中...' : `共 ${spus.length} 件商品`}
+            {loading ? '加载中...' : `共 ${spus.length} 个选择参考`}
           </span>
         </div>
 
@@ -106,7 +106,7 @@ export default function ProductListPage() {
           {!loading && spus.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <Icon name="slidersHorizontal" size={40} color="#9CA3AF" />
-              <p className="text-sm mt-3">暂无相关商品</p>
+              <p className="text-sm mt-3">暂无相关参考</p>
             </div>
           )}
         </main>

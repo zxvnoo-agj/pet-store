@@ -374,7 +374,7 @@ const ProductDetailPage: React.FC = () => {
             加入对比
           </button>
           <button className="flex-1 bg-gray-900 text-white text-sm font-medium py-2.5 rounded-full active:bg-gray-800 transition-colors">
-            去购买
+            问AI分析
           </button>
         </div>
       </div>

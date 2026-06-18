@@ -168,7 +168,7 @@ export default function SearchPage() {
                 dangerouslySetInnerHTML={{ __html: suggestion.highlight }}
               />
               <Text className="text-xs text-gray-400">
-                {suggestion.type === 'product' ? '商品' : suggestion.type === 'brand' ? '品牌' : '分类'}
+                {suggestion.type === 'product' ? '产品' : suggestion.type === 'brand' ? '品牌' : '分类'}
               </Text>
             </View>
           ))}
@@ -223,7 +223,7 @@ export default function SearchPage() {
                 搜索结果
               </Text>
               <Text className="text-xs text-gray-400">
-                共 {results.spus?.length || 0} 件商品
+                共 {results.spus?.length || 0} 个选择参考
               </Text>
             </View>
             
@@ -236,7 +236,7 @@ export default function SearchPage() {
             {results.spus?.length === 0 && !loading && (
               <View className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <Text className="text-4xl mb-2">🔍</Text>
-                <Text className="text-sm">未找到相关商品</Text>
+                <Text className="text-sm">未找到相关参考</Text>
                 <Text className="text-xs text-gray-400 mt-1">试试其他关键词</Text>
               </View>
             )}

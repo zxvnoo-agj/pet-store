@@ -72,6 +72,16 @@ export const ArrowRightIcon: React.FC<IconProps> = ({ size = 24, className = '',
   <Image src={dataUri(ArrowRightSvg, size, color)} className={className} style={{ width: size, height: size }} />
 )
 
+const ClockSvg = `<circle cx="12" cy="12" r="8"/><path d="M12 7.5v5l3.2 1.8"/>`
+export const ClockIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(ClockSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
+const SettingsSvg = `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 3.1-.2-.1a1.7 1.7 0 0 0-1.9.1l-.4.2a1.7 1.7 0 0 0-1 1.5v.2H10v-.2a1.7 1.7 0 0 0-1-1.5l-.4-.2a1.7 1.7 0 0 0-1.9-.1l-.2.1L4.7 17l.1-.1A1.7 1.7 0 0 0 5.1 15l-.2-.4a1.7 1.7 0 0 0-1.4-1H3.2V10h.3a1.7 1.7 0 0 0 1.4-1l.2-.4a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-3.1.2.1a1.7 1.7 0 0 0 1.9-.1l.4-.2a1.7 1.7 0 0 0 1-1.5V1.6h4v.2a1.7 1.7 0 0 0 1 1.5l.4.2a1.7 1.7 0 0 0 1.9.1l.2-.1 1.8 3.1-.1.1a1.7 1.7 0 0 0-.3 1.9l.2.4a1.7 1.7 0 0 0 1.4 1h.3v3.6h-.3a1.7 1.7 0 0 0-1.4 1z"/>`
+export const SettingsIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
+  <Image src={dataUri(SettingsSvg, size, color)} className={className} style={{ width: size, height: size }} />
+)
+
 const SendSvg = `<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4 18-7z"/>`
 export const SendIcon: React.FC<IconProps> = ({ size = 24, className = '', color = '#6B7280' }) => (
   <Image src={dataUri(SendSvg, size, color)} className={className} style={{ width: size, height: size }} />

@@ -218,22 +218,18 @@ export default function HomePage() {
   const isBrowsingOther = browsingOther && browsingSpecies
 
   return (
-    <View className="bg-[#fff8f2] min-h-screen">
+    <View className="bg-[#fff9f3] min-h-screen">
       {/* 顶部欢迎区 */}
       <View className="px-5 pt-6 pb-2 mini-fade-up">
         <View className="bg-white rounded-3xl px-4 py-4 border border-orange-100 mini-card">
-          <View className="flex items-start justify-between gap-3">
+          <View className="flex items-center justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-xs text-orange-500 font-medium">下午好</Text>
-              <Text className="text-xl font-bold text-gray-900 mt-1 leading-snug">
-                今天给<Text className="text-orange-500">{getActivePetName()}</Text>挑点什么？
-              </Text>
-              <Text className="text-xs text-gray-500 mt-2 leading-relaxed">
-                搜索、场景推荐和对比都在这里，先从最常买的需求开始。
+              <Text className="text-xl font-bold text-gray-900 leading-snug">
+                今天要为<Text className="text-orange-500">{getActivePetName()}</Text>看点什么？
               </Text>
             </View>
-            <View className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
-              <SparkleIcon size={24} color="#f97316" />
+            <View className="w-11 h-11 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
+              <SparkleIcon size={22} color="#f97316" />
             </View>
           </View>
           <View
@@ -241,8 +237,8 @@ export default function HomePage() {
             className="mt-4 flex items-center gap-2 bg-gray-50 rounded-full px-4 py-3 border border-gray-100 mini-press"
           >
             <SearchIcon size={17} color="#f97316" />
-            <Text className="text-sm text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
-            <Text className="text-xs text-orange-400 mini-caret">→</Text>
+            <Text className="text-sm text-gray-400 flex-1">搜索问题、成分、产品名...</Text>
+            <Text className="text-xs text-orange-400">分析</Text>
           </View>
         </View>
       </View>
@@ -340,7 +336,7 @@ export default function HomePage() {
         <View className="px-5 pt-1">
         <View className="bg-white border border-orange-200 rounded-2xl px-3 py-2 mini-scale-in">
             <Text className="text-xs text-orange-600">
-              正在浏览{SPECIES_LABELS[browsingSpecies!] || browsingSpecies}用品 · 点击宠物卡片切换回专属推荐
+              正在浏览{SPECIES_LABELS[browsingSpecies!] || browsingSpecies}选择指南 · 点击宠物卡片切换回专属推荐
             </Text>
           </View>
         </View>
@@ -378,7 +374,7 @@ export default function HomePage() {
         </View>
       )}
 
-      {/* 场景快捷推荐 */}
+      {/* 选择场景 */}
       <ScenarioSection
         key={activeSpecies}
         scenarios={getScenariosByPetType(activeSpecies)}
@@ -393,13 +389,13 @@ export default function HomePage() {
           <Text className="text-base text-gray-900 font-bold">
             {activeScenarioId ? (
               <>
-                <Text className="text-orange-500 font-medium">场景精选</Text>
+                <Text className="text-orange-500 font-medium">场景建议</Text>
                 <Text className="text-gray-400"> · </Text>
                 <Text>{getActivePetName()}</Text>
               </>
             ) : (
               <>
-                给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的推荐
+                给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的选择参考
               </>
             )}
           </Text>
@@ -408,7 +404,7 @@ export default function HomePage() {
               className="text-[11px] text-orange-500 font-medium"
               onClick={() => navigateToProducts(activeSpecies)}
             >
-              更多 →
+              更多参考
             </Text>
           )}
         </View>
@@ -417,7 +413,7 @@ export default function HomePage() {
         {isSearching && (
           <View className="py-8 flex flex-col items-center justify-center">
             <View className="w-6 h-6 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
-            <Text className="text-xs text-gray-400 mt-3">正在搜索相关商品...</Text>
+            <Text className="text-xs text-gray-400 mt-3">正在分析相关参考...</Text>
           </View>
         )}
 
@@ -437,12 +433,12 @@ export default function HomePage() {
         {/* Empty */}
         {!isSearching && !scenarioError && activeScenarioId && scenarioResults?.length === 0 && (
           <View className="py-8 flex flex-col items-center justify-center">
-            <Text className="text-sm text-gray-500">暂无相关商品，试试其他场景？</Text>
+            <Text className="text-sm text-gray-500">暂无相关参考，试试其他场景？</Text>
             <Text
               className="text-xs text-orange-500 mt-2"
               onClick={() => navigateToProducts(activeSpecies)}
             >
-              查看更多商品 →
+              查看更多参考
             </Text>
           </View>
         )}
@@ -460,7 +456,7 @@ export default function HomePage() {
       {/* 底部提示 */}
       <View className="px-5 pb-8 text-center">
         <Text className="text-[10px] text-gray-300">
-          产品信息来自真实用户评价，仅供参考
+          分析建议来自产品资料与真实评价，仅供养宠决策参考
         </Text>
       </View>
     </View>

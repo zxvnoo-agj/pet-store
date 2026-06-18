@@ -4,8 +4,8 @@ import MobileLayout from '../components/MobileLayout';
 import { FavoriteIcon } from '../components/Icons';
 
 const menuItems = [
-  { icon: 'favorite' as const, label: '我的收藏', desc: '12个商品', color: 'text-red-500', bg: 'bg-red-50' },
-  { icon: 'clock' as const, label: '浏览历史', desc: '', color: 'text-blue-500', bg: 'bg-blue-50' },
+  { icon: 'favorite' as const, label: '收藏指南', desc: '12个参考', color: 'text-red-500', bg: 'bg-red-50' },
+  { icon: 'clock' as const, label: '最近查看', desc: '', color: 'text-blue-500', bg: 'bg-blue-50' },
   { icon: 'messageSquare' as const, label: '我的评价', desc: '3条评价', color: 'text-green-500', bg: 'bg-green-50' },
   { icon: 'star' as const, label: '我的关注', desc: '关注的品牌', color: 'text-orange-500', bg: 'bg-orange-50' },
 ];

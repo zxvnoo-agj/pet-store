@@ -21,7 +21,7 @@ COPY backend/scripts ./scripts
 COPY backend/pyproject.toml .
 COPY backend/data ./data
 
-RUN mkdir -p /app/logs && chown -R petshop:petshop /app/logs
+RUN mkdir -p /app/logs /app/uploads && chown -R petshop:petshop /app/logs /app/uploads
 USER petshop
 
 EXPOSE 8000

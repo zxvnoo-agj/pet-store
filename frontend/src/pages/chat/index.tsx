@@ -3,7 +3,7 @@ import { View, Text, Input, ScrollView, Image } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import { apiClient } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
-import { getSuggestedQuestions } from '../../services/petApi'
+import { getMyPets, getSuggestedQuestions } from '../../services/petApi'
 import MarkdownRenderer from '../../components/MarkdownRenderer'
 import { AiAssistantIcon, SendIcon, SparkleIcon } from '../../components/Icons'
 import { API_BASE_URL } from '../../config/env'
@@ -49,10 +49,17 @@ const TOOL_NAMES: Record<string, string> = {
 }
 
 const DEFAULT_QUESTIONS = [
-  '3个月幼猫推荐什么猫粮？',
-  '皇家和渴望哪个好？',
-  '200元预算推荐',
-  '猫咪软便怎么办？',
+  '我家猫适合高蛋白猫粮吗？',
+  '换粮过渡要注意什么？',
+  '怎么判断猫砂除臭好不好？',
+  '肠胃敏感应该避开什么？',
+]
+
+const SCENE_QUESTIONS = [
+  { label: '幼猫成长', text: '3个月幼猫怎么选主粮？' },
+  { label: '换粮过渡', text: '猫咪换粮应该怎么过渡？' },
+  { label: '成分解读', text: '猫粮成分表应该重点看什么？' },
+  { label: '风险判断', text: '什么情况不适合吃高肉粮？' },
 ]
 
 function createUTF8Decoder() {
@@ -125,6 +132,8 @@ export default function ChatPage() {
   const [expandedProcessIds, setExpandedProcessIds] = useState<Record<number, boolean>>({})
   const [quickQuestions, setQuickQuestions] = useState<string[]>(DEFAULT_QUESTIONS)
   const [questionsLoading, setQuestionsLoading] = useState(false)
+  const [petProfilePrompt, setPetProfilePrompt] = useState('')
+  const [petProfileLabel, setPetProfileLabel] = useState('')
   const [systemInfo, setSystemInfo] = useState<{
     screenHeight: number
     windowHeight: number
@@ -159,6 +168,7 @@ export default function ChatPage() {
     const now = Date.now()
     if (now - lastFetchRef.current > 60000) {
       fetchQuestions()
+      fetchPetProfilePrompt()
     }
 
     const pendingSessionId = Taro.getStorageSync('pendingSessionId')
@@ -225,6 +235,25 @@ export default function ChatPage() {
       setQuickQuestions(DEFAULT_QUESTIONS)
     } finally {
       setQuestionsLoading(false)
+    }
+  }
+
+  async function fetchPetProfilePrompt() {
+    try {
+      const res = await getMyPets()
+      const pet = res.pets?.[0]
+      if (!pet) return
+      const name = pet.nickname || '我的宠物'
+      const details = [
+        pet.breed?.name,
+        pet.age_months != null ? `${pet.age_months}个月` : '',
+        pet.weight_kg != null ? `${pet.weight_kg}kg` : '',
+      ].filter(Boolean).join(' / ')
+      setPetProfileLabel(`${name}${details ? ` · ${details}` : ''}`)
+      setPetProfilePrompt(`请基于${name}的档案，帮我判断近期用品和主粮选择要注意什么。`)
+    } catch {
+      setPetProfilePrompt('')
+      setPetProfileLabel('')
     }
   }
 
@@ -490,7 +519,7 @@ export default function ChatPage() {
 
     return (
       <View className="mt-3">
-        <Text className="text-xs text-gray-500 font-medium mb-2">推荐产品</Text>
+        <Text className="text-xs text-gray-500 font-medium mb-2">相关参考</Text>
         <View className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
           {spus.map((spu) => (
             <View
@@ -509,15 +538,15 @@ export default function ChatPage() {
                 <Text className="text-xs font-semibold text-gray-900 truncate">{spu.name}</Text>
                 <Text className="text-[11px] text-gray-500 mt-0.5">{spu.brand}</Text>
                 <View className="flex items-center justify-between mt-2">
-                  <Text className="text-sm font-bold text-orange-600">
-                    ¥{spu.price_min}
+                  <Text className="text-sm font-semibold text-gray-700">
+                    参考 ¥{spu.price_min}
                     {spu.price_max > spu.price_min && (
                       <Text className="text-xs font-normal">起</Text>
                     )}
                   </Text>
                   {spu.ratings?.overall && (
-                    <View className="flex items-center gap-0.5">
-                      <Text className="text-xs">⭐</Text>
+                    <View className="flex items-center gap-0.5 bg-orange-50 px-1.5 py-0.5 rounded-full">
+                      <Text className="text-[10px] text-orange-600">评分</Text>
                       <Text className="text-xs text-orange-600 font-medium">{spu.ratings.overall}</Text>
                     </View>
                   )}
@@ -708,7 +737,7 @@ export default function ChatPage() {
       style={{
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#fff8f2',
+        backgroundColor: '#fff9f3',
       }}
     >
       {/* 自定义导航栏 - 独立 Fixed 在顶部 */}
@@ -725,7 +754,7 @@ export default function ChatPage() {
       >
         <View
           style={{ height: systemInfo.navBarHeight ? `${systemInfo.navBarHeight}px` : '44px', paddingRight: systemInfo.menuRight ? `${systemInfo.menuRight}px` : '0px' }}
-          className="flex items-center justify-between px-4 border-b border-orange-100"
+          className="flex items-center justify-between px-4 border-b border-[#F2E7DA]"
         >
           <View className="flex items-center gap-2">
             <View className="w-8 h-8 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
@@ -740,7 +769,7 @@ export default function ChatPage() {
             </View>
           </View>
           <View
-            className="px-3 py-1.5 bg-orange-50 rounded-full mini-press"
+            className="h-9 px-3 bg-orange-50 rounded-full flex items-center justify-center mini-press"
             onClick={navigateToSessions}
           >
             <Text className="text-xs text-orange-600 font-medium">历史</Text>
@@ -782,12 +811,14 @@ export default function ChatPage() {
                   style={
                     msg.role === 'user'
                       ? { maxWidth: '78%', marginRight: '16px', marginLeft: '48px', boxSizing: 'border-box' }
-                      : { width: 'calc(100% - 32px)', maxWidth: '100%', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }
+                      : msg.id === 0 && messages.length <= 1
+                        ? { width: 'calc(100% - 72px)', maxWidth: '86%', marginLeft: '16px', marginRight: '40px', boxSizing: 'border-box' }
+                        : { width: 'calc(100% - 32px)', maxWidth: '100%', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }
                   }
                   className={`min-w-0 ${
                     msg.role === 'user'
                       ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-md shadow-orange-100'
-                      : 'bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card'
+                      : 'bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -817,7 +848,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length > 0 && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
+                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   {renderProcessTimeline(streamSteps, false, undefined, currentStream)}
@@ -834,7 +865,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
+                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <MarkdownRenderer content={currentStream} />
@@ -850,7 +881,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && !currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-orange-100 rounded-2xl px-4 py-3 mini-card"
+                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <View className="flex items-center gap-2">
@@ -870,10 +901,31 @@ export default function ChatPage() {
         <View style={{ flexShrink: 0 }}>
           {/* 快捷问题 - 在输入框上方且相邻 */}
           {messages.length <= 1 && !isLoading && (
-            <View className="px-4 pt-3 pb-3 bg-[#fff8f2] border-t border-orange-100 mini-fade-up">
+            <View className="px-4 pt-3 pb-3 bg-[#fff9f3] border-t border-[#F2E7DA] mini-fade-up">
+              {petProfilePrompt && (
+                <View
+                  className="bg-white border border-[#FFE2C2] rounded-2xl px-4 py-3 mb-3 mini-card-soft mini-press"
+                  onClick={() => handleSend(petProfilePrompt)}
+                >
+                  <Text className="text-sm font-semibold text-gray-900 block">基于宠物档案提问</Text>
+                  <Text className="text-xs text-gray-500 mt-1 block">{petProfileLabel}</Text>
+                </View>
+              )}
+              <View className="grid grid-cols-2 gap-2 mb-3">
+                {SCENE_QUESTIONS.map((scene) => (
+                  <View
+                    key={scene.label}
+                    className="bg-white border border-[#F2E7DA] rounded-2xl px-3 py-2.5 mini-card-soft mini-press"
+                    onClick={() => handleSend(scene.text)}
+                  >
+                    <Text className="text-sm font-semibold text-gray-900 block">{scene.label}</Text>
+                    <Text className="text-xs text-gray-500 mt-0.5 block truncate">{scene.text}</Text>
+                  </View>
+                ))}
+              </View>
               <View className="flex items-center gap-2 mb-2">
                 <SparkleIcon size={15} color="#f97316" />
-                <Text className="text-xs text-gray-500 font-medium">你可以这样问</Text>
+                <Text className="text-xs text-gray-500 font-medium">猜你想问</Text>
               </View>
               <View className="flex flex-col gap-2 pb-1">
                 {questionsLoading
@@ -888,11 +940,11 @@ export default function ChatPage() {
                   : quickQuestions.slice(0, 3).map((q, i) => (
                       <View
                         key={i}
-                        className="bg-white border border-orange-100 rounded-2xl px-4 py-2.5 flex items-center justify-between mini-card mini-press"
+                        className="bg-white border border-[#F2E7DA] rounded-2xl px-4 py-2.5 flex items-center justify-between mini-card-soft mini-press"
                         onClick={() => handleSend(q)}
                       >
                         <Text className="text-orange-600 text-sm">{q}</Text>
-                        <Text className="text-xs text-orange-300 mini-caret">→</Text>
+                        <Text className="text-xs text-orange-400">提问</Text>
                       </View>
                     ))}
               </View>
@@ -900,7 +952,7 @@ export default function ChatPage() {
           )}
 
           {/* 输入栏 */}
-          <View className="bg-white border-t border-orange-100 px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
+          <View className="bg-white border-t border-[#F2E7DA] px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
             <Input
               className="flex-1 min-w-0 bg-gray-50 rounded-full px-4 py-3 text-sm border border-gray-100"
               placeholder="请输入问题，如：幼猫吃什么粮好？"
