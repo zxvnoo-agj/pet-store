@@ -2,7 +2,7 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /build
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt \
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt \
     -i https://mirrors.cloud.tencent.com/pypi/simple \
     --trusted-host mirrors.cloud.tencent.com
 
@@ -11,8 +11,7 @@ FROM python:3.11-slim
 RUN groupadd -r petshop && useradd -r -g petshop petshop
 
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder /install /usr/local
 
 COPY backend/app ./app
 COPY backend/alembic ./alembic
