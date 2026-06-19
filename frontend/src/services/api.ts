@@ -89,6 +89,12 @@ export interface Spu {
   id: number
   name: string
   brand: string
+  category?: {
+    id: number
+    name: string
+    pet_type: string
+  }
+  pet_type?: string
   price_min: number
   price_max: number
   image_urls: string[]

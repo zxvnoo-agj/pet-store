@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
 import { AuthUser, wechatLogin } from '../../services/auth'
 import { getMyPets } from '../../services/petApi'
-import { resolveAssetUrl } from '../../services/userApi'
+import { getMyProfile, resolveAssetUrl } from '../../services/userApi'
 import { FavoriteIcon, PawIcon, PackageIcon, ArrowRightIcon, AiAssistantIcon, ClockIcon, SettingsIcon } from '../../components/Icons'
 import { useCompareStore } from '../../stores/compareStore'
 
@@ -15,7 +15,7 @@ function needsInitialProfile(user?: AuthUser | null) {
 }
 
 export default function MinePage() {
-  const { user, isLoggedIn, logout } = useAuthStore()
+  const { user, isLoggedIn, logout, setUser } = useAuthStore()
   const { compareList } = useCompareStore()
   const [loading, setLoading] = useState(false)
   const [petCount, setPetCount] = useState(0)
@@ -39,9 +39,21 @@ export default function MinePage() {
     setLoading(true)
     try {
       const loginRes = await wechatLogin()
+      let currentUser = loginRes.user
+      try {
+        const profileRes = await getMyProfile()
+        currentUser = profileRes.user
+        setUser({
+          id: profileRes.user.id,
+          nickname: profileRes.user.nickname,
+          avatar_url: profileRes.user.avatar_url,
+        })
+      } catch {
+        currentUser = loginRes.user
+      }
       Taro.showToast({ title: '登录成功', icon: 'success' })
 
-      if (loginRes.is_new_user || needsInitialProfile(loginRes.user)) {
+      if (needsInitialProfile(currentUser)) {
         setTimeout(() => {
           Taro.navigateTo({ url: '/pages/mine/profile?firstLogin=1' })
         }, 500)

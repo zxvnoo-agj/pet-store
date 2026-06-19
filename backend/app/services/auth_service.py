@@ -14,6 +14,12 @@ class WeChatLoginUnavailableError(RuntimeError):
     """Raised when the backend cannot reach WeChat's login API."""
 
 
+def _is_default_nickname(nickname: str | None) -> bool:
+    if not nickname:
+        return True
+    return nickname == "微信用户" or nickname.startswith("用户")
+
+
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -68,9 +74,9 @@ class AuthService:
                 wechat_info = decrypt_user_info(session_key, encrypted_data, iv)
                 nickname = wechat_info.get("nickName")
                 avatar_url = wechat_info.get("avatarUrl")
-                if nickname:
+                if nickname and _is_default_nickname(user.nickname):
                     user.nickname = nickname
-                if avatar_url:
+                if avatar_url and not user.avatar_url:
                     user.avatar_url = avatar_url
                 await self.db.commit()
                 await self.db.refresh(user)

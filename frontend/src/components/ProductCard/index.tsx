@@ -9,6 +9,11 @@ interface Product {
   image_urls: string[]
   price_min: number
   price_max: number
+  category?: {
+    name: string
+  }
+  pet_type?: string
+  ingredients?: string[]
   ratings: { overall: number }
   reviewCount: number
   pros: string[]
@@ -21,9 +26,26 @@ interface ProductCardProps {
   showCompare?: boolean
 }
 
+const getPetLabel = (petType?: string) => {
+  if (petType === 'cat') return '猫用'
+  if (petType === 'dog') return '犬用'
+  return '宠物用品'
+}
+
+const getProductMeta = (product: Product) => {
+  const petLabel = getPetLabel(product.pet_type)
+  if (product.category?.name) return `${petLabel} · ${product.category.name}`
+
+  const ingredient = product.ingredients?.find((item) => item && item.length <= 8)
+  if (ingredient) return `${petLabel} · ${ingredient}`
+
+  return petLabel
+}
+
 export default function ProductCard({ product, variant = 'horizontal', showCompare = true }: ProductCardProps) {
   const { addToCompare, isInCompare } = useCompareStore()
   const inCompare = isInCompare(product.id)
+  const productMeta = getProductMeta(product)
 
   const navigateToDetail = () => {
     Taro.navigateTo({ url: `/pages/product/detail?id=${product.id}` })
@@ -54,10 +76,9 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
             <Text className="text-xs font-medium text-orange-500">⭐ {product.ratings.overall}</Text>
             <Text className="text-[10px] text-gray-400">({product.reviewCount})</Text>
           </View>
-          <View className="flex items-baseline justify-between mt-1.5">
-            <Text className="text-orange-600 font-bold text-sm">
-            ¥{product.price_min}
-            {product.price_max > product.price_min && <Text className="text-xs">起</Text>}
+          <View className="flex items-center justify-between gap-2 mt-2">
+            <Text className="text-xs text-gray-500 truncate flex-1 min-w-0">
+              {productMeta}
             </Text>
             {showCompare && (
               <View
@@ -92,20 +113,7 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
       <View className="flex-1 min-w-0">
         <Text className="text-sm font-medium text-gray-900 leading-tight">{product.name}</Text>
         <Text className="text-xs text-gray-500 mt-0.5">{product.brand}</Text>
-        
-        {/* 优缺点标签 */}
-        <View className="flex flex-wrap gap-1.5 mt-2">
-          {product.pros.slice(0, 2).map((pro, i) => (
-            <Text key={`pro-${i}`} className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-full">
-              +{pro}
-            </Text>
-          ))}
-          {product.cons.slice(0, 1).map((con, i) => (
-            <Text key={`con-${i}`} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded-full">
-              -{con}
-            </Text>
-          ))}
-        </View>
+        <Text className="text-xs text-gray-500 mt-1.5 truncate">{productMeta}</Text>
 
         <View className="flex items-center justify-between mt-2">
           <View className="flex items-center gap-1.5">
@@ -116,23 +124,18 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
               <Text className="text-[10px]">💬 {product.reviewCount}</Text>
             </View>
           </View>
-          <View className="flex items-center gap-2">
-            <Text className="text-orange-600 font-bold text-sm">
-              ¥{product.price_min}
-            </Text>
-            {showCompare && (
-              <View
-                className={`px-2 py-0.5 rounded-full text-[10px] ${
-                  inCompare
-                    ? 'bg-orange-100 text-orange-600'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-                onClick={handleCompare}
-              >
-                <Text>{inCompare ? '已对比' : '对比'}</Text>
-              </View>
-            )}
-          </View>
+          {showCompare && (
+            <View
+              className={`px-2 py-0.5 rounded-full text-[10px] ${
+                inCompare
+                  ? 'bg-orange-100 text-orange-600'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+              onClick={handleCompare}
+            >
+              <Text>{inCompare ? '已对比' : '对比'}</Text>
+            </View>
+          )}
         </View>
       </View>
     </View>

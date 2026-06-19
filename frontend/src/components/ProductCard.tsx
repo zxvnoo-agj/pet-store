@@ -9,9 +9,26 @@ interface ProductCardProps {
   showCompare?: boolean;
 }
 
+const getPetLabel = (petType?: string) => {
+  if (petType === 'cat') return '猫用';
+  if (petType === 'dog') return '犬用';
+  return '宠物用品';
+};
+
+const getProductMeta = (product: Spu) => {
+  const petLabel = getPetLabel(product.pet_type);
+  if (product.category?.name) return `${petLabel} · ${product.category.name}`;
+
+  const ingredient = product.ingredients?.find((item) => item && item.length <= 8);
+  if (ingredient) return `${petLabel} · ${ingredient}`;
+
+  return petLabel;
+};
+
 export default function ProductCard({ product, variant = 'horizontal', showCompare = true }: ProductCardProps) {
   const { addToCompare, isInCompare } = useCompareStore();
   const inCompare = isInCompare(product.id);
+  const productMeta = getProductMeta(product);
 
   const navigateToDetail = () => {
     Taro.navigateTo({ url: `/pages/product/detail?id=${product.id}` });
@@ -44,10 +61,9 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
             <span className="text-xs font-medium text-orange-500">{product.rating || '-'}</span>
             <span className="text-[10px] text-gray-400">({product.review_count ?? 0})</span>
           </div>
-          <div className="flex items-baseline justify-between mt-1.5">
-            <span className="text-orange-600 font-bold text-sm">
-              ¥{product.price_min}
-              {product.price_max > product.price_min && <span className="text-xs">起</span>}
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <span className="text-xs text-gray-500 truncate flex-1 min-w-0">
+              {productMeta}
             </span>
             {showCompare && (
               <span
@@ -83,19 +99,7 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
       <div className="flex-1 min-w-0">
         <h3 className="text-sm font-medium text-gray-900 leading-tight">{product.name}</h3>
         <p className="text-xs text-gray-500 mt-0.5">{product.brand}</p>
-
-        <div className="flex flex-wrap gap-1 mt-1.5">
-          {(product.pros || []).slice(0, 2).map((pro, i) => (
-            <span key={`pro-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full">
-              +{pro}
-            </span>
-          ))}
-          {(product.cons || []).slice(0, 1).map((con, i) => (
-            <span key={`con-${i}`} className="text-[10px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded-full">
-              -{con}
-            </span>
-          ))}
-        </div>
+        <p className="text-xs text-gray-500 mt-1.5 truncate">{productMeta}</p>
 
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1.5">
@@ -108,23 +112,18 @@ export default function ProductCard({ product, variant = 'horizontal', showCompa
               <span className="text-[10px]">{product.review_count ?? 0}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-orange-600 font-bold text-sm">
-              ¥{product.price_min}
+          {showCompare && (
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer ${
+                inCompare
+                  ? 'bg-orange-100 text-orange-600'
+                  : 'bg-gray-100 text-gray-500'
+              }`}
+              onClick={handleCompare}
+            >
+              {inCompare ? '已对比' : '对比'}
             </span>
-            {showCompare && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] cursor-pointer ${
-                  inCompare
-                    ? 'bg-orange-100 text-orange-600'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-                onClick={handleCompare}
-              >
-                {inCompare ? '已对比' : '对比'}
-              </span>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>

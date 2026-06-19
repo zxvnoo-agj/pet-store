@@ -4,6 +4,11 @@ export interface Spu {
   brand: string;
   model: string;
   category_id: number;
+  category?: {
+    id: number;
+    name: string;
+    pet_type: string;
+  };
   pet_type: string;
   price_min: number;
   price_max: number;

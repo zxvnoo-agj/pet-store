@@ -9,6 +9,16 @@ export interface UserProfile {
   avatar_url: string | null
 }
 
+export interface CurrentUserProfile extends UserProfile {
+  pets?: Array<{
+    id: number
+    species: string
+    breed_name?: string | null
+    nickname: string
+  }>
+  pet_count?: number
+}
+
 function getApiOrigin() {
   return API_BASE_URL.replace(/\/v1\/?$/, '')
 }
@@ -25,6 +35,10 @@ export async function updateMyProfile(data: {
   avatar_url?: string
 }): Promise<{ user: UserProfile }> {
   return apiClient.put('/users/me', data)
+}
+
+export async function getMyProfile(): Promise<{ user: CurrentUserProfile }> {
+  return apiClient.get('/users/me')
 }
 
 export async function uploadMyAvatar(filePath: string): Promise<{

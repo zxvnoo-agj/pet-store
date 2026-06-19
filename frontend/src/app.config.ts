@@ -17,6 +17,7 @@ export default defineAppConfig({
     'pages/mine/pets-create',
     'pages/privacy/index',
   ],
+  subPackages: [],
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',

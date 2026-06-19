@@ -25,26 +25,27 @@ const fullImageStyle = {
   display: 'block',
 }
 
-const formatPrice = (price?: number | string | null) => {
-  const value = Number(price || 0)
-  if (!Number.isFinite(value) || value <= 0) return '暂无价格'
-  return `¥${Number.isInteger(value) ? value : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}`
+const getPetLabel = (petType?: string) => {
+  if (petType === 'cat') return '猫用'
+  if (petType === 'dog') return '犬用'
+  return '宠物用品'
 }
 
-const formatPriceRange = (min?: number | string | null, max?: number | string | null) => {
-  const minValue = Number(min || 0)
-  const maxValue = Number(max || 0)
-  if (!Number.isFinite(minValue) || minValue <= 0) return '暂无价格'
-  if (Number.isFinite(maxValue) && maxValue > minValue) {
-    return `${formatPrice(minValue)} - ${formatPrice(maxValue)}`
-  }
-  return formatPrice(minValue)
+const getProductMeta = (spu: Spu) => {
+  const petLabel = getPetLabel(spu.pet_type)
+  const categoryName = spu.category?.name
+  if (categoryName) return `${petLabel} · ${categoryName}`
+
+  const ingredient = spu.ingredients?.find((item) => item && item.length <= 8)
+  if (ingredient) return `${petLabel} · ${ingredient}`
+
+  return petLabel
 }
 
 const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showCompare = true }) => {
   const { addToCompare, isInCompare } = useCompareStore();
   const inCompare = isInCompare(spu.id);
-  const priceText = formatPriceRange(spu.price_min, spu.price_max);
+  const productMeta = getProductMeta(spu);
 
   const navigateToDetail = () => {
     Taro.navigateTo({ url: `/pages/product/detail?id=${spu.id}` });
@@ -76,9 +77,9 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
             <Text className="text-xs font-medium text-orange-500">{spu.rating || 0}</Text>
             <Text className="text-xs text-gray-400">({spu.review_count || 0})</Text>
           </View>
-          <View className="flex items-baseline justify-between mt-1.5">
-            <Text className="text-gray-700 font-semibold text-base">
-              {priceText}
+          <View className="flex items-center justify-between gap-2 mt-2">
+            <Text className="text-xs text-gray-500 truncate flex-1 min-w-0">
+              {productMeta}
             </Text>
             {showCompare && (
               <Text
@@ -116,32 +117,15 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
           </View>
         )}
       </View>
-        <View className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+      <View className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
         <View>
           <View className="flex items-center gap-1.5 mb-1">
             <Text className="text-xs px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-medium">
               {spu.brand || '精选'}
             </Text>
-            {spu.listing_count ? (
-              <Text className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">
-                {spu.listing_count} 个参考来源
-              </Text>
-            ) : null}
           </View>
           <Text className="text-base font-bold text-gray-900 leading-snug block">{spu.name}</Text>
-
-          <View className="flex flex-wrap gap-1 mt-1.5">
-            {spu.pros?.slice(0, 2).map((pro, i) => (
-              <Text key={`pro-${i}`} className="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full">
-                适合 {pro}
-              </Text>
-            ))}
-            {spu.cons?.slice(0, 1).map((con, i) => (
-              <Text key={`con-${i}`} className="text-xs px-2 py-0.5 bg-red-50 text-red-500 rounded-full">
-                注意 {con}
-              </Text>
-            ))}
-          </View>
+          <Text className="text-xs text-gray-500 mt-1.5 truncate block">{productMeta}</Text>
         </View>
 
         <View className="flex items-end justify-between mt-2">
@@ -150,19 +134,14 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
             <Text className="text-xs text-gray-600 font-medium">{spu.rating || 0}</Text>
             <Text className="text-xs text-gray-400">({spu.review_count || 0})</Text>
           </View>
-          <View className="flex items-center gap-2">
-            <Text className="text-gray-700 font-semibold text-base">
-              {priceText}
+          {showCompare && (
+            <Text
+              className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}
+              onClick={handleCompare}
+            >
+              {inCompare ? '已对比' : '对比'}
             </Text>
-            {showCompare && (
-              <Text
-                className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}
-                onClick={handleCompare}
-              >
-                {inCompare ? '已对比' : '对比'}
-              </Text>
-            )}
-          </View>
+          )}
         </View>
       </View>
     </View>
