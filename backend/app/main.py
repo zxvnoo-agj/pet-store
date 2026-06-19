@@ -103,6 +103,7 @@ app = FastAPI(
 UPLOAD_ROOT = Path("uploads")
 UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_ROOT), name="uploads")
+app.mount("/v1/uploads", StaticFiles(directory=UPLOAD_ROOT), name="v1_uploads")
 
 app.add_middleware(
     CORSMiddleware,

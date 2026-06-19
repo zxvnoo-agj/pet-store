@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
@@ -21,19 +21,7 @@ export default function PetsPage() {
   const [pets, setPets] = useState<Pet[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchPets()
-    }
-  }, [isLoggedIn])
-
-  useDidShow(() => {
-    if (isLoggedIn) {
-      fetchPets()
-    }
-  })
-
-  const fetchPets = async () => {
+  async function fetchPets() {
     try {
       const res = await getMyPets()
       setPets(res.pets || [])
@@ -43,6 +31,12 @@ export default function PetsPage() {
       setLoading(false)
     }
   }
+
+  useDidShow(() => {
+    if (isLoggedIn) {
+      fetchPets()
+    }
+  })
 
   const handleAdd = () => {
     Taro.navigateTo({ url: '/pages/mine/pets-create' })
@@ -62,7 +56,7 @@ export default function PetsPage() {
         await deletePet(pet.id)
         Taro.showToast({ title: '已删除', icon: 'success' })
         fetchPets()
-      } catch (error) {
+      } catch {
         Taro.showToast({ title: '删除失败', icon: 'none' })
       }
     }
@@ -89,28 +83,28 @@ export default function PetsPage() {
 
   return (
     <View className="flex flex-col h-screen bg-[#fff9f3]">
-      <View className="shrink-0 px-4 pt-4 pb-3 flex items-center justify-between">
-        <View>
-          <Text className="text-xl font-bold text-gray-900 block">宠物档案</Text>
-          <Text className="text-sm text-gray-500 mt-1 block">管理宠物信息，用于推荐更合适的商品</Text>
+      <View className="shrink-0 px-4 pt-4 pb-3 flex items-center justify-between mini-fade-up">
+        <View className="min-w-0 flex-1 pr-3">
+          <Text className="text-lg font-bold text-gray-900 block">宠物档案</Text>
+          <Text className="text-sm text-gray-500 mt-1 block truncate">管理宠物信息，推荐更合适的商品</Text>
         </View>
         <View
-          className="h-11 px-5 bg-orange-500 rounded-full flex items-center justify-center mini-press"
+          className="h-9 px-4 bg-orange-500 rounded-full flex items-center justify-center shadow-sm shadow-orange-100 mini-press"
           onClick={handleAdd}
         >
           <Text className="text-sm font-semibold text-white">添加</Text>
         </View>
       </View>
 
-      <View className="flex-1 overflow-y-auto px-4 pb-4">
+      <View className="flex-1 overflow-y-auto px-4 pb-5">
         {loading ? (
           <View className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Text className="text-sm">加载中...</Text>
           </View>
         ) : pets.length === 0 ? (
-          <View className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-[#FFE2C2] mini-card-soft">
-            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center mb-4">
-              <PawIcon size={32} color="#f97316" />
+          <View className="flex flex-col items-center justify-center py-14 px-5 bg-white rounded-3xl border border-[#F2E7DA] mini-card-soft mini-fade-up">
+            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center mb-4 border border-orange-100/70">
+              <PawIcon size={30} color="#f97316" />
             </View>
             <Text className="text-base font-semibold text-gray-900 mb-1">还没有宠物档案</Text>
             <Text className="text-sm text-gray-500 mb-5">添加后可获得更贴合的用品推荐</Text>
@@ -126,11 +120,11 @@ export default function PetsPage() {
             {pets.map((pet) => (
               <View
                 key={pet.id}
-                className="bg-white rounded-3xl p-4 border border-[#FFE2C2] mini-card-soft"
+                className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft mini-fade-up"
               >
-                <View className="flex items-center gap-3">
-                  <View className="w-14 h-14 rounded-3xl bg-orange-50 flex items-center justify-center shrink-0">
-                    <PetTypeIcon type={pet.species} size={30} color="#f97316" />
+                <View className="flex items-start gap-3">
+                  <View className="w-14 h-14 rounded-3xl bg-orange-50 border border-orange-100/70 flex items-center justify-center shrink-0">
+                    <PetTypeIcon type={pet.species} size={28} color="#f97316" />
                   </View>
                   <View className="flex-1 min-w-0">
                     <Text className="text-base font-semibold text-gray-900 truncate block">
@@ -141,52 +135,55 @@ export default function PetsPage() {
                       {pet.age_months != null ? ` · ${pet.age_months}个月` : ''}
                       {pet.weight_kg != null ? ` · ${pet.weight_kg}kg` : ''}
                     </Text>
-                  </View>
-                  <View className="items-end">
-                    <View
-                      className="px-3 py-1.5 bg-gray-100 rounded-full mini-press"
-                      onClick={() => handleEdit(pet)}
-                    >
-                      <Text className="text-sm text-gray-700">编辑</Text>
+                    <View className="flex flex-wrap gap-2 mt-3">
+                      {getPetTags(pet).map((tag) => (
+                        <Text key={tag} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
+                          {tag}
+                        </Text>
+                      ))}
                     </View>
-                    <Text
-                      className="text-xs text-red-400 mt-2"
-                      onClick={() => handleDelete(pet)}
-                    >
-                      删除
-                    </Text>
                   </View>
                 </View>
-                <View className="flex flex-wrap gap-2 mt-3">
-                  {getPetTags(pet).map((tag) => (
-                    <Text key={tag} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
-                      {tag}
-                    </Text>
-                  ))}
+
+                <View className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <View
+                    className="h-8 px-4 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mini-press"
+                    onClick={() => handleEdit(pet)}
+                  >
+                    <Text className="text-xs font-medium text-gray-600">编辑</Text>
+                  </View>
+                  <View
+                    className="h-8 px-4 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mini-press"
+                    onClick={() => handleDelete(pet)}
+                  >
+                    <Text className="text-xs font-medium text-red-500">删除</Text>
+                  </View>
                 </View>
               </View>
             ))}
 
-            <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft">
+            <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft mini-fade-up">
               <View className="flex items-center justify-between mb-3">
-                <View>
+                <View className="min-w-0 flex-1 pr-3">
                   <Text className="text-base font-semibold text-gray-900 block">根据档案推荐</Text>
-                  <Text className="text-xs text-gray-500 mt-1 block">结合年龄、体重和品种生成用品建议</Text>
+                  <Text className="text-xs text-gray-500 mt-1 block truncate">结合年龄、体重和品种生成用品建议</Text>
                 </View>
-                <SparkleIcon size={22} color="#f97316" />
+                <View className="w-8 h-8 rounded-2xl bg-orange-50 flex items-center justify-center border border-orange-100/70">
+                  <SparkleIcon size={18} color="#f97316" />
+                </View>
               </View>
               <View className="grid grid-cols-3 gap-2">
-                <View className="bg-orange-50 rounded-2xl px-2 py-3 flex flex-col items-center mini-press">
+                <View className="min-h-[76px] bg-orange-50 rounded-2xl px-2 py-3 flex flex-col items-center justify-center mini-press">
                   <PackageIcon size={20} color="#f97316" />
-                  <Text className="text-xs font-medium text-gray-800 mt-1">换粮建议</Text>
+                  <Text className="text-xs font-medium text-orange-700 mt-1">换粮建议</Text>
                 </View>
-                <View className="bg-blue-50 rounded-2xl px-2 py-3 flex flex-col items-center mini-press">
+                <View className="min-h-[76px] bg-blue-50 rounded-2xl px-2 py-3 flex flex-col items-center justify-center mini-press">
                   <AiAssistantIcon size={20} color="#2563eb" />
-                  <Text className="text-xs font-medium text-gray-800 mt-1">问AI顾问</Text>
+                  <Text className="text-xs font-medium text-blue-700 mt-1">问AI顾问</Text>
                 </View>
-                <View className="bg-green-50 rounded-2xl px-2 py-3 flex flex-col items-center mini-press">
+                <View className="min-h-[76px] bg-green-50 rounded-2xl px-2 py-3 flex flex-col items-center justify-center mini-press">
                   <PawIcon size={20} color="#16a34a" />
-                  <Text className="text-xs font-medium text-gray-800 mt-1">用品清单</Text>
+                  <Text className="text-xs font-medium text-green-700 mt-1">用品清单</Text>
                 </View>
               </View>
             </View>

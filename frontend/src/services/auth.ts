@@ -9,6 +9,19 @@ const MOCK_USER = {
   avatar_url: '',
 }
 
+export interface AuthUser {
+  id: number
+  nickname: string | null
+  avatar_url: string | null
+}
+
+export interface WechatLoginResult {
+  token: string
+  expires_at?: number
+  user: AuthUser
+  is_new_user?: boolean
+}
+
 function isH5() {
   const env = Taro.getEnv()
   return env === Taro.ENV_TYPE.WEB
@@ -23,10 +36,10 @@ export function initMockLogin() {
   }
 }
 
-export async function wechatLogin() {
+export async function wechatLogin(): Promise<WechatLoginResult> {
   if (isH5()) {
     initMockLogin()
-    return { token: MOCK_TOKEN, user: MOCK_USER }
+    return { token: MOCK_TOKEN, user: MOCK_USER, is_new_user: false }
   }
 
   try {
@@ -42,7 +55,7 @@ export async function wechatLogin() {
       // user hasn't authorized, continue with default info
     }
 
-    const res = await apiClient.post('/auth/wechat-login', {
+    const res = await apiClient.post<WechatLoginResult>('/auth/wechat-login', {
       code,
       encrypted_data: encryptedData,
       iv,

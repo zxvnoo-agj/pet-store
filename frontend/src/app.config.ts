@@ -11,6 +11,7 @@ export default defineAppConfig({
     'pages/product/compare',
     'pages/search/index',
     'pages/mine/index',
+    'pages/mine/profile',
     'pages/mine/favorites',
     'pages/mine/pets',
     'pages/mine/pets-create',

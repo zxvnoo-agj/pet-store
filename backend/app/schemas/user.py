@@ -35,3 +35,4 @@ class WechatLoginResponse(BaseModel):
     token: str
     expires_at: int
     user: UserResponse
+    is_new_user: bool = False

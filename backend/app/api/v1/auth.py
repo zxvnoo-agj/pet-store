@@ -54,6 +54,7 @@ async def wechat_login(
             "token": result.token,
             "expires_at": result.expires_at,
             "user": result.user.model_dump(),
+            "is_new_user": result.is_new_user,
         }
     )
 

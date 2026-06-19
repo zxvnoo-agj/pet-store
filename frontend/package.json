@@ -6,11 +6,11 @@
     "clean:weapp": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
     "dev": "vite",
     "dev:h5": "taro build --type h5 --watch",
-    "dev:weapp": "npm run clean:weapp && TARO_API_BASE_URL=https://api.pawpalai.cn/v1 taro build --type weapp --watch",
+    "dev:weapp": "npm run clean:weapp && node scripts/dev-weapp.cjs",
     "build": "tsc -b && vite build",
     "build:h5": "taro build --type h5",
     "build:weapp": "npm run clean:weapp && TARO_API_BASE_URL=https://api.pawpalai.cn/v1 taro build --type weapp && bash patch-weapp.sh",
-    "dev:weapp:local": "npm run clean:weapp && TARO_API_BASE_URL=http://127.0.0.1:8001/v1 taro build --type weapp --watch",
+    "dev:weapp:local": "npm run clean:weapp && TARO_API_BASE_URL=http://127.0.0.1:8001/v1 node scripts/dev-weapp.cjs",
     "build:weapp:local": "npm run clean:weapp && TARO_API_BASE_URL=http://127.0.0.1:8001/v1 taro build --type weapp && bash patch-weapp.sh",
     "lint": "eslint .",
     "preview": "vite preview"

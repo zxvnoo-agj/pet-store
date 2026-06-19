@@ -54,8 +54,10 @@ class AuthService:
 
         result = await self.db.execute(select(User).where(User.openid == openid))
         user = result.scalar_one_or_none()
+        is_new_user = False
 
         if not user:
+            is_new_user = True
             user = User(openid=openid, nickname=f"用户{code[:6]}")
             self.db.add(user)
             await self.db.commit()
@@ -81,4 +83,5 @@ class AuthService:
             token=token,
             expires_at=7 * 24 * 3600,
             user=UserResponse.model_validate(user),
+            is_new_user=is_new_user,
         )

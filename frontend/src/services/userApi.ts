@@ -16,6 +16,7 @@ function getApiOrigin() {
 export function resolveAssetUrl(url?: string | null) {
   if (!url) return ''
   if (/^https?:\/\//.test(url)) return url
+  if (url.startsWith('/uploads/')) return `${API_BASE_URL}${url}`
   return `${getApiOrigin()}${url.startsWith('/') ? url : `/${url}`}`
 }
 

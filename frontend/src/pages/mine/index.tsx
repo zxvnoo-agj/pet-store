@@ -1,33 +1,26 @@
-import React, { useState, useEffect } from 'react'
-import { Button, Image, Input, View, Text } from '@tarojs/components'
+import React, { useState } from 'react'
+import { Image, View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useAuthStore } from '../../stores/authStore'
-import { wechatLogin } from '../../services/auth'
+import { AuthUser, wechatLogin } from '../../services/auth'
 import { getMyPets } from '../../services/petApi'
-import { resolveAssetUrl, updateMyProfile, uploadMyAvatar } from '../../services/userApi'
+import { resolveAssetUrl } from '../../services/userApi'
 import { FavoriteIcon, PawIcon, PackageIcon, ArrowRightIcon, AiAssistantIcon, ClockIcon, SettingsIcon } from '../../components/Icons'
 import { useCompareStore } from '../../stores/compareStore'
 
+function needsInitialProfile(user?: AuthUser | null) {
+  const nickname = user?.nickname?.trim() || ''
+  const hasDefaultNickname = !nickname || nickname === '微信用户' || /^用户[a-zA-Z0-9]{6}$/.test(nickname)
+  return hasDefaultNickname || !user?.avatar_url
+}
+
 export default function MinePage() {
-  const { user, isLoggedIn, logout, setUser } = useAuthStore()
+  const { user, isLoggedIn, logout } = useAuthStore()
   const { compareList } = useCompareStore()
   const [loading, setLoading] = useState(false)
-  const [profileSaving, setProfileSaving] = useState(false)
-  const [avatarUploading, setAvatarUploading] = useState(false)
-  const [profileNickname, setProfileNickname] = useState('')
   const [petCount, setPetCount] = useState(0)
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchPetCount()
-    }
-  }, [isLoggedIn])
-
-  useEffect(() => {
-    setProfileNickname(user?.nickname || '')
-  }, [user?.nickname])
-
-  const fetchPetCount = async () => {
+  async function fetchPetCount() {
     try {
       const res = await getMyPets()
       setPetCount(res.total || 0)
@@ -36,18 +29,32 @@ export default function MinePage() {
     }
   }
 
+  Taro.useDidShow(() => {
+    if (isLoggedIn) {
+      fetchPetCount()
+    }
+  })
+
   const handleLogin = async () => {
     setLoading(true)
     try {
-      await wechatLogin()
+      const loginRes = await wechatLogin()
       Taro.showToast({ title: '登录成功', icon: 'success' })
+
+      if (loginRes.is_new_user || needsInitialProfile(loginRes.user)) {
+        setTimeout(() => {
+          Taro.navigateTo({ url: '/pages/mine/profile?firstLogin=1' })
+        }, 500)
+        return
+      }
+
       const res = await getMyPets()
       if (!res.pets || res.pets.length === 0) {
         setTimeout(() => {
           Taro.navigateTo({ url: '/pages/mine/pets-create' })
         }, 1000)
       }
-    } catch (error) {
+    } catch {
       Taro.showToast({ title: '登录失败', icon: 'none' })
     } finally {
       setLoading(false)
@@ -59,48 +66,8 @@ export default function MinePage() {
     Taro.showToast({ title: '已退出登录', icon: 'success' })
   }
 
-  const handleChooseAvatar = async (event: any) => {
-    const avatarUrl = event.detail?.avatarUrl
-    if (!avatarUrl || !isLoggedIn) return
-
-    setAvatarUploading(true)
-    try {
-      const res = await uploadMyAvatar(avatarUrl)
-      setUser({
-        id: res.user.id,
-        nickname: res.user.nickname,
-        avatar_url: res.user.avatar_url,
-      })
-      Taro.showToast({ title: '头像已更新', icon: 'success' })
-    } catch (error) {
-      Taro.showToast({ title: '头像上传失败', icon: 'none' })
-    } finally {
-      setAvatarUploading(false)
-    }
-  }
-
-  const handleSaveProfile = async () => {
-    if (!isLoggedIn || profileSaving) return
-    const nickname = profileNickname.trim()
-    if (!nickname) {
-      Taro.showToast({ title: '请填写昵称', icon: 'none' })
-      return
-    }
-
-    setProfileSaving(true)
-    try {
-      const res = await updateMyProfile({ nickname })
-      setUser({
-        id: res.user.id,
-        nickname: res.user.nickname,
-        avatar_url: res.user.avatar_url,
-      })
-      Taro.showToast({ title: '资料已保存', icon: 'success' })
-    } catch {
-      Taro.showToast({ title: '保存失败', icon: 'none' })
-    } finally {
-      setProfileSaving(false)
-    }
+  const navigateToProfile = () => {
+    Taro.navigateTo({ url: '/pages/mine/profile' })
   }
 
   const navigateToFavorites = () => {
@@ -125,27 +92,17 @@ export default function MinePage() {
       <View className="px-4 pt-4 pb-4 mini-fade-up">
         <View className="bg-white rounded-3xl p-5 border border-[#FFE2C2] mini-card-soft">
           <View className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <Button
-                openType="chooseAvatar"
-                onChooseAvatar={handleChooseAvatar}
-                className="mini-avatar-button w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center overflow-hidden"
-              >
-                {user?.avatar_url ? (
-                  <Image
-                    src={resolveAssetUrl(user.avatar_url)}
-                    className="w-full h-full"
-                    mode="aspectFill"
-                  />
-                ) : (
-                  <PawIcon size={30} color="#f97316" />
-                )}
-              </Button>
-            ) : (
-              <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center overflow-hidden">
+            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center overflow-hidden">
+              {isLoggedIn && user?.avatar_url ? (
+                <Image
+                  src={resolveAssetUrl(user.avatar_url)}
+                  className="w-full h-full"
+                  mode="aspectFill"
+                />
+              ) : (
                 <PawIcon size={30} color="#f97316" />
-              </View>
-            )}
+              )}
+            </View>
             <View className="flex-1">
               {isLoggedIn ? (
                 <>
@@ -162,27 +119,15 @@ export default function MinePage() {
                 </>
               )}
             </View>
-          </View>
-
-          {isLoggedIn && (
-            <View className="mt-4 flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl px-3 py-2">
-              <Input
-                type="nickname"
-                value={profileNickname}
-                placeholder="填写微信昵称"
-                className="flex-1 text-sm text-gray-800"
-                onInput={(event) => setProfileNickname(event.detail.value)}
-              />
+            {isLoggedIn && (
               <View
-                className={`px-3 py-1.5 rounded-full ${profileSaving || avatarUploading ? 'bg-gray-200' : 'bg-orange-500'} mini-press`}
-                onClick={handleSaveProfile}
+                className="h-8 px-3 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center mini-press"
+                onClick={navigateToProfile}
               >
-                <Text className={`text-xs font-medium ${profileSaving || avatarUploading ? 'text-gray-400' : 'text-white'}`}>
-                  {profileSaving ? '保存中' : '保存'}
-                </Text>
+                <Text className="text-xs font-medium text-orange-600">编辑</Text>
               </View>
-            </View>
-          )}
+            )}
+          </View>
 
           <View className="grid grid-cols-3 gap-2 mt-5">
             <View
