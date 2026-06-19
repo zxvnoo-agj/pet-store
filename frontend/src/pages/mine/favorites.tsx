@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import SpuCard from '../../components/SpuCard'
 import { apiClient } from '../../services/api'
 import { useAuthStore } from '../../stores/authStore'
@@ -15,6 +15,12 @@ export default function FavoritesPage() {
       fetchFavorites()
     }
   }, [isLoggedIn])
+
+  useDidShow(() => {
+    if (isLoggedIn) {
+      fetchFavorites()
+    }
+  })
 
   const fetchFavorites = async () => {
     try {
