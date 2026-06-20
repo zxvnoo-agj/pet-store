@@ -57,6 +57,8 @@ export interface ImportParams {
 export const spuApi = {
   list: (params?: SpuFilterParams) =>
     apiClient.get('/admin/goods/spus', { params }),
+  listBrands: () =>
+    apiClient.get('/admin/goods/spus/brands'),
   get: (id: number) =>
     apiClient.get(`/admin/goods/spus/${id}`),
   create: (data: SpuCreateParams) =>

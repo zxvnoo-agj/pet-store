@@ -66,6 +66,15 @@ class SpuService:
         await self.db.commit()
         return True
 
+    async def list_brands(self) -> list[str]:
+        result = await self.db.execute(
+            select(Spu.brand)
+            .where(Spu.brand.is_not(None), func.length(func.trim(Spu.brand)) > 0)
+            .distinct()
+            .order_by(Spu.brand.asc())
+        )
+        return list(result.scalars().all())
+
     async def list_spus(self, filters: SpuFilter) -> tuple[list[Spu], int]:
         # Subquery for linked listing count
         listing_count_subq = (
@@ -104,10 +113,18 @@ class SpuService:
         if filters.search:
             search_term = f"%{filters.search}%"
             query = query.where(
-                (Spu.name.ilike(search_term)) | (Spu.model.ilike(search_term))
+                or_(
+                    Spu.name.ilike(search_term),
+                    Spu.model.ilike(search_term),
+                    Spu.brand.ilike(search_term),
+                )
             )
             count_query = count_query.where(
-                (Spu.name.ilike(search_term)) | (Spu.model.ilike(search_term))
+                or_(
+                    Spu.name.ilike(search_term),
+                    Spu.model.ilike(search_term),
+                    Spu.brand.ilike(search_term),
+                )
             )
 
         query = query.order_by(Spu.updated_at.desc())

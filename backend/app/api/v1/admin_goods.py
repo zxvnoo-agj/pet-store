@@ -58,6 +58,16 @@ async def admin_list_spus(
     )
 
 
+@router.get("/admin/goods/spus/brands", response_model=ApiResponse[dict], summary="List SPU brands", description="Return distinct existing SPU brands for admin filters.")
+async def admin_list_spu_brands(
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    brands = await service.list_brands()
+    return ApiResponse(data={"brands": brands})
+
+
 @router.post("/admin/goods/spus", response_model=ApiResponse[dict], summary="Create SPU", description="Create a new SPU master record.")
 async def admin_create_spu(
     data: SpuCreate,

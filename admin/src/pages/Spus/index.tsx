@@ -4,6 +4,7 @@ import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal, Refresh
 import { useSpuStore } from '../../stores/spuStore'
 import { useToastStore } from '../../stores/toastStore'
 import { adminCategoryApi, adminCollectApi } from '../../services/api'
+import { spuApi } from '../../services/spuApi'
 import Sidebar from '../../components/Sidebar'
 import SpuForm from './components/SpuForm'
 import BatchCollectDialog from './components/BatchCollectDialog'
@@ -26,6 +27,7 @@ export default function Spus() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showFilters, setShowFilters] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  const [brands, setBrands] = useState<string[]>([])
   const [filterBrand, setFilterBrand] = useState(filters.brand || '')
   const [filterParentId, setFilterParentId] = useState<number | ''>('')
   const [filterCategory, setFilterCategory] = useState<number | ''>(filters.category_id || '')
@@ -39,7 +41,7 @@ export default function Spus() {
   useEffect(() => {
     // Reset filters on mount to show all SPUs
     const defaultFilters = { page: 1, page_size: 20 }
-    setFilters(defaultFilters)
+    setFilters(defaultFilters, true)
     setSearch('')
     setFilterBrand('')
     setFilterParentId('')
@@ -54,6 +56,7 @@ export default function Spus() {
 
   useEffect(() => {
     fetchCategories()
+    fetchBrands()
   }, [])
 
   useEffect(() => {
@@ -89,29 +92,53 @@ export default function Spus() {
     }
   }
 
+  const fetchBrands = async () => {
+    try {
+      const res = await spuApi.listBrands()
+      const brandList = res.data?.data?.brands || []
+      setBrands(Array.isArray(brandList) ? brandList : [])
+    } catch (err) {
+      console.error('Failed to fetch SPU brands', err)
+      setBrands([])
+    }
+  }
+
+  const buildFilters = (overrides: Record<string, any> = {}) => {
+    const nextFilters: any = {
+      page: 1,
+      page_size: filters.page_size || 20,
+    }
+    const trimmedSearch = search.trim()
+    if (trimmedSearch) nextFilters.search = trimmedSearch
+    if (filterBrand) nextFilters.brand = filterBrand
+    if (filterCategory) nextFilters.category_id = Number(filterCategory)
+    if (filterPetType) nextFilters.pet_type = filterPetType
+    if (filterStatus) nextFilters.status = filterStatus
+    return { ...nextFilters, ...overrides }
+  }
+
   const handleSearch = () => {
-    setFilters({ search, page: 1 })
-    fetchSpus({ search, page: 1 })
+    const nextFilters = buildFilters()
+    setFilters(nextFilters, true)
+    fetchSpus(nextFilters, true)
   }
 
   const handleApplyFilters = () => {
-    const newFilters: any = { page: 1 }
-    if (filterBrand) newFilters.brand = filterBrand
-    if (filterCategory) newFilters.category_id = Number(filterCategory)
-    if (filterPetType) newFilters.pet_type = filterPetType
-    if (filterStatus) newFilters.status = filterStatus
-    setFilters(newFilters)
-    fetchSpus(newFilters)
+    const nextFilters = buildFilters()
+    setFilters(nextFilters, true)
+    fetchSpus(nextFilters, true)
   }
 
   const handleResetFilters = () => {
+    const defaultFilters = { page: 1, page_size: filters.page_size || 20 }
+    setSearch('')
     setFilterBrand('')
     setFilterParentId('')
     setFilterCategory('')
     setFilterPetType('')
     setFilterStatus('')
-    setFilters({ page: 1 })
-    fetchSpus({ page: 1 })
+    setFilters(defaultFilters, true)
+    fetchSpus(defaultFilters, true)
   }
 
   const handleDelete = async (id: number) => {
@@ -261,13 +288,16 @@ export default function Spus() {
               <div className="grid grid-cols-5 gap-4">
                 <div>
                   <label className="block text-xs text-carbon/60 mb-1.5">品牌</label>
-                  <input
-                    type="text"
+                  <select
                     value={filterBrand}
                     onChange={(e) => setFilterBrand(e.target.value)}
-                    placeholder="筛选品牌..."
                     className="w-full px-3 py-2 bg-white/50 border border-peach/10 rounded-xl text-sm focus:outline-none focus:border-peach/40"
-                  />
+                  >
+                    <option value="">全部品牌</option>
+                    {brands.map((brand) => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs text-carbon/60 mb-1.5">宠物类型</label>

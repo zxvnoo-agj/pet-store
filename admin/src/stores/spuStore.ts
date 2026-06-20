@@ -1,6 +1,14 @@
 import { create } from 'zustand'
 import { spuApi, SpuFilterParams } from '../services/spuApi'
 
+const DEFAULT_FILTERS: SpuFilterParams = { page: 1, page_size: 20 }
+
+const cleanFilters = (filters: SpuFilterParams): SpuFilterParams => {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  ) as SpuFilterParams
+}
+
 export interface Spu {
   id: number
   category_id: number
@@ -77,7 +85,7 @@ interface SpuState {
   importStatus: string | null
 
   // Actions
-  fetchSpus: (filters?: SpuFilterParams) => Promise<void>
+  fetchSpus: (filters?: SpuFilterParams, replace?: boolean) => Promise<void>
   fetchSpu: (id: number) => Promise<void>
   createSpu: (data: any) => Promise<Spu>
   updateSpu: (id: number, data: any) => Promise<Spu>
@@ -87,7 +95,7 @@ interface SpuState {
   confirmCandidates: (listingIds: number[]) => Promise<void>
   rejectCandidates: (listingIds: number[]) => Promise<void>
   pollImportStatus: () => Promise<any>
-  setFilters: (filters: SpuFilterParams) => void
+  setFilters: (filters: SpuFilterParams, replace?: boolean) => void
   setQueueFilters: (filters: { tier?: string; page?: number; page_size?: number }) => void
   setImportJob: (jobId: string | null) => void
   setImportStatus: (status: string | null) => void
@@ -98,7 +106,7 @@ export const useSpuStore = create<SpuState>((set, get) => ({
   total: 0,
   loading: false,
   error: null,
-  filters: { page: 1, page_size: 20 },
+  filters: DEFAULT_FILTERS,
 
   currentSpu: null,
   currentListings: [],
@@ -112,14 +120,15 @@ export const useSpuStore = create<SpuState>((set, get) => ({
   importJobId: null,
   importStatus: null,
 
-  fetchSpus: async (filters) => {
+  fetchSpus: async (filters, replace = false) => {
     set({ loading: true, error: null })
     try {
-      const params = { ...get().filters, ...filters }
+      const params = cleanFilters(replace ? { ...DEFAULT_FILTERS, ...filters } : { ...get().filters, ...filters })
       const res = await spuApi.list(params)
       set({
         spus: res.data.data?.products || res.data.data?.items || [],
         total: res.data.pagination?.total || 0,
+        filters: params,
         loading: false,
       })
     } catch (err: any) {
@@ -221,7 +230,9 @@ export const useSpuStore = create<SpuState>((set, get) => ({
     }
   },
 
-  setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
+  setFilters: (filters, replace = false) => set((state) => ({
+    filters: cleanFilters(replace ? { ...DEFAULT_FILTERS, ...filters } : { ...state.filters, ...filters }),
+  })),
   setQueueFilters: (filters) => set((state) => ({ queueFilters: { ...state.queueFilters, ...filters } })),
   setImportJob: (jobId) => set({ importJobId: jobId }),
   setImportStatus: (status) => set({ importStatus: status }),
