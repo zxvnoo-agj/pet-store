@@ -1,0 +1,157 @@
+[
+  {
+    "name": "猫粮",
+    "aliases": ["主粮"],
+    "pet_type": "cat",
+    "icon": "cat-food",
+    "sort_order": 10,
+    "children": [
+      { "name": "猫干粮", "aliases": ["干粮"], "icon": "dry-food", "sort_order": 10 },
+      { "name": "猫湿粮", "aliases": ["湿粮"], "icon": "wet-food", "sort_order": 20 },
+      { "name": "猫处方粮", "icon": "prescription-food", "sort_order": 30 }
+    ]
+  },
+  {
+    "name": "猫零食",
+    "aliases": ["零食"],
+    "pet_type": "cat",
+    "icon": "cat-treat",
+    "sort_order": 20,
+    "children": [
+      { "name": "猫冻干零食", "icon": "freeze-dried", "sort_order": 10 },
+      { "name": "猫条罐头零食", "icon": "treat-can", "sort_order": 20 },
+      { "name": "猫肉干肉粒", "icon": "jerky", "sort_order": 30 },
+      { "name": "猫草化毛", "icon": "cat-grass", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "猫砂",
+    "pet_type": "cat",
+    "icon": "cat-litter",
+    "sort_order": 30,
+    "children": [
+      { "name": "豆腐猫砂", "aliases": ["豆腐砂"], "icon": "tofu-litter", "sort_order": 10 },
+      { "name": "膨润土猫砂", "aliases": ["膨润土砂"], "icon": "clay-litter", "sort_order": 20 },
+      { "name": "混合猫砂", "aliases": ["混合砂"], "icon": "mixed-litter", "sort_order": 30 },
+      { "name": "矿砂木砂及其他", "icon": "other-litter", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "猫玩具",
+    "pet_type": "cat",
+    "icon": "cat-toy",
+    "sort_order": 40,
+    "children": [
+      { "name": "互动玩具", "aliases": ["逗猫棒"], "icon": "interactive-toy", "sort_order": 10 },
+      { "name": "电动玩具", "icon": "electric-toy", "sort_order": 20 },
+      { "name": "猫抓用品", "aliases": ["猫抓板"], "icon": "scratcher", "sort_order": 30 },
+      { "name": "猫爬架猫树", "aliases": ["猫爬架"], "icon": "cat-tree", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "猫护理保健",
+    "pet_type": "cat",
+    "icon": "cat-care",
+    "sort_order": 50,
+    "children": [
+      { "name": "猫驱虫药", "icon": "dewormer", "sort_order": 10 },
+      { "name": "猫疫苗免疫", "icon": "vaccine", "sort_order": 20 },
+      { "name": "猫洗护清洁", "icon": "wash-care", "sort_order": 30 },
+      { "name": "猫美容工具", "icon": "grooming", "sort_order": 40 },
+      { "name": "猫口腔眼耳护理", "icon": "oral-eye-ear", "sort_order": 50 },
+      { "name": "猫营养保健品", "icon": "supplement", "sort_order": 60 }
+    ]
+  },
+  {
+    "name": "猫生活用品",
+    "aliases": ["猫用品"],
+    "pet_type": "cat",
+    "icon": "cat-supplies",
+    "sort_order": 60,
+    "children": [
+      { "name": "猫食盆水具", "aliases": ["猫碗"], "icon": "bowl-water", "sort_order": 10 },
+      { "name": "猫窝垫家具", "aliases": ["猫窝"], "icon": "bed-furniture", "sort_order": 20 },
+      { "name": "猫厕所砂盆", "icon": "litter-box", "sort_order": 30 },
+      { "name": "猫包出行", "aliases": ["猫包"], "icon": "carrier", "sort_order": 40 },
+      { "name": "猫笼围栏", "icon": "cage", "sort_order": 50 },
+      { "name": "猫清洁除味", "icon": "deodorize", "sort_order": 60 }
+    ]
+  },
+  {
+    "name": "狗粮",
+    "aliases": ["犬粮"],
+    "pet_type": "dog",
+    "icon": "dog-food",
+    "sort_order": 10,
+    "children": [
+      { "name": "狗干粮", "aliases": ["干粮"], "icon": "dry-food", "sort_order": 10 },
+      { "name": "狗湿粮", "aliases": ["湿粮"], "icon": "wet-food", "sort_order": 20 },
+      { "name": "狗处方粮", "icon": "prescription-food", "sort_order": 30 }
+    ]
+  },
+  {
+    "name": "狗零食",
+    "pet_type": "dog",
+    "icon": "dog-treat",
+    "sort_order": 20,
+    "children": [
+      { "name": "狗肉干肉粒", "aliases": ["肉干"], "icon": "jerky", "sort_order": 10 },
+      { "name": "狗磨牙洁齿", "aliases": ["磨牙棒"], "icon": "dental-chew", "sort_order": 20 },
+      { "name": "狗冻干零食", "icon": "freeze-dried", "sort_order": 30 },
+      { "name": "狗训练奖励", "icon": "training-treat", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "狗玩具",
+    "pet_type": "dog",
+    "icon": "dog-toy",
+    "sort_order": 30,
+    "children": [
+      { "name": "互动玩具", "icon": "interactive-toy", "sort_order": 10 },
+      { "name": "磨牙玩具", "aliases": ["磨牙玩具"], "icon": "chew-toy", "sort_order": 20 },
+      { "name": "发声玩具", "aliases": ["发声玩具"], "icon": "squeaky-toy", "sort_order": 30 },
+      { "name": "益智漏食玩具", "icon": "puzzle-toy", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "狗护理保健",
+    "pet_type": "dog",
+    "icon": "dog-care",
+    "sort_order": 40,
+    "children": [
+      { "name": "狗驱虫药", "icon": "dewormer", "sort_order": 10 },
+      { "name": "狗疫苗免疫", "icon": "vaccine", "sort_order": 20 },
+      { "name": "狗洗护清洁", "icon": "wash-care", "sort_order": 30 },
+      { "name": "狗美容工具", "icon": "grooming", "sort_order": 40 },
+      { "name": "狗口腔眼耳护理", "icon": "oral-eye-ear", "sort_order": 50 },
+      { "name": "狗营养保健品", "icon": "supplement", "sort_order": 60 }
+    ]
+  },
+  {
+    "name": "狗出行牵引",
+    "pet_type": "dog",
+    "icon": "dog-travel",
+    "sort_order": 50,
+    "children": [
+      { "name": "狗牵引胸背", "icon": "leash-harness", "sort_order": 10 },
+      { "name": "狗项圈身份牌", "icon": "collar-tag", "sort_order": 20 },
+      { "name": "狗外出包车载", "icon": "travel-car", "sort_order": 30 },
+      { "name": "狗训练用品", "icon": "training", "sort_order": 40 }
+    ]
+  },
+  {
+    "name": "狗生活用品",
+    "aliases": ["狗用品"],
+    "pet_type": "dog",
+    "icon": "dog-supplies",
+    "sort_order": 60,
+    "children": [
+      { "name": "狗食盆水具", "aliases": ["狗碗"], "icon": "bowl-water", "sort_order": 10 },
+      { "name": "狗窝垫家具", "aliases": ["狗窝"], "icon": "bed-furniture", "sort_order": 20 },
+      { "name": "狗厕所尿垫", "icon": "toilet-pad", "sort_order": 30 },
+      { "name": "狗笼围栏", "icon": "cage", "sort_order": 40 },
+      { "name": "狗服饰鞋袜", "icon": "clothes", "sort_order": 50 },
+      { "name": "狗清洁除味", "icon": "deodorize", "sort_order": 60 }
+    ]
+  }
+]

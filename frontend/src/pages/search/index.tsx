@@ -124,10 +124,10 @@ export default function SearchPage() {
   }
 
   return (
-    <View className="flex flex-col h-screen bg-gray-50">
+    <View className="flex flex-col h-screen mini-page">
       {/* 搜索栏 */}
       <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
-        <View className="flex-1 flex items-center gap-2 bg-gray-100 rounded-full px-3.5 py-2">
+        <View className="flex-1 flex items-center gap-2 bg-[#FAFAF8] rounded-full px-3.5 py-2 border mini-border">
           <Text className="text-gray-400 text-sm">🔍</Text>
           <Input
             ref={inputRef}
@@ -188,7 +188,7 @@ export default function SearchPage() {
                     {results.categories.map((cat: any) => (
                       <View
                         key={cat.id}
-                        className="px-3 py-1 bg-orange-50 text-orange-600 text-xs rounded-full"
+                        className="px-3 py-1 mini-action-soft text-orange-600 text-xs rounded-full"
                         onClick={() => navigateToList({ category: cat.name, petType: cat.pet_type })}
                       >
                         <Text>{cat.name}</Text>
@@ -257,7 +257,7 @@ export default function SearchPage() {
                 {searchHistory.map((keyword, index) => (
                   <View
                     key={index}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-full"
+                    className="px-3 py-1.5 bg-[#F4F4F2] text-gray-700 text-xs rounded-full"
                     onClick={() => performSearch(keyword)}
                   >
                     <Text>{keyword}</Text>
@@ -273,7 +273,7 @@ export default function SearchPage() {
               {HOT_SEARCHES.map((keyword, index) => (
                 <View
                   key={index}
-                  className="px-3 py-1.5 bg-orange-50 text-orange-600 text-xs rounded-full"
+                  className="px-3 py-1.5 mini-action-soft text-orange-600 text-xs rounded-full"
                   onClick={() => performSearch(keyword)}
                 >
                   <Text>{keyword}</Text>

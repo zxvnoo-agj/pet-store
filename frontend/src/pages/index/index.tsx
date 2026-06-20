@@ -218,27 +218,27 @@ export default function HomePage() {
   const isBrowsingOther = browsingOther && browsingSpecies
 
   return (
-    <View className="bg-[#fff9f3] min-h-screen">
+    <View className="mini-page min-h-screen">
       {/* 顶部欢迎区 */}
       <View className="px-5 pt-6 pb-2 mini-fade-up">
-        <View className="bg-white rounded-3xl px-4 py-4 border border-orange-100 mini-card">
+        <View className="mini-surface rounded-3xl px-4 py-4 border mini-border mini-card">
           <View className="flex items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-xl font-bold text-gray-900 leading-snug">
-                今天要为<Text className="text-orange-500">{getActivePetName()}</Text>看点什么？
+                今天要为<Text className="mini-primary">{getActivePetName()}</Text>看点什么？
               </Text>
             </View>
-            <View className="w-11 h-11 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
-              <SparkleIcon size={22} color="#f97316" />
+            <View className="w-11 h-11 rounded-2xl mini-action-soft flex items-center justify-center shrink-0">
+              <SparkleIcon size={22} color="#FF6B1A" />
             </View>
           </View>
           <View
             onClick={navigateToSearch}
-            className="mt-4 flex items-center gap-2 bg-gray-50 rounded-full px-4 py-3 border border-gray-100 mini-press"
+            className="mt-4 flex items-center gap-2 bg-[#FAFAF8] rounded-full px-4 py-3 border mini-border mini-press"
           >
-            <SearchIcon size={17} color="#f97316" />
-            <Text className="text-sm text-gray-400 flex-1">搜索问题、成分、产品名...</Text>
-            <Text className="text-xs text-orange-400">分析</Text>
+            <SearchIcon size={17} color="#FF6B1A" />
+            <Text className="text-sm mini-text-sub flex-1">搜索问题、成分、产品名...</Text>
+            <Text className="text-xs mini-primary">分析</Text>
           </View>
         </View>
       </View>
@@ -256,14 +256,14 @@ export default function HomePage() {
                     onClick={() => handlePetClick(pet.id)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                       isActive
-                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
-                        : 'bg-white border-orange-100 text-gray-700'
+                        ? 'mini-primary-bg border-[#FF6B1A] text-white shadow-md shadow-orange-200'
+                        : 'mini-surface mini-border text-gray-700'
                     }`}
                   >
                     <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-white/20' : 'bg-orange-50'
+                      isActive ? 'bg-white/20' : 'mini-action-soft'
                     }`}>
-                      <PetTypeIcon type={pet.species} size={17} color={isActive ? '#ffffff' : '#f97316'} />
+                      <PetTypeIcon type={pet.species} size={17} color={isActive ? '#ffffff' : '#FF6B1A'} />
                     </View>
                     <View className="text-left">
                       <Text className={`text-sm font-medium ${isActive ? 'text-white' : ''}`}>
@@ -271,7 +271,7 @@ export default function HomePage() {
                       </Text>
                       {pet.breed?.name && (
                         <Text className={`text-xs mt-0.5 ${
-                          isActive ? 'text-orange-100' : 'text-gray-400'
+                          isActive ? 'text-orange-100' : 'mini-text-sub'
                         }`}>
                           {pet.breed.name}
                         </Text>
@@ -285,11 +285,11 @@ export default function HomePage() {
                 onClick={() => handlePetClick('other')}
                 className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                   browsingOther
-                    ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
-                    : 'border-dashed border-orange-200 bg-white text-gray-400'
+                    ? 'mini-primary-bg border-[#FF6B1A] text-white shadow-md shadow-orange-200'
+                    : 'border-dashed mini-border mini-surface mini-text-sub'
                 }`}
               >
-                <PawIcon size={15} color={browsingOther ? '#ffffff' : '#f97316'} />
+                <PawIcon size={15} color={browsingOther ? '#ffffff' : '#FF6B1A'} />
                 <Text className={`text-sm font-medium ${browsingOther ? 'text-white' : ''}`}>
                   选择其他
                 </Text>
@@ -305,14 +305,14 @@ export default function HomePage() {
                     onClick={() => handlePetClick(p.id)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border shrink-0 ${
                       isActive
-                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200'
-                        : 'bg-white border-orange-100 text-gray-700'
+                        ? 'mini-primary-bg border-[#FF6B1A] text-white shadow-md shadow-orange-200'
+                        : 'mini-surface mini-border text-gray-700'
                     }`}
                   >
                     <View className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-white/20' : 'bg-orange-50'
+                      isActive ? 'bg-white/20' : 'mini-action-soft'
                     }`}>
-                      <PetTypeIcon type={p.id} size={17} color={isActive ? '#ffffff' : '#f97316'} />
+                      <PetTypeIcon type={p.id} size={17} color={isActive ? '#ffffff' : '#FF6B1A'} />
                     </View>
                     <Text className="text-sm font-medium">{p.name}</Text>
                   </View>
@@ -321,9 +321,9 @@ export default function HomePage() {
               <View
                 key="other"
                 onClick={() => {}}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed border-orange-200 bg-white text-gray-400 shrink-0"
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-dashed mini-border mini-surface mini-text-sub shrink-0"
               >
-                <PawIcon size={15} color="#f97316" />
+                <PawIcon size={15} color="#FF6B1A" />
                 <Text className="text-sm font-medium">其他</Text>
               </View>
             </Block>
@@ -334,8 +334,8 @@ export default function HomePage() {
       {/* 浏览其他物种指示器 */}
       {isBrowsingOther && (
         <View className="px-5 pt-1">
-        <View className="bg-white border border-orange-200 rounded-2xl px-3 py-2 mini-scale-in">
-            <Text className="text-xs text-orange-600">
+        <View className="mini-surface border mini-border rounded-2xl px-3 py-2 mini-scale-in">
+            <Text className="text-xs mini-primary">
               正在浏览{SPECIES_LABELS[browsingSpecies!] || browsingSpecies}选择指南 · 点击宠物卡片切换回专属推荐
             </Text>
           </View>
@@ -360,10 +360,10 @@ export default function HomePage() {
                   <View
                     key={species}
                     onClick={() => handleSpeciesSelect(species)}
-                    className="flex flex-col items-center gap-2 py-4 rounded-xl bg-gray-50 active:bg-gray-100"
+                    className="flex flex-col items-center gap-2 py-4 rounded-xl bg-[#FAFAF8] active:bg-gray-100"
                   >
-                    <View className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center">
-                      <PetTypeIcon type={species} size={23} color="#f97316" />
+                    <View className="w-10 h-10 rounded-2xl mini-action-soft flex items-center justify-center">
+                      <PetTypeIcon type={species} size={23} color="#FF6B1A" />
                     </View>
                     <Text className="text-sm text-gray-700">{info?.name || species}</Text>
                   </View>
@@ -389,19 +389,19 @@ export default function HomePage() {
           <Text className="text-base text-gray-900 font-bold">
             {activeScenarioId ? (
               <>
-                <Text className="text-orange-500 font-medium">场景建议</Text>
+                <Text className="mini-primary font-medium">场景建议</Text>
                 <Text className="text-gray-400"> · </Text>
                 <Text>{getActivePetName()}</Text>
               </>
             ) : (
               <>
-                给 <Text className="font-medium text-orange-500">{getActivePetName()}</Text> 的选择参考
+                给 <Text className="font-medium mini-primary">{getActivePetName()}</Text> 的选择参考
               </>
             )}
           </Text>
           {!activeScenarioId && (
             <Text
-              className="text-[11px] text-orange-500 font-medium"
+              className="text-[11px] mini-primary font-medium"
               onClick={() => navigateToProducts(activeSpecies)}
             >
               更多参考
@@ -422,7 +422,7 @@ export default function HomePage() {
           <View className="py-8 flex flex-col items-center justify-center">
             <Text className="text-sm text-gray-500">{scenarioError}</Text>
             <Text
-              className="text-xs text-orange-500 mt-2"
+              className="text-xs mini-primary mt-2"
               onClick={handleClearScenario}
             >
               清除筛选，查看全部推荐
@@ -435,7 +435,7 @@ export default function HomePage() {
           <View className="py-8 flex flex-col items-center justify-center">
             <Text className="text-sm text-gray-500">暂无相关参考，试试其他场景？</Text>
             <Text
-              className="text-xs text-orange-500 mt-2"
+              className="text-xs mini-primary mt-2"
               onClick={() => navigateToProducts(activeSpecies)}
             >
               查看更多参考

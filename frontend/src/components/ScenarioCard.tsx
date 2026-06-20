@@ -15,14 +15,14 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, isActive, onClick
       onClick={onClick}
       className={`shrink-0 w-[170px] h-[82px] rounded-2xl px-3 py-2.5 flex items-center gap-2.5 mini-press ${
         isActive
-          ? 'bg-orange-500 shadow-md shadow-orange-200'
-          : 'bg-white border border-orange-100 mini-card'
+          ? 'mini-primary-bg shadow-md shadow-orange-200'
+          : 'mini-surface border mini-border mini-card'
       }`}
     >
       <View className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-        isActive ? 'bg-white/20' : 'bg-orange-50'
+        isActive ? 'bg-white/20' : 'mini-action-soft'
       }`}>
-        <ScenarioIcon id={scenario.id} size={23} color={isActive ? '#ffffff' : '#f97316'} />
+        <ScenarioIcon id={scenario.id} size={23} color={isActive ? '#ffffff' : '#FF6B1A'} />
       </View>
       <View className="flex-1 min-w-0">
         <Text
@@ -34,7 +34,7 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, isActive, onClick
         </Text>
         <Text
           className={`text-[11px] truncate block mt-0.5 ${
-            isActive ? 'text-orange-100' : 'text-gray-400'
+            isActive ? 'text-orange-100' : 'mini-text-sub'
           }`}
         >
           {scenario.subtitle}

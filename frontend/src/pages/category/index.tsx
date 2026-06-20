@@ -81,48 +81,48 @@ export default function CategoryPage() {
 
   if (loading) {
     return (
-      <View className="flex flex-col h-screen bg-white items-center justify-center">
+      <View className="flex flex-col h-screen mini-page items-center justify-center">
         <Text className="text-gray-400">加载中...</Text>
       </View>
     )
   }
 
   return (
-    <View className="flex flex-col h-screen bg-[#fff9f3]">
+    <View className="flex flex-col h-screen mini-page">
       {/* 搜索栏 */}
-      <View className="px-4 py-3 bg-white border-b border-[#F2E7DA]">
+      <View className="px-4 py-3 mini-surface border-b mini-divider">
         <View
-          className="flex items-center gap-2 bg-gray-50 rounded-full px-3.5 py-2.5 border border-gray-100 mini-press"
+          className="flex items-center gap-2 bg-[#FAFAF8] rounded-full px-3.5 py-2.5 border mini-border mini-press"
           onClick={navigateToSearch}
         >
-          <SearchIcon size={15} color="#f97316" />
-          <Text className="text-sm text-gray-400 flex-1">搜索猫粮、狗粮、用品...</Text>
-          <Text className="text-xs text-gray-400">搜索</Text>
+          <SearchIcon size={15} color="#FF6B1A" />
+          <Text className="text-sm mini-text-sub flex-1">搜索猫粮、狗粮、用品...</Text>
+          <Text className="text-xs mini-primary">搜索</Text>
         </View>
       </View>
 
       {/* 分类布局 */}
       <View className="flex flex-1 overflow-hidden">
         {/* 左侧：宠物类型 */}
-        <View className="w-24 bg-white flex flex-col items-center py-3 gap-1 shrink-0 overflow-y-auto border-r border-[#F2E7DA]">
+        <View className="w-24 mini-surface flex flex-col items-center py-3 gap-1 shrink-0 overflow-y-auto border-r mini-divider">
           {petTypes.map((pet) => (
             <View
               key={pet.id}
               onClick={() => setActivePet(pet.id)}
               className={`flex flex-col items-center gap-1 py-3 px-1 w-full rounded-r-2xl relative mini-press ${
                 activePet === pet.id
-                  ? 'bg-orange-50 text-orange-500 font-medium'
-                  : 'text-gray-500'
+                  ? 'mini-action-soft mini-primary font-medium'
+                  : 'mini-text-sub'
               }`}
             >
               <View className={`w-9 h-9 rounded-2xl flex items-center justify-center ${
-                activePet === pet.id ? 'bg-orange-500' : 'bg-gray-50'
+                activePet === pet.id ? 'mini-primary-bg' : 'bg-[#FAFAF8]'
               }`}>
-                <PetTypeIcon type={pet.id} size={21} color={activePet === pet.id ? '#ffffff' : '#6b7280'} />
+                <PetTypeIcon type={pet.id} size={21} color={activePet === pet.id ? '#ffffff' : '#8B95A1'} />
               </View>
               <Text className="text-xs">{pet.name}</Text>
               {activePet === pet.id && (
-                <View className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-orange-500 rounded-r" />
+                <View className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 mini-primary-bg rounded-r" />
               )}
             </View>
           ))}
@@ -130,7 +130,7 @@ export default function CategoryPage() {
 
         {/* 右侧：品类列表 */}
         <View className="flex-1 p-4 overflow-y-auto">
-          <View className="mb-4 bg-white rounded-3xl px-4 py-4 border border-[#FFE2C2] mini-card-soft mini-fade-up">
+          <View className="mb-4 mini-surface rounded-3xl px-4 py-4 border mini-border mini-card-soft mini-fade-up">
             <Text className="text-lg font-bold text-gray-900">
               {petTypes.find((p) => p.id === activePet)?.name}选择指南
             </Text>
@@ -145,7 +145,7 @@ export default function CategoryPage() {
               {NEED_SCENES.map((scene) => (
                 <View
                   key={scene.title}
-                  className="bg-white border border-[#F2E7DA] rounded-2xl px-3 py-3 mini-card-soft mini-press"
+                  className="mini-surface border mini-border rounded-2xl px-3 py-3 mini-card-soft mini-press"
                   onClick={() => navigateToNeed(scene.title)}
                 >
                   <Text className="text-sm font-semibold text-gray-900 block">{scene.title}</Text>
@@ -163,11 +163,11 @@ export default function CategoryPage() {
                 {parentCategories.map((cat) => (
                   <View
                     key={cat.id}
-                    className="flex flex-col items-center gap-2 py-4 bg-white border border-[#FFE2C2] rounded-2xl mini-card-soft mini-press"
+                    className="flex flex-col items-center gap-2 py-4 mini-surface border mini-border rounded-2xl mini-card-soft mini-press"
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
-                    <View className="w-11 h-11 rounded-2xl bg-orange-50 flex items-center justify-center">
-                      <CategoryIcon name={cat.name} size={23} color="#f97316" />
+                    <View className="w-11 h-11 rounded-2xl mini-action-soft flex items-center justify-center">
+                      <CategoryIcon name={cat.name} size={23} color="#FF6B1A" />
                     </View>
                     <Text className="text-sm text-gray-700 font-medium">{cat.name}</Text>
                   </View>
@@ -184,10 +184,10 @@ export default function CategoryPage() {
                 {filteredCategories.map((cat) => (
                   <View
                     key={cat.id}
-                    className="flex flex-col items-center gap-2 py-4 bg-white border border-[#F2E7DA] rounded-2xl mini-card-soft mini-press"
+                    className="flex flex-col items-center gap-2 py-4 mini-surface border mini-border rounded-2xl mini-card-soft mini-press"
                     onClick={() => navigateToProducts(cat.id, cat.name)}
                   >
-                    <View className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center">
+                    <View className="w-11 h-11 rounded-2xl bg-[#FAFAF8] flex items-center justify-center">
                       <CategoryIcon name={cat.name} size={23} color="#94a3b8" />
                     </View>
                     <Text className="text-sm text-gray-700 font-medium">{cat.name}</Text>
@@ -198,7 +198,7 @@ export default function CategoryPage() {
           )}
 
           {/* 品牌推荐 */}
-          <View className="mt-6 bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft">
+          <View className="mt-6 mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
             <View className="flex items-center justify-between mb-3">
               <Text className="text-sm font-bold text-gray-900">常见资料来源</Text>
               <Text className="text-xs text-gray-400">参考</Text>
@@ -208,7 +208,7 @@ export default function CategoryPage() {
                 (brand) => (
                   <Text
                     key={brand}
-                    className="px-3 py-1.5 bg-orange-50 text-gray-700 text-xs rounded-full font-medium"
+                    className="px-3 py-1.5 mini-action-soft text-gray-700 text-xs rounded-full font-medium"
                     onClick={() => navigateToBrand(brand)}
                   >
                     {brand}

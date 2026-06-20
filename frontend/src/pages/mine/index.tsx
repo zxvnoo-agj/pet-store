@@ -99,12 +99,12 @@ export default function MinePage() {
   }
 
   return (
-    <View className="flex flex-col h-screen bg-[#fff9f3]">
+    <View className="flex flex-col h-screen mini-page">
       {/* 用户信息 */}
       <View className="px-4 pt-4 pb-4 mini-fade-up">
-        <View className="bg-white rounded-3xl p-5 border border-[#FFE2C2] mini-card-soft">
+        <View className="mini-surface rounded-3xl p-5 border mini-border mini-card-soft">
           <View className="flex items-center gap-4">
-            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center overflow-hidden">
+            <View className="w-16 h-16 rounded-3xl mini-action-soft flex items-center justify-center overflow-hidden">
               {isLoggedIn && user?.avatar_url ? (
                 <Image
                   src={resolveAssetUrl(user.avatar_url)}
@@ -133,7 +133,7 @@ export default function MinePage() {
             </View>
             {isLoggedIn && (
               <View
-                className="h-8 px-3 rounded-full bg-orange-50 border border-orange-100 flex items-center justify-center mini-press"
+                className="h-8 px-3 rounded-full mini-action-soft border mini-border flex items-center justify-center mini-press"
                 onClick={navigateToProfile}
               >
                 <Text className="text-xs font-medium text-orange-600">编辑</Text>
@@ -143,7 +143,7 @@ export default function MinePage() {
 
           <View className="grid grid-cols-3 gap-2 mt-5">
             <View
-              className="bg-orange-50 rounded-2xl px-2 py-3.5 flex flex-col items-center mini-press"
+              className="mini-action-soft rounded-2xl px-2 py-3.5 flex flex-col items-center mini-press"
               onClick={navigateToPets}
             >
               <PawIcon size={22} color="#f97316" />
@@ -171,13 +171,13 @@ export default function MinePage() {
       </View>
 
       {/* 功能列表 */}
-      <View className="mx-4 mt-2 bg-white rounded-3xl overflow-hidden border border-[#F2E7DA] mini-card-soft mini-fade-up">
+      <View className="mx-4 mt-2 mini-surface rounded-3xl overflow-hidden border mini-border mini-card-soft mini-fade-up">
         <View
           className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press"
           onClick={navigateToPets}
         >
           <View className="flex items-center gap-2">
-            <View className="w-8 h-8 rounded-2xl bg-orange-50 flex items-center justify-center">
+            <View className="w-8 h-8 rounded-2xl mini-action-soft flex items-center justify-center">
               <PawIcon size={17} color="#f97316" />
             </View>
             <Text className="text-sm text-gray-800">宠物档案</Text>
@@ -218,7 +218,7 @@ export default function MinePage() {
 
         <View className="px-4 py-4 flex items-center justify-between border-b border-gray-100 mini-press">
           <View className="flex items-center gap-2">
-            <View className="w-8 h-8 rounded-2xl bg-gray-50 flex items-center justify-center">
+            <View className="w-8 h-8 rounded-2xl bg-[#FAFAF8] flex items-center justify-center">
               <ClockIcon size={17} color="#64748b" />
             </View>
             <Text className="text-sm text-gray-800">最近查看</Text>
@@ -228,7 +228,7 @@ export default function MinePage() {
 
         <View className="px-4 py-4 flex items-center justify-between mini-press">
           <View className="flex items-center gap-2">
-            <View className="w-8 h-8 rounded-2xl bg-gray-50 flex items-center justify-center">
+            <View className="w-8 h-8 rounded-2xl bg-[#FAFAF8] flex items-center justify-center">
               <SettingsIcon size={17} color="#64748b" />
             </View>
             <Text className="text-sm text-gray-800">设置</Text>
@@ -248,7 +248,7 @@ export default function MinePage() {
           </View>
         ) : (
           <View
-            className="w-full py-3 bg-orange-500 text-white text-sm font-medium rounded-full text-center shadow-lg shadow-orange-200 mini-press"
+            className="w-full py-3 mini-primary-bg text-white text-sm font-medium rounded-full text-center shadow-lg shadow-orange-200 mini-press"
             onClick={handleLogin}
           >
             <Text>{loading ? '登录中...' : '微信登录'}</Text>

@@ -82,7 +82,7 @@ export default function PetsPage() {
   }
 
   return (
-    <View className="flex flex-col h-screen bg-[#fff9f3]">
+    <View className="flex flex-col h-screen mini-page">
       <View className="shrink-0 px-4 pt-4 pb-3 flex items-center justify-between mini-fade-up">
         <View className="min-w-0 flex-1 pr-3">
           <Text className="text-lg font-bold text-gray-900 block">宠物档案</Text>
@@ -102,8 +102,8 @@ export default function PetsPage() {
             <Text className="text-sm">加载中...</Text>
           </View>
         ) : pets.length === 0 ? (
-          <View className="flex flex-col items-center justify-center py-14 px-5 bg-white rounded-3xl border border-[#F2E7DA] mini-card-soft mini-fade-up">
-            <View className="w-16 h-16 rounded-3xl bg-orange-50 flex items-center justify-center mb-4 border border-orange-100/70">
+          <View className="flex flex-col items-center justify-center py-14 px-5 mini-surface rounded-3xl border mini-border mini-card-soft mini-fade-up">
+            <View className="w-16 h-16 rounded-3xl mini-action-soft flex items-center justify-center mb-4 border mini-border">
               <PawIcon size={30} color="#f97316" />
             </View>
             <Text className="text-base font-semibold text-gray-900 mb-1">还没有宠物档案</Text>
@@ -120,10 +120,10 @@ export default function PetsPage() {
             {pets.map((pet) => (
               <View
                 key={pet.id}
-                className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft mini-fade-up"
+                className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft mini-fade-up"
               >
                 <View className="flex items-start gap-3">
-                  <View className="w-14 h-14 rounded-3xl bg-orange-50 border border-orange-100/70 flex items-center justify-center shrink-0">
+                  <View className="w-14 h-14 rounded-3xl mini-action-soft border mini-border flex items-center justify-center shrink-0">
                     <PetTypeIcon type={pet.species} size={28} color="#f97316" />
                   </View>
                   <View className="flex-1 min-w-0">
@@ -137,7 +137,7 @@ export default function PetsPage() {
                     </Text>
                     <View className="flex flex-wrap gap-2 mt-3">
                       {getPetTags(pet).map((tag) => (
-                        <Text key={tag} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
+                        <Text key={tag} className="px-2.5 py-1 mini-action-soft text-orange-700 text-xs rounded-full">
                           {tag}
                         </Text>
                       ))}
@@ -147,7 +147,7 @@ export default function PetsPage() {
 
                 <View className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                   <View
-                    className="h-8 px-4 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mini-press"
+                    className="h-8 px-4 rounded-full bg-[#FAFAF8] border mini-border flex items-center justify-center mini-press"
                     onClick={() => handleEdit(pet)}
                   >
                     <Text className="text-xs font-medium text-gray-600">编辑</Text>
@@ -162,18 +162,18 @@ export default function PetsPage() {
               </View>
             ))}
 
-            <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft mini-fade-up">
+            <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft mini-fade-up">
               <View className="flex items-center justify-between mb-3">
                 <View className="min-w-0 flex-1 pr-3">
                   <Text className="text-base font-semibold text-gray-900 block">根据档案推荐</Text>
                   <Text className="text-xs text-gray-500 mt-1 block truncate">结合年龄、体重和品种生成用品建议</Text>
                 </View>
-                <View className="w-8 h-8 rounded-2xl bg-orange-50 flex items-center justify-center border border-orange-100/70">
+                <View className="w-8 h-8 rounded-2xl mini-action-soft flex items-center justify-center border mini-border">
                   <SparkleIcon size={18} color="#f97316" />
                 </View>
               </View>
               <View className="grid grid-cols-3 gap-2">
-                <View className="min-h-[76px] bg-orange-50 rounded-2xl px-2 py-3 flex flex-col items-center justify-center mini-press">
+                <View className="min-h-[76px] mini-action-soft rounded-2xl px-2 py-3 flex flex-col items-center justify-center mini-press">
                   <PackageIcon size={20} color="#f97316" />
                   <Text className="text-xs font-medium text-orange-700 mt-1">换粮建议</Text>
                 </View>

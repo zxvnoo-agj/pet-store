@@ -59,10 +59,10 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
   if (variant === 'vertical') {
     return (
       <View
-        className="bg-white rounded-2xl overflow-hidden border border-orange-100/70 mini-card mini-press"
+        className="mini-surface rounded-2xl overflow-hidden border mini-border mini-card mini-press"
         onClick={navigateToDetail}
       >
-        <View className="aspect-square overflow-hidden bg-gray-100">
+        <View className="aspect-square overflow-hidden bg-[#FAFAF8]">
           <Image
             src={spu.image_urls?.[0] || ''}
             className="w-full h-full"
@@ -71,19 +71,19 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
         </View>
         <View className="p-3">
           <Text className="text-base font-semibold text-gray-900 truncate block">{spu.name}</Text>
-          <Text className="text-sm text-gray-500 mt-0.5 block">{spu.brand}</Text>
+          <Text className="text-sm mini-text-sub mt-0.5 block">{spu.brand}</Text>
           <View className="flex items-center gap-1 mt-1.5">
             <Image src={starFilledUri(12)} style={{ width: 12, height: 12 }} />
             <Text className="text-xs font-medium text-orange-500">{spu.rating || 0}</Text>
             <Text className="text-xs text-gray-400">({spu.review_count || 0})</Text>
           </View>
           <View className="flex items-center justify-between gap-2 mt-2">
-            <Text className="text-xs text-gray-500 truncate flex-1 min-w-0">
+            <Text className="text-xs mini-text-sub truncate flex-1 min-w-0">
               {productMeta}
             </Text>
             {showCompare && (
               <Text
-                className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}
+                className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'mini-action-soft text-orange-600' : 'bg-[#F4F4F2] mini-text-sub'}`}
                 onClick={handleCompare}
               >
                 {inCompare ? '已对比' : '对比'}
@@ -97,11 +97,11 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
 
   return (
     <View
-      className="bg-white rounded-3xl p-3.5 border border-orange-100/80 flex gap-3 mini-card mini-press"
+      className="mini-surface rounded-3xl p-3.5 border mini-border flex gap-3 mini-card mini-press"
       onClick={navigateToDetail}
     >
       <View
-        className="rounded-2xl overflow-hidden bg-orange-50 relative"
+        className="rounded-2xl overflow-hidden bg-[#FAFAF8] relative"
         style={horizontalImageStyle}
       >
         {spu.image_urls?.[0] ? (
@@ -113,19 +113,19 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
           />
         ) : (
           <View className="flex items-center justify-center" style={fullImageStyle}>
-            <Text className="text-xs text-orange-300">暂无图片</Text>
+            <Text className="text-xs text-[#C9A58C]">暂无图片</Text>
           </View>
         )}
       </View>
       <View className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
         <View>
           <View className="flex items-center gap-1.5 mb-1">
-            <Text className="text-xs px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full font-medium">
+            <Text className="text-xs px-2 py-0.5 mini-action-soft text-orange-600 rounded-full font-medium">
               {spu.brand || '精选'}
             </Text>
           </View>
           <Text className="text-base font-bold text-gray-900 leading-snug block">{spu.name}</Text>
-          <Text className="text-xs text-gray-500 mt-1.5 truncate block">{productMeta}</Text>
+          <Text className="text-xs mini-text-sub mt-1.5 truncate block">{productMeta}</Text>
         </View>
 
         <View className="flex items-end justify-between mt-2">
@@ -136,7 +136,7 @@ const SpuCard: React.FC<SpuCardProps> = ({ spu, variant = 'horizontal', showComp
           </View>
           {showCompare && (
             <Text
-              className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}
+              className={`px-2.5 py-1 rounded-full text-xs ${inCompare ? 'mini-action-soft text-orange-600' : 'bg-[#F4F4F2] mini-text-sub'}`}
               onClick={handleCompare}
             >
               {inCompare ? '已对比' : '对比'}

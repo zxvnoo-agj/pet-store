@@ -65,7 +65,7 @@ export default function MineProfilePage() {
 
   if (!isLoggedIn) {
     return (
-      <View className="flex flex-col items-center justify-center h-screen bg-[#fff9f3] text-gray-400">
+      <View className="flex flex-col items-center justify-center h-screen mini-page text-gray-400">
         <Text className="text-sm">请先登录</Text>
       </View>
     )
@@ -74,19 +74,19 @@ export default function MineProfilePage() {
   const displayAvatarUrl = avatarUrl && isRemoteAsset(avatarUrl) ? resolveAssetUrl(avatarUrl) : avatarUrl
 
   return (
-    <View className="flex flex-col h-screen bg-[#fff9f3]">
+    <View className="flex flex-col h-screen mini-page">
       <View className="shrink-0 bg-white px-4 py-2.5 flex items-center gap-3 border-b border-gray-100">
         <Text className="text-gray-600" onClick={goBack}>←</Text>
         <Text className="flex-1 text-sm font-bold text-gray-800">个人信息</Text>
       </View>
 
       <View className="flex-1 overflow-y-auto px-4 py-5">
-        <View className="bg-white rounded-3xl p-5 border border-[#FFE2C2] mini-card-soft">
+        <View className="mini-surface rounded-3xl p-5 border mini-border mini-card-soft">
           <View className="items-center flex flex-col">
             <Button
               openType="chooseAvatar"
               onChooseAvatar={handleChooseAvatar}
-              className="mini-avatar-button w-24 h-24 rounded-3xl bg-orange-50 flex items-center justify-center overflow-hidden"
+              className="mini-avatar-button w-24 h-24 rounded-3xl mini-action-soft flex items-center justify-center overflow-hidden"
             >
               {displayAvatarUrl ? (
                 <Image
@@ -103,7 +103,7 @@ export default function MineProfilePage() {
 
           <View className="mt-6">
             <Text className="text-xs text-gray-400 mb-2 block">昵称</Text>
-            <View className="h-12 bg-gray-50 border border-gray-100 rounded-2xl px-4 flex items-center">
+            <View className="h-12 bg-[#FAFAF8] border mini-border rounded-2xl px-4 flex items-center">
               <Input
                 type="nickname"
                 value={nickname}

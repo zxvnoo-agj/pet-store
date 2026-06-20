@@ -144,15 +144,15 @@ export default function ProductListPage() {
   ]
 
   return (
-    <View className="flex flex-col h-screen bg-[#f8fafc]">
+    <View className="flex flex-col h-screen mini-page">
       {/* 列表工具栏：原生导航栏已提供返回和页面标题 */}
-      <View className="shrink-0 bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-100">
+      <View className="shrink-0 mini-surface px-4 py-3 flex items-center gap-3 border-b mini-divider">
         <View className="flex-1 min-w-0">
           <Text className="text-lg font-bold text-gray-900 truncate block" userSelect>{getPageTitle()}</Text>
           <Text className="text-sm text-gray-500 mt-0.5 block">共 {total} 个选择参考</Text>
         </View>
         <View
-          className={`px-3 py-2 rounded-full mini-press ${showSortMenu ? 'bg-orange-50' : 'bg-gray-100'}`}
+          className={`px-3 py-2 rounded-full mini-press ${showSortMenu ? 'mini-action-soft' : 'bg-[#F4F4F2]'}`}
           onClick={() => setShowSortMenu(!showSortMenu)}
         >
           <Text className={`text-sm font-medium ${showSortMenu ? 'text-orange-600' : 'text-gray-600'}`}>筛选</Text>
@@ -161,14 +161,14 @@ export default function ProductListPage() {
 
       {/* 排序菜单 */}
       {showSortMenu && (
-        <View className="shrink-0 bg-white border-b border-gray-100 px-4 py-2 flex gap-2">
+        <View className="shrink-0 mini-surface border-b mini-divider px-4 py-2 flex gap-2">
           {sortOptions.map((opt) => (
             <View
               key={opt.key}
               className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                 sortBy === opt.key
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'mini-primary-bg text-white'
+                  : 'bg-[#F4F4F2] text-gray-600'
               }`}
               onClick={() => {
                 setSortBy(opt.key)
@@ -221,18 +221,18 @@ export default function ProductListPage() {
       {/* 对比浮动栏 */}
       {compareList.length > 0 && (
         <View
-          className="shrink-0 px-4 py-2.5 bg-white border-t border-gray-100 flex items-center gap-3 z-10"
+          className="shrink-0 px-4 py-2.5 mini-surface border-t mini-divider flex items-center gap-3 z-10"
         >
             <View className="flex items-center gap-2 flex-1">
-              <View className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <PackageIcon size={18} color="#f97316" />
+              <View className="w-8 h-8 mini-action-soft rounded-full flex items-center justify-center">
+                <PackageIcon size={18} color="#FF6B1A" />
               </View>
             <Text className="text-sm text-gray-700">
               已选 <Text className="text-orange-500 font-bold">{compareList.length}</Text> 个参考
             </Text>
           </View>
           <View
-            className="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-full"
+            className="px-4 py-2 mini-primary-bg text-white text-sm font-medium rounded-full"
             onClick={() => Taro.navigateTo({ url: '/pages/product/compare' })}
           >
             <Text>帮我判断</Text>

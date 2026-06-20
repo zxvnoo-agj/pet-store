@@ -50,8 +50,8 @@ export default function ReviewCreatePage() {
   }
 
   return (
-    <View className="min-h-screen bg-[#fff8f2] px-4 py-4">
-      <View className="bg-white rounded-3xl p-4 border border-orange-100">
+    <View className="min-h-screen mini-page px-4 py-4">
+      <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
         <Text className="text-xs text-gray-400">给 {spuName} 写评价</Text>
         <Text className="block mt-2 text-lg font-bold text-gray-900">分享真实使用体验</Text>
 
@@ -68,7 +68,7 @@ export default function ReviewCreatePage() {
           <Text className="text-sm text-gray-500 ml-2">{rating} 分</Text>
         </View>
 
-        <View className="mt-5 bg-gray-50 rounded-2xl p-3">
+        <View className="mt-5 bg-[#FAFAF8] rounded-2xl p-3 border mini-border">
           <Textarea
             value={content}
             maxlength={500}

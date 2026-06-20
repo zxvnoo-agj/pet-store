@@ -737,7 +737,7 @@ export default function ChatPage() {
       style={{
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#fff9f3',
+        backgroundColor: '#FAFAF8',
       }}
     >
       {/* 自定义导航栏 - 独立 Fixed 在顶部 */}
@@ -754,7 +754,7 @@ export default function ChatPage() {
       >
         <View
           style={{ height: systemInfo.navBarHeight ? `${systemInfo.navBarHeight}px` : '44px', paddingRight: systemInfo.menuRight ? `${systemInfo.menuRight}px` : '0px' }}
-          className="flex items-center justify-between px-4 border-b border-[#F2E7DA]"
+          className="flex items-center justify-between px-4 border-b mini-divider"
         >
           <View className="flex items-center gap-2">
             <View className="w-8 h-8 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center shadow-sm">
@@ -769,7 +769,7 @@ export default function ChatPage() {
             </View>
           </View>
           <View
-            className="h-9 px-3 bg-orange-50 rounded-full flex items-center justify-center mini-press"
+            className="h-9 px-3 mini-action-soft rounded-full flex items-center justify-center mini-press"
             onClick={navigateToSessions}
           >
             <Text className="text-xs text-orange-600 font-medium">历史</Text>
@@ -817,8 +817,8 @@ export default function ChatPage() {
                   }
                   className={`min-w-0 ${
                     msg.role === 'user'
-                      ? 'bg-orange-500 text-white rounded-2xl rounded-br-md px-4 py-3 shadow-md shadow-orange-100'
-                      : 'bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft'
+                      ? 'mini-primary-bg text-white rounded-2xl rounded-br-md px-4 py-3 shadow-md shadow-orange-100'
+                      : 'mini-surface border mini-border rounded-2xl px-4 py-3 mini-card-soft'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -848,7 +848,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length > 0 && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
+                  className="min-w-0 mini-surface border mini-border rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   {renderProcessTimeline(streamSteps, false, undefined, currentStream)}
@@ -865,7 +865,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
+                  className="min-w-0 mini-surface border mini-border rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <MarkdownRenderer content={currentStream} />
@@ -881,7 +881,7 @@ export default function ChatPage() {
             {isLoading && streamSteps.length === 0 && !currentStream && (
               <View className="flex justify-center mb-5">
                 <View
-                  className="min-w-0 bg-white border border-[#F2E7DA] rounded-2xl px-4 py-3 mini-card-soft"
+                  className="min-w-0 mini-surface border mini-border rounded-2xl px-4 py-3 mini-card-soft"
                   style={{ width: 'calc(100% - 32px)', marginLeft: '16px', marginRight: '16px', boxSizing: 'border-box' }}
                 >
                   <View className="flex items-center gap-2">
@@ -901,10 +901,10 @@ export default function ChatPage() {
         <View style={{ flexShrink: 0 }}>
           {/* 快捷问题 - 在输入框上方且相邻 */}
           {messages.length <= 1 && !isLoading && (
-            <View className="px-4 pt-3 pb-3 bg-[#fff9f3] border-t border-[#F2E7DA] mini-fade-up">
+            <View className="px-4 pt-3 pb-3 mini-page border-t mini-divider mini-fade-up">
               {petProfilePrompt && (
                 <View
-                  className="bg-white border border-[#FFE2C2] rounded-2xl px-4 py-3 mb-3 mini-card-soft mini-press"
+                  className="mini-surface border mini-border rounded-2xl px-4 py-3 mb-3 mini-card-soft mini-press"
                   onClick={() => handleSend(petProfilePrompt)}
                 >
                   <Text className="text-sm font-semibold text-gray-900 block">基于宠物档案提问</Text>
@@ -915,7 +915,7 @@ export default function ChatPage() {
                 {SCENE_QUESTIONS.map((scene) => (
                   <View
                     key={scene.label}
-                    className="bg-white border border-[#F2E7DA] rounded-2xl px-3 py-2.5 mini-card-soft mini-press"
+                    className="mini-surface border mini-border rounded-2xl px-3 py-2.5 mini-card-soft mini-press"
                     onClick={() => handleSend(scene.text)}
                   >
                     <Text className="text-sm font-semibold text-gray-900 block">{scene.label}</Text>
@@ -940,7 +940,7 @@ export default function ChatPage() {
                   : quickQuestions.slice(0, 3).map((q, i) => (
                       <View
                         key={i}
-                        className="bg-white border border-[#F2E7DA] rounded-2xl px-4 py-2.5 flex items-center justify-between mini-card-soft mini-press"
+                        className="mini-surface border mini-border rounded-2xl px-4 py-2.5 flex items-center justify-between mini-card-soft mini-press"
                         onClick={() => handleSend(q)}
                       >
                         <Text className="text-orange-600 text-sm">{q}</Text>
@@ -952,9 +952,9 @@ export default function ChatPage() {
           )}
 
           {/* 输入栏 */}
-          <View className="bg-white border-t border-[#F2E7DA] px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
+          <View className="mini-surface border-t mini-divider px-4 py-3 flex items-center gap-3 shadow-[0_-8px_24px_rgba(28,35,48,0.05)]">
             <Input
-              className="flex-1 min-w-0 bg-gray-50 rounded-full px-4 py-3 text-sm border border-gray-100"
+              className="flex-1 min-w-0 bg-[#FAFAF8] rounded-full px-4 py-3 text-sm border mini-border"
               placeholder="请输入问题，如：幼猫吃什么粮好？"
               value={inputValue}
               onInput={(e) => setInputValue(e.detail.value)}

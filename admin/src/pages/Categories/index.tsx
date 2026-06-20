@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, Trash2, Loader2, FolderTree, Cat, Dog, X } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Plus, Trash2, Loader2, FolderTree, Cat, Dog, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { adminCategoryApi } from '../../services/api'
 import Sidebar from '../../components/Sidebar'
 import { useLockBodyScroll } from '../../hooks/useLockBodyScroll'
@@ -9,12 +10,22 @@ interface Category {
   id: number
   name: string
   pet_type: string
+  parent_id?: number | null
   level: number
+  icon?: string | null
   sort_order: number
   is_active: boolean
+  children?: Category[]
 }
 
-const petTypeIcons: Record<string, React.ReactNode> = {
+interface TreeRow {
+  category: Category
+  depth: number
+  childCount: number
+  hasChildren: boolean
+}
+
+const petTypeIcons: Record<string, ReactNode> = {
   cat: <Cat className="w-3.5 h-3.5" />,
   dog: <Dog className="w-3.5 h-3.5" />,
 }
@@ -27,9 +38,8 @@ const petTypeLabels: Record<string, string> = {
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
@@ -49,9 +59,10 @@ export default function Categories() {
   const fetchCategories = async () => {
     setLoading(true)
     try {
-      const response = await adminCategoryApi.list({ page })
-      setCategories(response.data.data.categories)
-      setTotalPages(response.data.pagination.total_pages)
+      const response = await adminCategoryApi.list({ tree: true, page_size: 100 })
+      const nextCategories = response.data.data.categories || []
+      setCategories(nextCategories)
+      setExpandedIds(new Set(nextCategories.map((category: Category) => category.id)))
     } catch (error) {
       console.error('Failed to fetch categories', error)
     } finally {
@@ -61,7 +72,58 @@ export default function Categories() {
 
   useEffect(() => {
     fetchCategories()
-  }, [page])
+  }, [])
+
+  const groupedCategories = useMemo(() => {
+    return categories.reduce<Record<string, Category[]>>((acc, category) => {
+      if (!acc[category.pet_type]) acc[category.pet_type] = []
+      acc[category.pet_type].push(category)
+      return acc
+    }, {})
+  }, [categories])
+
+  const treeRows = useMemo(() => {
+    const rows: Array<{ type: 'group'; petType: string; rootCount: number; totalCount: number } | ({ type: 'category' } & TreeRow)> = []
+
+    Object.entries(groupedCategories)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([petType, roots]) => {
+        const totalCount = roots.reduce((sum, root) => sum + 1 + (root.children?.length || 0), 0)
+        rows.push({ type: 'group', petType, rootCount: roots.length, totalCount })
+
+        roots
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+          .forEach((root) => {
+            const children = (root.children || []).slice().sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+            rows.push({
+              type: 'category',
+              category: root,
+              depth: 0,
+              childCount: children.length,
+              hasChildren: children.length > 0,
+            })
+
+            if (expandedIds.has(root.id)) {
+              children.forEach((child) => {
+                rows.push({
+                  type: 'category',
+                  category: child,
+                  depth: 1,
+                  childCount: child.children?.length || 0,
+                  hasChildren: Boolean(child.children?.length),
+                })
+              })
+            }
+          })
+      })
+
+    return rows
+  }, [expandedIds, groupedCategories])
+
+  const totalCount = useMemo(() => {
+    return categories.reduce((sum, category) => sum + 1 + (category.children?.length || 0), 0)
+  }, [categories])
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个分类吗？')) return
@@ -71,6 +133,18 @@ export default function Categories() {
     } catch (error) {
       console.error('Failed to delete category', error)
     }
+  }
+
+  const toggleExpanded = (id: number) => {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   const handleCreate = async () => {
@@ -153,95 +227,155 @@ export default function Categories() {
                       </tr>
                     </thead>
                     <tbody>
-                      {categories.map((category, idx) => (
-                        <tr
-                          key={category.id}
-                          className="border-b border-peach/5 table-row-hover"
-                          onMouseEnter={() => setHoveredRow(idx)}
-                          onMouseLeave={() => setHoveredRow(null)}
-                        >
-                          <td className="px-6 py-4 text-sm text-carbon/70 relative">
-                            <span className={`absolute left-0 top-0 bottom-0 w-[3px] bg-peach rounded-r-full transition-opacity duration-300 ${
-                              hoveredRow === idx ? 'opacity-100' : 'opacity-0'
-                            }`} />
-                            #{category.id}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-peach/10 to-peach/5 flex items-center justify-center flex-shrink-0">
-                                <FolderTree className="w-4 h-4 text-peach/70" />
+                      {treeRows.map((row, idx) => {
+                        if (row.type === 'group') {
+                          return (
+                            <tr key={`group-${row.petType}`} className="bg-peach/[0.04] border-b border-peach/10">
+                              <td colSpan={7} className="px-6 py-3">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-deep-black">
+                                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-white text-peach shadow-sm">
+                                    {petTypeIcons[row.petType] || <Cat className="w-3.5 h-3.5" />}
+                                  </span>
+                                  <span>{petTypeLabels[row.petType] || row.petType}</span>
+                                  <span className="text-xs font-normal text-carbon/50">
+                                    {row.rootCount} 个一级分类 / 共 {row.totalCount} 个分类
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        }
+
+                        const { category, depth, childCount, hasChildren } = row
+                        const isParent = depth === 0
+
+                        return (
+                          <tr
+                            key={category.id}
+                            className={`border-b border-peach/5 table-row-hover ${
+                              isParent ? 'bg-white/30' : 'bg-white/10'
+                            }`}
+                            onMouseEnter={() => setHoveredRow(idx)}
+                            onMouseLeave={() => setHoveredRow(null)}
+                          >
+                            <td className="px-6 py-4 text-sm text-carbon/70 relative">
+                              <span className={`absolute left-0 top-0 bottom-0 w-[3px] bg-peach rounded-r-full transition-opacity duration-300 ${
+                                hoveredRow === idx ? 'opacity-100' : 'opacity-0'
+                              }`} />
+                              #{category.id}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3" style={{ paddingLeft: depth * 32 }}>
+                                <button
+                                  type="button"
+                                  onClick={() => hasChildren && toggleExpanded(category.id)}
+                                  disabled={!hasChildren}
+                                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                                    hasChildren
+                                      ? 'text-carbon/50 hover:text-peach hover:bg-peach/10'
+                                      : 'text-carbon/15 cursor-default'
+                                  }`}
+                                >
+                                  {hasChildren ? (
+                                    expandedIds.has(category.id)
+                                      ? <ChevronDown className="w-4 h-4" />
+                                      : <ChevronRight className="w-4 h-4" />
+                                  ) : (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-carbon/20" />
+                                  )}
+                                </button>
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                  isParent
+                                    ? 'bg-gradient-to-br from-peach/15 to-peach/5'
+                                    : 'bg-rose-gray/60'
+                                }`}>
+                                  <FolderTree className={`w-4 h-4 ${isParent ? 'text-peach/80' : 'text-carbon/45'}`} />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm text-deep-black ${isParent ? 'font-semibold' : 'font-medium'}`}>
+                                      {category.name}
+                                    </span>
+                                    {isParent && (
+                                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-peach/10 text-peach">
+                                        {childCount} 个子类
+                                      </span>
+                                    )}
+                                  </div>
+                                  {depth > 0 && (
+                                    <p className="text-xs text-carbon/40 mt-0.5">
+                                      上级分类 ID: {category.parent_id || '-'}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-sm text-deep-black font-medium">
-                                {category.name}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="inline-flex items-center gap-1.5 status-badge bg-blue-50/80 text-blue-500">
+                                {petTypeIcons[category.pet_type] || <Cat className="w-3.5 h-3.5" />}
+                                {petTypeLabels[category.pet_type] || '猫咪'}
                               </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center gap-1.5 status-badge bg-blue-50/80 text-blue-500">
-                              {petTypeIcons[category.pet_type] || <Cat className="w-3.5 h-3.5" />}
-                              {petTypeLabels[category.pet_type] || '猫咪'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                                category.level === 1
-                                  ? 'bg-peach text-white'
-                                  : 'bg-rose-gray text-carbon/70'
-                              }`}
-                            >
-                              {category.level}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-carbon/70">{category.sort_order}</td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`status-badge ${
-                                category.is_active
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}
-                            >
+                            </td>
+                            <td className="px-6 py-4">
                               <span
-                                className={`status-dot ${
-                                  category.is_active ? 'bg-emerald-400' : 'bg-gray-300'
+                                className={`inline-flex items-center justify-center px-2.5 h-6 rounded-full text-xs font-bold ${
+                                  isParent
+                                    ? 'bg-peach text-white'
+                                    : 'bg-rose-gray text-carbon/70'
                                 }`}
-                              />
-                              {category.is_active ? '启用' : '禁用'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => handleDelete(category.id)}
-                              className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                              >
+                                {isParent ? '一级' : '二级'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-carbon/70">{category.sort_order}</td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`status-badge ${
+                                  category.is_active
+                                    ? 'bg-emerald-50 text-emerald-600'
+                                    : 'bg-gray-100 text-gray-500'
+                                }`}
+                              >
+                                <span
+                                  className={`status-dot ${
+                                    category.is_active ? 'bg-emerald-400' : 'bg-gray-300'
+                                  }`}
+                                />
+                                {category.is_active ? '启用' : '禁用'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => handleDelete(category.id)}
+                                className="p-2 rounded-xl text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all duration-300"
+                                title="删除分类"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
 
                 <div className="flex items-center justify-between px-6 py-4 border-t border-peach/10">
                   <p className="text-xs text-carbon/50">
-                    第 {page} 页 / 共 {totalPages} 页
+                    当前展示 {totalCount} 个分类，按宠物类型和父子关系组织
                   </p>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
+                      onClick={() => setExpandedIds(new Set(categories.map(category => category.id)))}
                       className="px-4 py-2 text-sm text-carbon bg-white/50 border border-peach/10 rounded-pill hover:bg-white hover:border-peach/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
                     >
-                      上一页
+                      展开全部
                     </button>
                     <button
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
+                      onClick={() => setExpandedIds(new Set())}
                       className="px-4 py-2 text-sm text-white bg-peach rounded-pill hover:shadow-peach disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300"
                     >
-                      下一页
+                      收起全部
                     </button>
                   </div>
                 </div>

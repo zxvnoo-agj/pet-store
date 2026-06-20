@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 60 17% 98%;
+    --foreground: 221 39% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 221 39% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
+    --primary: 23 100% 55%;
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted-foreground: 211 13% 59%;
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
+    --border: 32 39% 90%;
+    --input: 32 39% 90%;
     --ring: 240 5.9% 10%;
     --radius: 0.625rem;
     --sidebar-background: 0 0% 98%;
@@ -72,6 +72,11 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  page {
+    background: #FAFAF8;
+    color: #111827;
+  }
 }
 
 @keyframes mini-fade-up {
@@ -120,11 +125,51 @@
 }
 
 .mini-card {
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  background: #FFFFFF;
+  border-color: #F0E7DD;
+  box-shadow: 0 8px 24px rgba(28, 35, 48, 0.05);
 }
 
 .mini-card-soft {
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.035);
+  background: #FFFFFF;
+  border-color: #F0E7DD;
+  box-shadow: 0 8px 24px rgba(28, 35, 48, 0.05);
+}
+
+.mini-page {
+  background: #FAFAF8;
+}
+
+.mini-surface {
+  background: #FFFFFF;
+}
+
+.mini-border {
+  border-color: #F0E7DD;
+}
+
+.mini-text-main {
+  color: #111827;
+}
+
+.mini-text-sub {
+  color: #8B95A1;
+}
+
+.mini-primary {
+  color: #FF6B1A;
+}
+
+.mini-primary-bg {
+  background: #FF6B1A;
+}
+
+.mini-action-soft {
+  background: #FFF4EC;
+}
+
+.mini-divider {
+  border-color: #F0E7DD;
 }
 
 .mini-safe-bottom {

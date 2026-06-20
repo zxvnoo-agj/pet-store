@@ -278,7 +278,7 @@ function SpuDetailContent() {
 
   if (!spu) {
     return (
-      <View className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <View className="flex flex-col items-center justify-center min-h-screen mini-page">
         <Text className="text-4xl mb-2"></Text>
         <Text className="text-gray-500">产品不存在或已下架</Text>
       </View>
@@ -293,11 +293,11 @@ function SpuDetailContent() {
   
 
   return (
-    <View className="flex flex-col h-screen bg-[#fff9f3]">
+    <View className="flex flex-col h-screen mini-page">
       <ScrollView className="flex-1" scrollY style={{ paddingBottom: '112px' }}>
         {/* 产品图片 */}
         <View
-          className="bg-orange-50 flex items-center justify-center overflow-hidden relative"
+          className="bg-[#FAFAF8] flex items-center justify-center overflow-hidden relative"
           style={{ height: imageExpanded ? '420px' : '100vw', maxHeight: imageExpanded ? '420px' : '390px' }}
         >
           {heroImage ? (
@@ -323,7 +323,7 @@ function SpuDetailContent() {
         </View>
 
         {/* SPU 基本信息 */}
-        <View className="mx-4 mt-4 px-4 pt-4 pb-4 bg-white rounded-3xl border border-[#FFE2C2] mini-card-soft mini-fade-up">
+        <View className="mx-4 mt-4 px-4 pt-4 pb-4 mini-surface rounded-3xl border mini-border mini-card-soft mini-fade-up">
           <View className="flex items-start justify-between gap-3 mb-2">
             {/* 品牌标签 */}
             <View className="flex-1 flex flex-wrap items-center gap-2">
@@ -341,13 +341,13 @@ function SpuDetailContent() {
             </View>
             <View className="flex items-center gap-2 shrink-0">
               <View
-                className="w-11 h-11 rounded-full bg-orange-50 flex items-center justify-center mini-press"
+                className="w-11 h-11 rounded-full mini-action-soft flex items-center justify-center mini-press"
                 onClick={toggleFavorite}
               >
                 {isFavorited ? (
                   <FavoriteFilledIcon size={19} color="#f87171" />
                 ) : (
-                  <FavoriteIcon size={19} color="#f97316" />
+                  <FavoriteIcon size={19} color="#FF6B1A" />
                 )}
               </View>
               <Button openType="share" className="mini-share-button w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center">
@@ -380,7 +380,7 @@ function SpuDetailContent() {
 
           {/* 评分和评价 */}
           <View className="grid grid-cols-3 gap-2 mt-4">
-            <View className="bg-orange-50 rounded-2xl px-3 py-3">
+            <View className="mini-action-soft rounded-2xl px-3 py-3">
               <Text className="text-lg font-bold text-orange-600 block">{spu.rating || 0}</Text>
               <Text className="text-xs text-orange-700/70 mt-0.5 block">综合评分</Text>
             </View>
@@ -405,7 +405,7 @@ function SpuDetailContent() {
         </View>
 
         {/* Tab切换 */}
-        <View className="flex border-b border-[#F2E7DA] px-4 mt-3 bg-white">
+        <View className="flex border-b mini-divider px-4 mt-3 mini-surface">
           <View
             className={`flex-1 py-3 text-sm font-medium text-center border-b-2 ${
               activeTab === 'overview'
@@ -441,7 +441,7 @@ function SpuDetailContent() {
           {/* 产品概览 */}
         {activeTab === 'overview' && (
           <View className="px-4 py-4 space-y-4">
-            <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft">
+            <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
               <Text className="text-sm font-bold text-gray-800 mb-2">推荐理由</Text>
               <Text className="text-sm text-gray-600 leading-relaxed">{getAnalysisSummary()}</Text>
             </View>
@@ -482,7 +482,7 @@ function SpuDetailContent() {
 
             {/* 成分 */}
             {spu.ingredients && spu.ingredients.length > 0 && (
-              <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft">
+              <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
                 <Text className="text-sm font-bold text-gray-800 mb-2">成分解读</Text>
                 <View className="flex flex-wrap gap-2">
                   {spu.ingredients.slice(0, 6).map((ing: string, i: number) => (
@@ -499,7 +499,7 @@ function SpuDetailContent() {
 
             {/* 产品描述 */}
             {spu.description && (
-              <View className="bg-white rounded-3xl p-4 border border-[#F2E7DA] mini-card-soft">
+              <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
                 <Text className="text-sm font-bold text-gray-800 mb-2">产品描述</Text>
                 <Text className="text-sm text-gray-600 leading-relaxed" userSelect>{spu.description}</Text>
               </View>
@@ -507,7 +507,7 @@ function SpuDetailContent() {
 
             {/* 营养成分 */}
             {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
-              <View className="bg-white rounded-3xl p-4 border border-gray-100 mini-card">
+              <View className="mini-surface rounded-3xl p-4 border mini-border mini-card">
                 <Text className="text-sm font-bold text-gray-800 mb-2">营养成分</Text>
                 <View className="bg-gray-50 rounded-xl p-4 space-y-3">
                   {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
@@ -585,7 +585,7 @@ function SpuDetailContent() {
               </View>
             ) : (
               listings.map((listing: any) => (
-                <View key={listing.id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+                <View key={listing.id} className="mini-surface rounded-xl border mini-border p-4 space-y-3 mini-card-soft">
                   {/* 来源信息 */}
                   <View className="flex items-center justify-between">
                     <View className="flex items-center gap-2">
@@ -705,7 +705,7 @@ function SpuDetailContent() {
               </View>
             )}
 
-            <View className="bg-white rounded-2xl border border-orange-100 p-4 flex items-center justify-between">
+              <View className="mini-surface rounded-2xl border mini-border p-4 flex items-center justify-between mini-card-soft">
               <View>
                 <Text className="block text-sm font-bold text-gray-900">真实评价</Text>
                 <Text className="block text-xs text-gray-400 mt-1">
@@ -721,7 +721,7 @@ function SpuDetailContent() {
             </View>
 
             {myReview && (
-              <View className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
+              <View className="mini-action-soft rounded-2xl border mini-border p-4">
                 <View className="flex items-center justify-between mb-2">
                   <Text className="text-sm font-bold text-orange-700">我的评价</Text>
                   <Text className="text-[10px] px-2 py-0.5 bg-white text-orange-600 rounded-full">
@@ -749,7 +749,7 @@ function SpuDetailContent() {
             ) : reviews.length === 0 ? (
               <View className="flex flex-col items-center justify-center py-10 bg-white rounded-2xl border border-gray-100">
                 <Text className="text-gray-500 text-sm">暂无评价，来写第一条评价吧</Text>
-                <View className="mt-3 px-4 py-2 bg-orange-50 rounded-full" onClick={navigateToWriteReview}>
+                <View className="mt-3 px-4 py-2 mini-action-soft rounded-full" onClick={navigateToWriteReview}>
                   <Text className="text-xs text-orange-600 font-medium">去写评价</Text>
                 </View>
               </View>
@@ -758,7 +758,7 @@ function SpuDetailContent() {
                 const isExpanded = expandedNoteIds.has(note.id)
                 const truncated = note.content.length > 200
                 return (
-                  <View key={note.id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+                  <View key={note.id} className="mini-surface rounded-xl border mini-border p-4 space-y-3 mini-card-soft">
                     {/* 作者和信息头 */}
                     <View className="flex items-center gap-2">
                       <View className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
@@ -869,7 +869,7 @@ function SpuDetailContent() {
 
       {/* 底部操作栏 */}
       <View
-        className="shrink-0 px-4 pt-3 bg-white border-t border-[#F2E7DA] flex items-center gap-3 z-10 fixed bottom-0 left-0 right-0"
+        className="shrink-0 px-4 pt-3 mini-surface border-t mini-divider flex items-center gap-3 z-10 fixed bottom-0 left-0 right-0"
         style={{ minHeight: '88px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
       >
         <View className="w-12 flex flex-col items-center gap-0.5 px-1">
