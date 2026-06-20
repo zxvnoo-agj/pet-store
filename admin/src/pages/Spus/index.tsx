@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Plus, Trash2, Edit3, Loader2, Boxes, SlidersHorizontal, RefreshCw } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
@@ -21,6 +21,7 @@ export default function Spus() {
   const navigate = useNavigate()
   const { spus, total, loading, error, filters, fetchSpus, deleteSpu, setFilters } = useSpuStore()
   const { addToast } = useToastStore()
+  const skipInitialPageFetch = useRef(true)
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editSpu, setEditSpu] = useState<any>(null)
@@ -48,9 +49,14 @@ export default function Spus() {
     setFilterCategory('')
     setFilterPetType('')
     setFilterStatus('')
+    fetchSpus(defaultFilters, true)
   }, [])
 
   useEffect(() => {
+    if (skipInitialPageFetch.current) {
+      skipInitialPageFetch.current = false
+      return
+    }
     fetchSpus()
   }, [filters.page, filters.page_size])
 
