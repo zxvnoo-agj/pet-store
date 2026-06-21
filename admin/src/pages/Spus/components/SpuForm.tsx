@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useLockBodyScroll } from '../../../hooks/useLockBodyScroll'
 import { X, Save, Loader2, Sparkles, ImageIcon, Type } from 'lucide-react'
@@ -6,6 +6,7 @@ import { useSpuStore } from '../../../stores/spuStore'
 import { useToastStore } from '../../../stores/toastStore'
 import { adminCategoryApi } from '../../../services/api'
 import { spuApi } from '../../../services/spuApi'
+import { formatAttributeValue, getSpuAttributeTemplate } from '../../../config/spuAttributeTemplates'
 
 interface Category {
   id: number
@@ -63,7 +64,7 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
 
   const fetchCategories = async () => {
     try {
-      const res = await adminCategoryApi.list()
+      const res = await adminCategoryApi.list({ page_size: 100 })
       setCategories(res.data?.data?.categories || [])
     } catch (err) {
       console.error('Failed to fetch categories', err)
@@ -73,6 +74,35 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const selectedCategory = useMemo(() => {
+    return categories.find(c => c.id === Number(formData.category_id))
+      || categories.find(c => c.id === Number(selectedParentId))
+      || null
+  }, [categories, formData.category_id, selectedParentId])
+
+  const attributeTemplate = useMemo(() => {
+    return getSpuAttributeTemplate(selectedCategory?.name)
+  }, [selectedCategory?.name])
+
+  const parseExtraAttrs = () => {
+    try {
+      const parsed = JSON.parse(formData.extra_attrs || '{}')
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+    } catch {
+      return {}
+    }
+  }
+
+  const updateExtraAttr = (key: string, value: string) => {
+    const next = { ...parseExtraAttrs() }
+    if (value.trim()) {
+      next[key] = value
+    } else {
+      delete next[key]
+    }
+    handleChange('extra_attrs', JSON.stringify(next, null, 2))
   }
 
   const handleSubmit = async () => {
@@ -225,6 +255,8 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
   }
 
   const parentHasChildren = selectedParentId ? categories.some(c => c.parent_id === selectedParentId && c.level === 2) : false
+  const isFoodTemplate = attributeTemplate.kind === 'food'
+  const extraAttrs = parseExtraAttrs()
 
   const labelStyle = 'block text-xs font-medium text-carbon/60 mb-1.5'
   const inputStyle = 'w-full px-3 py-2.5 bg-white/50 border border-peach/10 rounded-xl text-sm text-deep-black placeholder:text-carbon/30 focus:outline-none focus:border-peach/40 focus:bg-white/80 transition-all duration-300'
@@ -358,126 +390,172 @@ export default function SpuForm({ spu, onClose, onSaved }: SpuFormProps) {
             <h3 className="text-sm font-semibold text-deep-black flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-peach" />
               详细信息
+              <span className="px-2 py-0.5 rounded-full bg-peach/10 text-peach text-[11px] font-medium">
+                {attributeTemplate.label}
+              </span>
             </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className={labelStyle}>成分 (每行一个)</label>
-                  <button
-                    onClick={() => ingredientsFileRef.current?.click()}
-                    disabled={aiLoading.ingredients}
-                    className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
-                  >
-                    {aiLoading.ingredients ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <ImageIcon className="w-3 h-3" />
-                    )}
-                    上传图片解析
-                  </button>
-                  <input
-                    ref={ingredientsFileRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleParseIngredients}
-                    className="hidden"
-                  />
-                </div>
-                <textarea
-                  value={formData.ingredients}
-                  onChange={(e) => handleChange('ingredients', e.target.value)}
-                  rows={4}
-                  placeholder="Chicken&#10;Rice&#10;Corn"
-                  className={textareaStyle}
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className={labelStyle}>营养成分 (JSON)</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => nutritionFileRef.current?.click()}
-                      disabled={aiLoading.nutritionImage}
-                      className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
-                    >
-                      {aiLoading.nutritionImage ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <ImageIcon className="w-3 h-3" />
-                      )}
-                      图片
-                    </button>
-                    <input
-                      ref={nutritionFileRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleParseNutritionFromImage}
-                      className="hidden"
+
+            {isFoodTemplate ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className={labelStyle}>成分 (每行一个)</label>
+                      <button
+                        onClick={() => ingredientsFileRef.current?.click()}
+                        disabled={aiLoading.ingredients}
+                        className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
+                      >
+                        {aiLoading.ingredients ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <ImageIcon className="w-3 h-3" />
+                        )}
+                        上传图片解析
+                      </button>
+                      <input
+                        ref={ingredientsFileRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleParseIngredients}
+                        className="hidden"
+                      />
+                    </div>
+                    <textarea
+                      value={formData.ingredients}
+                      onChange={(e) => handleChange('ingredients', e.target.value)}
+                      rows={4}
+                      placeholder="Chicken&#10;Rice&#10;Corn"
+                      className={textareaStyle}
                     />
-                    <button
-                      onClick={handleParseNutritionFromText}
-                      disabled={aiLoading.nutritionText}
-                      className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
-                    >
-                      {aiLoading.nutritionText ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Type className="w-3 h-3" />
-                      )}
-                      转文本
-                    </button>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className={labelStyle}>营养成分 (JSON)</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => nutritionFileRef.current?.click()}
+                          disabled={aiLoading.nutritionImage}
+                          className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                          {aiLoading.nutritionImage ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <ImageIcon className="w-3 h-3" />
+                          )}
+                          图片
+                        </button>
+                        <input
+                          ref={nutritionFileRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleParseNutritionFromImage}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={handleParseNutritionFromText}
+                          disabled={aiLoading.nutritionText}
+                          className="text-xs text-peach hover:text-peach/80 flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                          {aiLoading.nutritionText ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Type className="w-3 h-3" />
+                          )}
+                          转文本
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      value={formData.nutrition}
+                      onChange={(e) => handleChange('nutrition', e.target.value)}
+                      rows={4}
+                      placeholder='{"protein": "32%", "fat": "15%"}'
+                      className={textareaStyle + ' font-mono text-xs'}
+                    />
                   </div>
                 </div>
-                <textarea
-                  value={formData.nutrition}
-                  onChange={(e) => handleChange('nutrition', e.target.value)}
-                  rows={4}
-                  placeholder='{"protein": "32%", "fat": "15%"}'
-                  className={textareaStyle + ' font-mono text-xs'}
-                />
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleGenerateProsCons}
+                    disabled={aiLoading.prosCons}
+                    className="text-xs text-peach hover:text-peach/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-peach/20 hover:bg-peach/5 transition-all disabled:opacity-50"
+                  >
+                    {aiLoading.prosCons ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    AI 一键生成优缺点
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-5">
+                {attributeTemplate.medicalNotice && (
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                    医疗相关信息仅作产品资料参考，具体使用请以兽医建议和产品说明书为准。
+                  </div>
+                )}
+
+                {attributeTemplate.sections.map(section => (
+                  <div key={section.title} className="space-y-3">
+                    <p className="text-xs font-semibold text-carbon/70">{section.title}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {section.fields.map(field => (
+                        <div key={field.key} className={field.multiline ? 'col-span-2' : ''}>
+                          <label className={labelStyle}>{field.label}</label>
+                          {field.multiline ? (
+                            <textarea
+                              value={formatAttributeValue(extraAttrs[field.key])}
+                              onChange={(e) => updateExtraAttr(field.key, e.target.value)}
+                              rows={3}
+                              placeholder={field.placeholder}
+                              className={textareaStyle}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              value={formatAttributeValue(extraAttrs[field.key])}
+                              onChange={(e) => updateExtraAttr(field.key, e.target.value)}
+                              placeholder={field.placeholder}
+                              className={inputStyle}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className={labelStyle}>优点 (每行一个)</label>
+                  <label className={labelStyle}>{isFoodTemplate ? '优点' : '适合的理由'} (每行一个)</label>
                 </div>
                 <textarea
                   value={formData.pros}
                   onChange={(e) => handleChange('pros', e.target.value)}
                   rows={3}
-                  placeholder="High protein&#10;Grain-free"
+                  placeholder={isFoodTemplate ? 'High protein&#10;Grain-free' : '使用方便&#10;适用场景明确'}
                   className={textareaStyle}
                 />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className={labelStyle}>缺点 (每行一个)</label>
+                  <label className={labelStyle}>{isFoodTemplate ? '缺点' : '注意事项'} (每行一个)</label>
                 </div>
                 <textarea
                   value={formData.cons}
                   onChange={(e) => handleChange('cons', e.target.value)}
                   rows={3}
-                  placeholder="Pricey&#10;Limited flavors"
+                  placeholder={isFoodTemplate ? 'Pricey&#10;Limited flavors' : '需按说明选择&#10;特殊情况先咨询专业人士'}
                   className={textareaStyle}
                 />
               </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={handleGenerateProsCons}
-                disabled={aiLoading.prosCons}
-                className="text-xs text-peach hover:text-peach/80 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-peach/20 hover:bg-peach/5 transition-all disabled:opacity-50"
-              >
-                {aiLoading.prosCons ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
-                AI 一键生成优缺点
-              </button>
             </div>
           </div>
 

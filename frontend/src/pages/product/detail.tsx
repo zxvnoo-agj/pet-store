@@ -8,6 +8,12 @@ import { checkLoginStatus } from '../../services/auth'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { Loading } from '../../components/Loading'
 import { FavoriteIcon, FavoriteFilledIcon, ShareIcon, AiAssistantIcon } from '../../components/Icons'
+import {
+  formatAttributeValue,
+  getSpuAttributeTemplate,
+  getTemplateFieldKeys,
+  SpuAttributeTemplate,
+} from '../../config/spuAttributeTemplates'
 
 function PurchaseButton({ listingId, spuId }: { listingId: number; spuId: number }) {
   const [loading, setLoading] = useState(false)
@@ -59,6 +65,76 @@ const SERVICE_TAG_MAP: Record<number, string> = {
   13: '官方店铺',
   15: '品牌好货',
   24: '隔日达',
+}
+
+function hasAttributeValue(value: unknown) {
+  if (Array.isArray(value)) return value.filter(Boolean).length > 0
+  if (value && typeof value === 'object') return Object.values(value).filter(Boolean).length > 0
+  return value !== undefined && value !== null && String(value).trim().length > 0
+}
+
+function AttributeSections({ template, attrs }: { template: SpuAttributeTemplate; attrs: Record<string, any> }) {
+  const renderedKeys = getTemplateFieldKeys(template)
+  const hasTemplateContent = template.sections.some(section =>
+    section.fields.some(field => hasAttributeValue(attrs[field.key]))
+  )
+  const remainingAttrs = Object.entries(attrs || {}).filter(
+    ([key, value]) => !renderedKeys.has(key) && hasAttributeValue(value)
+  )
+
+  return (
+    <>
+      {template.medicalNotice && (
+        <View className="bg-amber-50 rounded-3xl p-4 border border-amber-100 mini-card-soft">
+          <Text className="text-sm font-bold text-amber-700 mb-1">使用提示</Text>
+          <Text className="text-xs text-amber-700 leading-relaxed">
+            疫苗、驱虫等医疗相关信息仅作产品资料参考，具体使用请咨询兽医并以产品说明书为准。
+          </Text>
+        </View>
+      )}
+
+      {template.sections.map(section => {
+        const visibleFields = section.fields.filter(field => hasAttributeValue(attrs[field.key]))
+        if (visibleFields.length === 0) return null
+        return (
+          <View key={section.title} className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
+            <Text className="text-sm font-bold text-gray-800 mb-3">{section.title}</Text>
+            <View className="space-y-2">
+              {visibleFields.map(field => (
+                <View key={field.key} className="flex justify-between gap-4 py-2 border-b border-gray-50 last:border-0">
+                  <Text className="text-xs text-gray-500 shrink-0">{field.label}</Text>
+                  <Text className="text-xs text-gray-800 font-medium text-right leading-relaxed">
+                    {formatAttributeValue(attrs[field.key])}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )
+      })}
+
+      {!hasTemplateContent && remainingAttrs.length === 0 && (
+        <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
+          <Text className="text-sm font-bold text-gray-800 mb-1">产品参数</Text>
+          <Text className="text-xs text-gray-400">暂无结构化参数</Text>
+        </View>
+      )}
+
+      {remainingAttrs.length > 0 && (
+        <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
+          <Text className="text-sm font-bold text-gray-800 mb-2">其他参数</Text>
+          <View className="space-y-2">
+            {remainingAttrs.map(([key, value]) => (
+              <View key={key} className="flex justify-between gap-4 py-2 border-b border-gray-50 last:border-0">
+                <Text className="text-xs text-gray-500 shrink-0">{key}</Text>
+                <Text className="text-xs text-gray-800 font-medium text-right">{formatAttributeValue(value)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+    </>
+  )
 }
 
 function SpuDetailContent() {
@@ -243,13 +319,30 @@ function SpuDetailContent() {
   const getAnalysisSummary = () => {
     if (!spu) return ''
     const petLabel = getPetTypeLabel(spu.pet_type)
-    const highlights = [
-      ...(spu.pros || []).slice(0, 2),
-      ...(spu.ingredients || []).slice(0, 1),
-    ].filter(Boolean)
+    const template = getSpuAttributeTemplate(spu.category?.name)
+    const attrs = spu.extra_attrs || {}
+    const templateValues = template.sections
+      .flatMap(section => section.fields)
+      .map(field => formatAttributeValue(attrs[field.key]))
+      .filter(Boolean)
+      .slice(0, 2)
+    const highlights = template.kind === 'food'
+      ? [
+          ...(spu.pros || []).slice(0, 2),
+          ...(spu.ingredients || []).slice(0, 1),
+        ].filter(Boolean)
+      : [
+          ...(spu.pros || []).slice(0, 1),
+          ...templateValues,
+        ].filter(Boolean)
     const caution = (spu.cons || [])[0]
-    const reason = highlights.length > 0 ? `重点可关注${highlights.join('、')}` : '建议结合成分、评价和自家宠物状态综合判断'
-    const warning = caution ? `；如果关注「${caution}」，建议先少量过渡。` : '。'
+    const fallback = template.medicalNotice
+      ? '建议结合产品说明、评价和兽医建议综合判断'
+      : '建议结合参数、评价和自家宠物状态综合判断'
+    const reason = highlights.length > 0 ? `重点可关注${highlights.join('、')}` : fallback
+    const warning = caution
+      ? `；如果关注「${caution}」，建议先确认适用条件。`
+      : '。'
     return `更适合作为${petLabel}用品选择参考，${reason}${warning}`
   }
 
@@ -289,6 +382,8 @@ function SpuDetailContent() {
     (reviews.filter((r: any) => r.is_recommended).length / (reviews.length || 1)) * 100
   )
   const heroImage = spu.image_urls?.[0] || ''
+  const attributeTemplate = getSpuAttributeTemplate(spu.category?.name)
+  const isFoodTemplate = attributeTemplate.kind === 'food'
 
   
 
@@ -480,21 +575,42 @@ function SpuDetailContent() {
               </View>
             )}
 
-            {/* 成分 */}
-            {spu.ingredients && spu.ingredients.length > 0 && (
-              <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
-                <Text className="text-sm font-bold text-gray-800 mb-2">成分解读</Text>
-                <View className="flex flex-wrap gap-2">
-                  {spu.ingredients.slice(0, 6).map((ing: string, i: number) => (
-                    <Text key={i} className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs rounded-full">
-                      {ing}
-                    </Text>
-                  ))}
-                  {spu.ingredients.length > 6 && (
-                    <Text className="px-3 py-1.5 bg-gray-50 text-gray-500 text-xs rounded-full">+{spu.ingredients.length - 6}</Text>
-                  )}
-                </View>
-              </View>
+            {isFoodTemplate ? (
+              <>
+                {/* 成分 */}
+                {spu.ingredients && spu.ingredients.length > 0 && (
+                  <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
+                    <Text className="text-sm font-bold text-gray-800 mb-2">成分解读</Text>
+                    <View className="flex flex-wrap gap-2">
+                      {spu.ingredients.slice(0, 6).map((ing: string, i: number) => (
+                        <Text key={i} className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs rounded-full">
+                          {ing}
+                        </Text>
+                      ))}
+                      {spu.ingredients.length > 6 && (
+                        <Text className="px-3 py-1.5 bg-gray-50 text-gray-500 text-xs rounded-full">+{spu.ingredients.length - 6}</Text>
+                      )}
+                    </View>
+                  </View>
+                )}
+
+                {/* 营养成分 */}
+                {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
+                  <View className="mini-surface rounded-3xl p-4 border mini-border mini-card">
+                    <Text className="text-sm font-bold text-gray-800 mb-2">营养成分</Text>
+                    <View className="bg-gray-50 rounded-xl p-4 space-y-3">
+                      {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
+                        <View key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                          <Text className="text-xs text-gray-600">{key}</Text>
+                          <Text className="text-xs font-medium text-gray-800">{String(value)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </>
+            ) : (
+              <AttributeSections template={attributeTemplate} attrs={spu.extra_attrs || {}} />
             )}
 
             {/* 产品描述 */}
@@ -502,36 +618,6 @@ function SpuDetailContent() {
               <View className="mini-surface rounded-3xl p-4 border mini-border mini-card-soft">
                 <Text className="text-sm font-bold text-gray-800 mb-2">产品描述</Text>
                 <Text className="text-sm text-gray-600 leading-relaxed" userSelect>{spu.description}</Text>
-              </View>
-            )}
-
-            {/* 营养成分 */}
-            {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
-              <View className="mini-surface rounded-3xl p-4 border mini-border mini-card">
-                <Text className="text-sm font-bold text-gray-800 mb-2">营养成分</Text>
-                <View className="bg-gray-50 rounded-xl p-4 space-y-3">
-                  {Object.entries(spu.nutrition).map(([key, value]: [string, any]) => (
-                    <View key={key} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                      <Text className="text-xs text-gray-600">{key}</Text>
-                      <Text className="text-xs font-medium text-gray-800">{String(value)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* 额外属性 */}
-            {spu.extra_attrs && Object.keys(spu.extra_attrs).length > 0 && (
-              <View>
-                <Text className="text-sm font-bold text-gray-800 mb-2">产品参数</Text>
-                <View className="space-y-2">
-                  {Object.entries(spu.extra_attrs).map(([key, value]: [string, any]) => (
-                    <View key={key} className="flex justify-between py-2 border-b border-gray-50">
-                      <Text className="text-xs text-gray-500">{key}</Text>
-                      <Text className="text-xs text-gray-800 font-medium">{String(value)}</Text>
-                    </View>
-                  ))}
-                </View>
               </View>
             )}
 

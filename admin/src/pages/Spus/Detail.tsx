@@ -6,6 +6,7 @@ import { spuApi } from '../../services/spuApi'
 import { useToastStore } from '../../stores/toastStore'
 import Sidebar from '../../components/Sidebar'
 import ListingTable from './components/ListingTable'
+import { formatAttributeValue, getSpuAttributeTemplate, getTemplateFieldKeys } from '../../config/spuAttributeTemplates'
 
 export default function SpuDetail() {
   const { id } = useParams()
@@ -124,6 +125,13 @@ export default function SpuDetail() {
   }
 
   const spu = currentSpu
+  const attributeTemplate = getSpuAttributeTemplate(spu.category?.name)
+  const isFoodTemplate = attributeTemplate.kind === 'food'
+  const extraAttrs = spu.extra_attrs || {}
+  const renderedExtraKeys = getTemplateFieldKeys(attributeTemplate)
+  const remainingExtraAttrs = Object.entries(extraAttrs).filter(
+    ([key, value]) => !renderedExtraKeys.has(key) && formatAttributeValue(value).trim()
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-gray/30 via-white to-rose-gray/20">
@@ -208,19 +216,61 @@ export default function SpuDetail() {
 
             {activeTab === 'attrs' && (
               <div className="space-y-6">
-                {spu.ingredients && spu.ingredients.length > 0 && (
-                  <div>
-                    <label className="text-xs text-carbon/50 mb-2 block">成分</label>
-                    <div className="flex flex-wrap gap-2">
-                      {spu.ingredients.map((item: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 bg-peach/5 text-peach rounded-full text-xs">{item}</span>
-                      ))}
-                    </div>
-                  </div>
+                {isFoodTemplate ? (
+                  <>
+                    {spu.ingredients && spu.ingredients.length > 0 && (
+                      <div>
+                        <label className="text-xs text-carbon/50 mb-2 block">成分</label>
+                        <div className="flex flex-wrap gap-2">
+                          {spu.ingredients.map((item: string, idx: number) => (
+                            <span key={idx} className="px-3 py-1 bg-peach/5 text-peach rounded-full text-xs">{item}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
+                      <div>
+                        <label className="text-xs text-carbon/50 mb-2 block">营养成分</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {Object.entries(spu.nutrition).map(([key, value]) => (
+                            <div key={key} className="flex justify-between px-3 py-2 bg-white/50 rounded-lg">
+                              <span className="text-xs text-carbon/60">{key}</span>
+                              <span className="text-xs text-deep-black font-medium">{String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {attributeTemplate.medicalNotice && (
+                      <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                        医疗相关信息仅作产品资料参考，具体使用请以兽医建议和产品说明书为准。
+                      </div>
+                    )}
+                    {attributeTemplate.sections.map(section => {
+                      const visibleFields = section.fields.filter(field => formatAttributeValue(extraAttrs[field.key]).trim())
+                      if (visibleFields.length === 0) return null
+                      return (
+                        <div key={section.title}>
+                          <label className="text-xs text-carbon/50 mb-2 block">{section.title}</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {visibleFields.map(field => (
+                              <div key={field.key} className="flex justify-between px-3 py-2 bg-white/50 rounded-lg gap-4">
+                                <span className="text-xs text-carbon/60">{field.label}</span>
+                                <span className="text-xs text-deep-black font-medium text-right">{formatAttributeValue(extraAttrs[field.key])}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </>
                 )}
                 {spu.pros && spu.pros.length > 0 && (
                   <div>
-                    <label className="text-xs text-carbon/50 mb-2 block">优点</label>
+                    <label className="text-xs text-carbon/50 mb-2 block">{isFoodTemplate ? '优点' : '适合的理由'}</label>
                     <ul className="space-y-1">
                       {spu.pros.map((item: string, idx: number) => (
                         <li key={idx} className="text-sm text-deep-black flex items-center gap-2">
@@ -233,7 +283,7 @@ export default function SpuDetail() {
                 )}
                 {spu.cons && spu.cons.length > 0 && (
                   <div>
-                    <label className="text-xs text-carbon/50 mb-2 block">缺点</label>
+                    <label className="text-xs text-carbon/50 mb-2 block">{isFoodTemplate ? '缺点' : '注意事项'}</label>
                     <ul className="space-y-1">
                       {spu.cons.map((item: string, idx: number) => (
                         <li key={idx} className="text-sm text-deep-black flex items-center gap-2">
@@ -244,27 +294,14 @@ export default function SpuDetail() {
                     </ul>
                   </div>
                 )}
-                {spu.nutrition && Object.keys(spu.nutrition).length > 0 && (
+                {remainingExtraAttrs.length > 0 && (
                   <div>
-                    <label className="text-xs text-carbon/50 mb-2 block">营养成分</label>
+                    <label className="text-xs text-carbon/50 mb-2 block">其他参数</label>
                     <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(spu.nutrition).map(([key, value]) => (
+                      {remainingExtraAttrs.map(([key, value]) => (
                         <div key={key} className="flex justify-between px-3 py-2 bg-white/50 rounded-lg">
                           <span className="text-xs text-carbon/60">{key}</span>
-                          <span className="text-xs text-deep-black font-medium">{String(value)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {spu.extra_attrs && Object.keys(spu.extra_attrs).length > 0 && (
-                  <div>
-                    <label className="text-xs text-carbon/50 mb-2 block">扩展属性</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(spu.extra_attrs).map(([key, value]) => (
-                        <div key={key} className="flex justify-between px-3 py-2 bg-white/50 rounded-lg">
-                          <span className="text-xs text-carbon/60">{key}</span>
-                          <span className="text-xs text-deep-black font-medium">{String(value)}</span>
+                          <span className="text-xs text-deep-black font-medium">{formatAttributeValue(value)}</span>
                         </div>
                       ))}
                     </div>

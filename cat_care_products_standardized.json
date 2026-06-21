@@ -1,0 +1,1777 @@
+[
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "大宠爱体内外同驱滴剂（幼猫款-粉色）",
+    "model": "Revolution-Kitten-Pink",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "大宠爱幼猫款，适用于2.5kg以下猫咪。塞拉菌素成分，体内外同驱。滴剂使用，每月一次。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "幼猫专用小体重",
+      "安全性高孕猫可用",
+      "滴剂方便"
+    ],
+    "cons": [
+      "不能驱蜱虫绦虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "塞拉菌素(Selamectin) 15mg/支(0.25ml)",
+      "parasite_targets": "跳蚤/虱子/耳螨/蛔虫/钩虫/心丝虫",
+      "dosage_form": "滴剂",
+      "weight_range": "≤2.5kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱蜱虫绦虫",
+      "applicable_age": "6周龄以上",
+      "package_spec": "0.25ml/支",
+      "reference_price": "约80-100元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "大宠爱体内外同驱滴剂（成猫款-蓝色）",
+    "model": "Revolution-Adult-Blue",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "大宠爱成猫款，适用于2.6-7.5kg猫咪。塞拉菌素成分，体内外同驱。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "成猫标准剂量",
+      "安全性高"
+    ],
+    "cons": [
+      "不能驱蜱虫绦虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "塞拉菌素(Selamectin) 45mg/支(0.75ml)",
+      "parasite_targets": "跳蚤/虱子/耳螨/蛔虫/钩虫/心丝虫",
+      "dosage_form": "滴剂",
+      "weight_range": "2.6-7.5kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱蜱虫绦虫",
+      "applicable_age": "6周龄以上",
+      "package_spec": "0.75ml/支",
+      "reference_price": "约100-120元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "拜耳(Bayer)",
+    "name": "爱沃克体内外同驱滴剂（小猫款-0.4ml）",
+    "model": "Advocate-Small-0.4ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "爱沃克小猫款，适用于4kg以下猫咪。吡虫啉+莫昔克丁双效成分。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "耳螨特效",
+      "4kg以下精准剂量"
+    ],
+    "cons": [
+      "不能驱蜱虫绦虫虱子"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "吡虫啉40mg、莫昔克丁4mg",
+      "parasite_targets": "跳蚤/耳螨/蛔虫/钩虫/心丝虫",
+      "dosage_form": "滴剂",
+      "weight_range": "≤4kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱蜱虫绦虫虱子",
+      "applicable_age": "9周龄以上",
+      "package_spec": "0.4ml/支",
+      "reference_price": "约90-110元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "拜耳(Bayer)",
+    "name": "爱沃克体内外同驱滴剂（大猫款-0.8ml）",
+    "model": "Advocate-Large-0.8ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "爱沃克大猫款，适用于4kg以上猫咪。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "大猫标准剂量"
+    ],
+    "cons": [
+      "不能驱蜱虫绦虫虱子"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "吡虫啉80mg、莫昔克丁8mg",
+      "parasite_targets": "跳蚤/耳螨/蛔虫/钩虫/心丝虫",
+      "dosage_form": "滴剂",
+      "weight_range": ">4kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱蜱虫绦虫虱子",
+      "package_spec": "0.8ml/支",
+      "reference_price": "约110-130元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "勃林格殷格翰",
+    "name": "博来恩体内外同驱滴剂（幼猫款-0.3ml）",
+    "model": "Broadline-Kitten-0.3ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "博来恩幼猫款，适用于2.5kg以下猫咪。非泼罗尼+甲氧普烯，能驱绦虫。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "能驱绦虫",
+      "幼猫专用"
+    ],
+    "cons": [
+      "不能驱虱子螨虫心丝虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "非泼罗尼、甲氧普烯",
+      "parasite_targets": "跳蚤/蜱虫/蛔虫/钩虫/绦虫",
+      "dosage_form": "滴剂",
+      "weight_range": "≤2.5kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱虱子螨虫心丝虫",
+      "applicable_age": "8周龄以上",
+      "package_spec": "0.3ml/支",
+      "reference_price": "约100-120元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "勃林格殷格翰",
+    "name": "博来恩体内外同驱滴剂（成猫款-0.9ml）",
+    "model": "Broadline-Adult-0.9ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "博来恩成猫款，适用于2.5-7.5kg猫咪。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "能驱绦虫蜱虫",
+      "驱虫范围广"
+    ],
+    "cons": [
+      "不能驱虱子螨虫心丝虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "非泼罗尼、甲氧普烯",
+      "parasite_targets": "跳蚤/蜱虫/蛔虫/钩虫/绦虫",
+      "dosage_form": "滴剂",
+      "weight_range": "2.5-7.5kg",
+      "frequency": "每月1次",
+      "contraindications": "不能驱虱子螨虫心丝虫",
+      "package_spec": "0.9ml/支",
+      "reference_price": "约120-150元/支"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "海正药业",
+    "name": "海乐妙体内驱虫片（小猫款-14mg）",
+    "model": "Helmitin-Small-14mg",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "海乐妙小猫款米尔贝肟片，适用于0.5-1kg猫咪。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "小体重精准剂量",
+      "药片小如红豆"
+    ],
+    "cons": [
+      "仅体内驱虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "米尔贝肟4mg、吡喹酮10mg",
+      "parasite_targets": "蛔虫/钩虫/绦虫/心丝虫预防",
+      "dosage_form": "片剂",
+      "weight_range": "0.5-1kg",
+      "frequency": "口服",
+      "contraindications": "仅体内驱虫",
+      "package_spec": "14mg/片",
+      "reference_price": "约15-20元/片"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "海正药业",
+    "name": "海乐妙体内驱虫片（标准款-56mg）",
+    "model": "Helmitin-Standard-56mg",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "海乐妙标准款，适用于1-2kg猫咪半片，2-4kg一片。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "国产大牌性价比高",
+      "驱虫范围广"
+    ],
+    "cons": [
+      "仅体内驱虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "米尔贝肟16mg、吡喹酮40mg",
+      "parasite_targets": "蛔虫/钩虫/绦虫/心丝虫预防",
+      "dosage_form": "片剂",
+      "weight_range": "1-4kg",
+      "frequency": "口服",
+      "contraindications": "仅体内驱虫",
+      "package_spec": "56mg/片",
+      "reference_price": "约25-35元/片"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "海正药业",
+    "name": "海乐妙体内驱虫片（大猫款-84mg）",
+    "model": "Helmitin-Large-84mg",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "海乐妙大猫款，适用于4-8kg猫咪。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "大猫标准剂量"
+    ],
+    "cons": [
+      "仅体内驱虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "米尔贝肟24mg、吡喹酮60mg",
+      "parasite_targets": "蛔虫/钩虫/绦虫/心丝虫预防",
+      "dosage_form": "片剂",
+      "weight_range": "4-8kg",
+      "frequency": "口服",
+      "contraindications": "仅体内驱虫",
+      "package_spec": "84mg/片",
+      "reference_price": "约30-40元/片"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "拜耳(Bayer)",
+    "name": "拜宠清体内驱虫片（猫用标准款）",
+    "model": "Drontal-Cat-Standard",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "拜宠清标准款，1-2kg半片，2.1-4kg 1片，>4kg每4kg 1片。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "绦虫特效",
+      "拜耳品质"
+    ],
+    "cons": [
+      "需空腹",
+      "仅体内驱虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "吡喹酮20mg、双羟萘酸噻嘧啶230mg",
+      "parasite_targets": "蛔虫/钩虫/绦虫",
+      "dosage_form": "片剂",
+      "weight_range": "≥1kg",
+      "contraindications": "需空腹；仅体内驱虫",
+      "applicable_age": "3周龄以上",
+      "package_spec": "标准片",
+      "reference_price": "约35-50元/片"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "勃林格殷格翰",
+    "name": "福来恩体外驱虫喷剂（100ml）",
+    "model": "Frontline-Spray-100ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "福来恩喷剂100ml，约喷100-200次。2日龄以上可用。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "2日龄以上可用",
+      "严重感染适用"
+    ],
+    "cons": [
+      "仅体外驱虫",
+      "喷剂操作需戴手套"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "非泼罗尼 2.5mg/ml",
+      "parasite_targets": "跳蚤/蜱虫",
+      "dosage_form": "喷剂",
+      "contraindications": "仅体外驱虫；喷剂操作需戴手套",
+      "applicable_age": "2日龄以上",
+      "package_spec": "100ml/瓶",
+      "reference_price": "约80-100元/瓶"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "勃林格殷格翰",
+    "name": "福来恩体外驱虫喷剂（250ml）",
+    "model": "Frontline-Spray-250ml",
+    "pet_type": "cat",
+    "category_id": 88,
+    "description": "福来恩喷剂250ml大瓶装，多猫家庭适用。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "大瓶装性价比高",
+      "多猫家庭"
+    ],
+    "cons": [
+      "仅体外驱虫"
+    ],
+    "extra_attrs": {
+      "active_ingredient": "非泼罗尼 2.5mg/ml",
+      "parasite_targets": "跳蚤/蜱虫",
+      "dosage_form": "喷剂",
+      "contraindications": "仅体外驱虫",
+      "applicable_age": "2日龄以上",
+      "package_spec": "250ml/瓶",
+      "reference_price": "约120-150元/瓶"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "妙三多猫三联疫苗（进口版）",
+    "model": "Felocell-3-Import",
+    "pet_type": "cat",
+    "category_id": 89,
+    "description": "妙三多进口版猫三联灭活疫苗。预防猫瘟/猫鼻支/猫杯状。需冷链2-8℃保存。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "进口版效果稳定",
+      "临床使用广泛"
+    ],
+    "cons": [
+      "需冷链",
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "vaccine_type": "猫三联灭活疫苗",
+      "target_diseases": "猫瘟/猫鼻支/猫杯状",
+      "applicable_age": "8周龄以上",
+      "schedule": "8周/11-12周/14-16周各1针，成年每年加强",
+      "precautions": "需冷链2-8℃保存，接种后观察精神食欲",
+      "contraindications": "发热、急病期、严重过敏史或免疫状态异常时请先咨询兽医",
+      "package_spec": "1头份/瓶",
+      "reference_price": "约120-180元/针"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "妙三多猫三联疫苗（国产版）",
+    "model": "Felocell-3-Domestic",
+    "pet_type": "cat",
+    "category_id": 89,
+    "description": "妙三多国产版，2021年国产化，效果与进口版一致。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "价格更亲民",
+      "供货稳定"
+    ],
+    "cons": [
+      "部分宠主偏好进口版"
+    ],
+    "extra_attrs": {
+      "vaccine_type": "猫三联灭活疫苗",
+      "target_diseases": "猫瘟/猫鼻支/猫杯状",
+      "applicable_age": "8周龄以上",
+      "schedule": "同进口版",
+      "precautions": "需冷链2-8℃保存，接种后观察精神食欲",
+      "contraindications": "发热、急病期、严重过敏史或免疫状态异常时请先咨询兽医",
+      "package_spec": "1头份/瓶",
+      "reference_price": "约60-80元/针"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "瑞贝康猫狂犬疫苗（进口版）",
+    "model": "Rabisin-Import",
+    "pet_type": "cat",
+    "category_id": 89,
+    "description": "瑞贝康进口版狂犬疫苗。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "预防致命狂犬病"
+    ],
+    "cons": [
+      "需每年加强"
+    ],
+    "extra_attrs": {
+      "vaccine_type": "猫用狂犬灭活疫苗",
+      "target_diseases": "狂犬病",
+      "applicable_age": "12周龄以上",
+      "schedule": "12周龄以上，每年加强",
+      "precautions": "接种后观察精神食欲，异常及时咨询兽医",
+      "contraindications": "发热、急病期、严重过敏史或免疫状态异常时请先咨询兽医",
+      "package_spec": "1头份/瓶",
+      "reference_price": "约100元/针"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "硕腾(Zoetis)",
+    "name": "瑞贝康猫狂犬疫苗（国产版）",
+    "model": "Rabisin-Domestic",
+    "pet_type": "cat",
+    "category_id": 89,
+    "description": "瑞贝康国产版狂犬疫苗。",
+    "ingredients": [],
+    "nutrition": {},
+    "pros": [
+      "价格亲民"
+    ],
+    "cons": [
+      "需每年加强"
+    ],
+    "extra_attrs": {
+      "vaccine_type": "猫用狂犬灭活疫苗",
+      "target_diseases": "狂犬病",
+      "applicable_age": "12周龄以上",
+      "schedule": "12周龄以上，每年加强",
+      "precautions": "接种后观察精神食欲，异常及时咨询兽医",
+      "contraindications": "发热、急病期、严重过敏史或免疫状态异常时请先咨询兽医",
+      "package_spec": "1头份/瓶",
+      "reference_price": "约40-60元/针"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗经典化毛膏（猫专用-120g）",
+    "model": "Hairball-Classic-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗经典款化毛膏，猫专用。天然植物纤维+多种维生素，温和排毛球。",
+    "ingredients": [
+      "植物油",
+      "麦芽提取物",
+      "纤维素",
+      "果寡糖",
+      "维生素A/E/B族",
+      "牛磺酸"
+    ],
+    "nutrition": {
+      "粗纤维": "≥5%",
+      "粗脂肪": "≥30%"
+    },
+    "pros": [
+      "经典款性价比高",
+      "约40-50元/支"
+    ],
+    "cons": [
+      "油脂含量较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "红狗经典款化毛膏，猫专用。天然植物纤维+多种维生素，温和排毛球。；经典款性价比高；约40-50元/支",
+      "core_ingredients": "植物油、麦芽提取物、纤维素、果寡糖、维生素A/E/B族、牛磺酸",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "油脂含量较高",
+      "package_spec": "120g/支",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗经典化毛膏（猫专用-58g便携装）",
+    "model": "Hairball-Classic-58g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗经典款58g便携装，适合试用或旅行携带。",
+    "ingredients": [
+      "植物油",
+      "麦芽提取物",
+      "纤维素",
+      "果寡糖",
+      "维生素A/E/B族",
+      "牛磺酸"
+    ],
+    "nutrition": {
+      "粗纤维": "≥5%",
+      "粗脂肪": "≥30%"
+    },
+    "pros": [
+      "便携装适合试用"
+    ],
+    "cons": [
+      "单支量较少"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "红狗经典款58g便携装，适合试用或旅行携带。；便携装适合试用",
+      "core_ingredients": "植物油、麦芽提取物、纤维素、果寡糖、维生素A/E/B族、牛磺酸",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "单支量较少",
+      "package_spec": "58g/支",
+      "reference_price": "约25-30元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗0糖化毛膏Pro（猫专用-75g）",
+    "model": "Hairball-Pro-0Sugar-75g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗升级款0糖化毛膏Pro，添加益生元护肠胃，0糖配方更健康。",
+    "ingredients": [
+      "植物油",
+      "纤维素",
+      "益生元",
+      "鱼油",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥6%",
+      "粗脂肪": "≥25%"
+    },
+    "pros": [
+      "0糖配方更健康",
+      "添加益生元护肠胃"
+    ],
+    "cons": [
+      "价格略高于经典款"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "红狗升级款0糖化毛膏Pro，添加益生元护肠胃，0糖配方更健康。；0糖配方更健康；添加益生元护肠胃",
+      "core_ingredients": "植物油、纤维素、益生元、鱼油、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "价格略高于经典款",
+      "package_spec": "75g/支",
+      "reference_price": "约50-60元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗金标生物酶化毛膏（猫专用-120g）",
+    "model": "Hairball-Gold-Enzyme-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗金标高端款，添加生物酶分解毛球，排毛更高效。含乳铁蛋白增强免疫力。",
+    "ingredients": [
+      "植物油",
+      "生物酶",
+      "乳铁蛋白",
+      "纤维素",
+      "鱼油",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥6%",
+      "粗脂肪": "≥28%"
+    },
+    "pros": [
+      "生物酶高效分解毛球",
+      "乳铁蛋白增强免疫",
+      "金标高端品质"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "红狗金标高端款，添加生物酶分解毛球，排毛更高效。含乳铁蛋白增强免疫力。；生物酶高效分解毛球；乳铁蛋白增强免疫；金标高端品质",
+      "core_ingredients": "植物油、生物酶、乳铁蛋白、纤维素、鱼油、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "价格较高",
+      "package_spec": "120g/支",
+      "reference_price": "约60-80元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗肠胃化毛膏（猫专用-90g）",
+    "model": "Hairball-Gut-90g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗肠胃专用款化毛膏，添加益生菌和益生元，排毛同时呵护肠胃。",
+    "ingredients": [
+      "植物油",
+      "纤维素",
+      "益生菌",
+      "益生元",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥5%",
+      "粗脂肪": "≥25%"
+    },
+    "pros": [
+      "添加益生菌护肠胃",
+      "适合肠胃敏感猫咪"
+    ],
+    "cons": [
+      "规格较小"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "红狗肠胃专用款化毛膏，添加益生菌和益生元，排毛同时呵护肠胃。；添加益生菌护肠胃；适合肠胃敏感猫咪",
+      "core_ingredients": "植物油、纤维素、益生菌、益生元、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "规格较小",
+      "package_spec": "90g/支",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗猫草片（化毛球片-200片/瓶）",
+    "model": "Hairball-Tablet-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗猫草片，片剂型化毛产品。天然猫草纤维，温和排毛。",
+    "ingredients": [
+      "猫草粉",
+      "纤维素",
+      "益生元"
+    ],
+    "nutrition": {
+      "粗纤维": "≥15%"
+    },
+    "pros": [
+      "片剂方便喂食",
+      "无油脂更健康"
+    ],
+    "cons": [
+      "部分猫咪不喜片剂"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "红狗猫草片，片剂型化毛产品。天然猫草纤维，温和排毛。；片剂方便喂食；无油脂更健康",
+      "core_ingredients": "猫草粉、纤维素、益生元",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "部分猫咪不喜片剂",
+      "package_spec": "200片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗营养膏（猫专用-120g）",
+    "model": "Nutrition-Gel-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗经典营养膏，快速补充能量营养。富含氨基酸、维生素、矿物质。",
+    "ingredients": [
+      "麦芽糖",
+      "植物油",
+      "鱼油",
+      "氨基酸",
+      "维生素A/D/E",
+      "牛磺酸"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥4%",
+      "粗脂肪": "≥20%"
+    },
+    "pros": [
+      "快速补充能量",
+      "术后/孕期/体弱适用"
+    ],
+    "cons": [
+      "糖分油脂较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "营养补充/日常养护",
+      "main_benefits": "红狗经典营养膏，快速补充能量营养。富含氨基酸、维生素、矿物质。；快速补充能量；术后/孕期/体弱适用",
+      "core_ingredients": "麦芽糖、植物油、鱼油、氨基酸、维生素A/D/E、牛磺酸",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "糖分油脂较高",
+      "package_spec": "120g/支",
+      "reference_price": "约50-60元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗金标营养膏（猫专用-120g）",
+    "model": "Nutrition-Gold-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗金标营养膏，添加牛初乳和免疫球蛋白，增强免疫。",
+    "ingredients": [
+      "麦芽糖",
+      "植物油",
+      "牛初乳",
+      "免疫球蛋白",
+      "鱼油",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥5%",
+      "粗脂肪": "≥22%"
+    },
+    "pros": [
+      "牛初乳增强免疫",
+      "金标高端品质"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "营养补充/日常养护",
+      "main_benefits": "红狗金标营养膏，添加牛初乳和免疫球蛋白，增强免疫。；牛初乳增强免疫；金标高端品质",
+      "core_ingredients": "麦芽糖、植物油、牛初乳、免疫球蛋白、鱼油、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "价格较高",
+      "package_spec": "120g/支",
+      "reference_price": "约70-85元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗乳铁蛋白营养膏Pro（猫专用-75g）",
+    "model": "Nutrition-Lactoferrin-Pro-75g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗乳铁蛋白Pro营养膏，添加乳铁蛋白，增强免疫力和抵抗力。",
+    "ingredients": [
+      "麦芽糖",
+      "植物油",
+      "乳铁蛋白",
+      "鱼油",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥5%",
+      "粗脂肪": "≥20%"
+    },
+    "pros": [
+      "乳铁蛋白增强免疫",
+      "Pro高端配方"
+    ],
+    "cons": [
+      "规格较小"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "营养补充/日常养护",
+      "main_benefits": "红狗乳铁蛋白Pro营养膏，添加乳铁蛋白，增强免疫力和抵抗力。；乳铁蛋白增强免疫；Pro高端配方",
+      "core_ingredients": "麦芽糖、植物油、乳铁蛋白、鱼油、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "规格较小",
+      "package_spec": "75g/支",
+      "reference_price": "约60-75元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗复合维生素片（猫专用-200片）",
+    "model": "Vitamins-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗猫用复合维生素片，200片装。含多种维生素，改善掉毛增强免疫。",
+    "ingredients": [
+      "维生素A",
+      "维生素D3",
+      "维生素E",
+      "B族维生素",
+      "烟酸",
+      "泛酸"
+    ],
+    "nutrition": {},
+    "pros": [
+      "片剂方便",
+      "200片大包装"
+    ],
+    "cons": [
+      "部分猫咪不喜片剂"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "维生素补充/日常营养均衡",
+      "main_benefits": "红狗猫用复合维生素片，200片装。含多种维生素，改善掉毛增强免疫。；片剂方便；200片大包装",
+      "core_ingredients": "维生素A、维生素D3、维生素E、B族维生素、烟酸、泛酸",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "部分猫咪不喜片剂",
+      "package_spec": "200片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗BC30专利益生菌（猫狗通用-5g×5条）",
+    "model": "Probiotics-BC30-5gx5",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗BC30专利益生菌，独立条装。芽孢杆菌BC30，耐胃酸耐高温。",
+    "ingredients": [
+      "芽孢杆菌BC30",
+      "益生元"
+    ],
+    "nutrition": {
+      "活菌量": "≥10亿CFU/条"
+    },
+    "pros": [
+      "BC30专利菌株",
+      "独立条装方便"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "红狗BC30专利益生菌，独立条装。芽孢杆菌BC30，耐胃酸耐高温。；BC30专利菌株；独立条装方便",
+      "core_ingredients": "芽孢杆菌BC30、益生元",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日1条",
+      "precautions": "价格较高",
+      "package_spec": "5g×5条",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "红狗(RedDog)",
+    "name": "红狗布拉氏益生菌片（猫狗通用-200片）",
+    "model": "Probiotics-Boulardii-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "红狗布拉氏酵母益生菌片，200片大瓶装。调理肠胃腹泻软便。",
+    "ingredients": [
+      "布拉氏酵母菌",
+      "益生菌"
+    ],
+    "nutrition": {},
+    "pros": [
+      "布拉氏酵母效果好",
+      "200片大包装"
+    ],
+    "cons": [
+      "片剂部分猫咪不喜"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "红狗布拉氏酵母益生菌片，200片大瓶装。调理肠胃腹泻软便。；布拉氏酵母效果好；200片大包装",
+      "core_ingredients": "布拉氏酵母菌、益生菌",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "片剂部分猫咪不喜",
+      "package_spec": "200片/瓶",
+      "reference_price": "约70-80元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用化毛膏（120g）",
+    "model": "Hairball-Nourse-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫用化毛膏120g，天然植物纤维排毛球，添加维生素。",
+    "ingredients": [
+      "植物油",
+      "麦芽提取物",
+      "纤维素",
+      "果寡糖",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥5%",
+      "粗脂肪": "≥28%"
+    },
+    "pros": [
+      "国产品牌性价比高",
+      "约30-40元/支"
+    ],
+    "cons": [
+      "油脂含量较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "卫仕猫用化毛膏120g，天然植物纤维排毛球，添加维生素。；国产品牌性价比高；约30-40元/支",
+      "core_ingredients": "植物油、麦芽提取物、纤维素、果寡糖、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "油脂含量较高",
+      "package_spec": "120g/支",
+      "reference_price": "约30-40元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用化毛球片（200片）",
+    "model": "Hairball-Tablet-Nourse-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕化毛球片200片，片剂型化毛产品。猫草纤维+维生素。",
+    "ingredients": [
+      "猫草粉",
+      "纤维素",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥12%"
+    },
+    "pros": [
+      "片剂无油脂更健康",
+      "200片大包装"
+    ],
+    "cons": [
+      "部分猫咪不喜片剂"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "卫仕化毛球片200片，片剂型化毛产品。猫草纤维+维生素。；片剂无油脂更健康；200片大包装",
+      "core_ingredients": "猫草粉、纤维素、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "部分猫咪不喜片剂",
+      "package_spec": "200片/瓶",
+      "reference_price": "约35-45元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用化毛球片（240片京东版）",
+    "model": "Hairball-Tablet-Nourse-240",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕化毛球片240片京东版，加量不加价。",
+    "ingredients": [
+      "猫草粉",
+      "纤维素",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥12%"
+    },
+    "pros": [
+      "240片大容量",
+      "性价比高"
+    ],
+    "cons": [
+      "京东专供版"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "卫仕化毛球片240片京东版，加量不加价。；240片大容量；性价比高",
+      "core_ingredients": "猫草粉、纤维素、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "京东专供版",
+      "package_spec": "240片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫力肠益生菌片（200片）",
+    "model": "Probiotics-Cat-Gut-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫力肠益生菌片，200片装。调理肠胃帮助消化。",
+    "ingredients": [
+      "益生菌",
+      "益生元",
+      "消化酶"
+    ],
+    "nutrition": {},
+    "pros": [
+      "片剂方便",
+      "200片大包装"
+    ],
+    "cons": [
+      "活菌量一般"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "卫仕猫力肠益生菌片，200片装。调理肠胃帮助消化。；片剂方便；200片大包装",
+      "core_ingredients": "益生菌、益生元、消化酶",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "活菌量一般",
+      "package_spec": "200片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用复合益生菌（30g）",
+    "model": "Probiotics-Powder-30g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫用复合益生菌粉剂30g。",
+    "ingredients": [
+      "枯草芽孢杆菌",
+      "地衣芽孢杆菌",
+      "果寡糖"
+    ],
+    "nutrition": {
+      "活菌量": "≥1亿CFU/g"
+    },
+    "pros": [
+      "粉剂易拌粮",
+      "价格亲民"
+    ],
+    "cons": [
+      "活菌量相对较低"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "卫仕猫用复合益生菌粉剂30g。；粉剂易拌粮；价格亲民",
+      "core_ingredients": "枯草芽孢杆菌、地衣芽孢杆菌、果寡糖",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日适量拌粮",
+      "precautions": "活菌量相对较低",
+      "package_spec": "30g/罐",
+      "reference_price": "约30-40元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用猫多维复合维生素片（200片）",
+    "model": "Vitamins-Cat-Multi-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫多维200片，11种维生素全面补充。",
+    "ingredients": [
+      "维生素A/D3/E/B1/B2/B6/B12",
+      "烟酸",
+      "泛酸",
+      "叶酸",
+      "生物素"
+    ],
+    "nutrition": {},
+    "pros": [
+      "11种维生素全面",
+      "200片大包装",
+      "约40-50元"
+    ],
+    "cons": [
+      "片剂部分猫咪不喜"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "维生素补充/日常营养均衡",
+      "main_benefits": "卫仕猫多维200片，11种维生素全面补充。；11种维生素全面；200片大包装；约40-50元",
+      "core_ingredients": "维生素A/D3/E/B1/B2/B6/B12、烟酸、泛酸、叶酸、生物素",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "片剂部分猫咪不喜",
+      "package_spec": "200片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用猫多维复合维生素片（240片京东版）",
+    "model": "Vitamins-Cat-Multi-240",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫多维240片京东加量版。",
+    "ingredients": [
+      "维生素A/D3/E/B1/B2/B6/B12",
+      "烟酸",
+      "泛酸",
+      "叶酸",
+      "生物素"
+    ],
+    "nutrition": {},
+    "pros": [
+      "240片加量装"
+    ],
+    "cons": [
+      "京东专供"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "维生素补充/日常营养均衡",
+      "main_benefits": "卫仕猫多维240片京东加量版。；240片加量装",
+      "core_ingredients": "维生素A/D3/E/B1/B2/B6/B12、烟酸、泛酸、叶酸、生物素",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "京东专供",
+      "package_spec": "240片/瓶",
+      "reference_price": "约45-55元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用复合牛磺酸片（200片）",
+    "model": "Taurine-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫用牛磺酸片200片，护心护眼。",
+    "ingredients": [
+      "牛磺酸",
+      "维生素群"
+    ],
+    "nutrition": {
+      "牛磺酸": "≥100mg/片"
+    },
+    "pros": [
+      "补充必需牛磺酸",
+      "200片大包装"
+    ],
+    "cons": [
+      "功能较单一"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "特定营养补充/免疫与呼吸道养护",
+      "main_benefits": "卫仕猫用牛磺酸片200片，护心护眼。；补充必需牛磺酸；200片大包装",
+      "core_ingredients": "牛磺酸、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "功能较单一",
+      "package_spec": "200片/瓶",
+      "reference_price": "约35-45元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用猫氨赖氨酸片（200片）",
+    "model": "Lysine-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫氨赖氨酸片200片，含L-赖氨酸，辅助猫鼻支护理。",
+    "ingredients": [
+      "L-赖氨酸",
+      "牛磺酸",
+      "维生素群"
+    ],
+    "nutrition": {
+      "L-赖氨酸": "≥250mg/片"
+    },
+    "pros": [
+      "辅助猫鼻支护理",
+      "200片大包装"
+    ],
+    "cons": [
+      "不能替代药物治疗"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "特定营养补充/免疫与呼吸道养护",
+      "main_benefits": "卫仕猫氨赖氨酸片200片，含L-赖氨酸，辅助猫鼻支护理。；辅助猫鼻支护理；200片大包装",
+      "core_ingredients": "L-赖氨酸、牛磺酸、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "不能替代药物治疗",
+      "package_spec": "200片/瓶",
+      "reference_price": "约40-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用微量元素片（200片）",
+    "model": "Trace-Elements-200",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫用微量元素片200片，改善异食癖。",
+    "ingredients": [
+      "铁",
+      "锌",
+      "锰",
+      "铜",
+      "碘"
+    ],
+    "nutrition": {},
+    "pros": [
+      "改善异食癖",
+      "200片大包装"
+    ],
+    "cons": [
+      "健康猫一般不需额外补充"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "营养补充/日常养护",
+      "main_benefits": "卫仕猫用微量元素片200片，改善异食癖。；改善异食癖；200片大包装",
+      "core_ingredients": "铁、锌、锰、铜、碘",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日2-4片",
+      "precautions": "健康猫一般不需额外补充",
+      "package_spec": "200片/瓶",
+      "reference_price": "约35-45元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "卫仕(NOURSE)",
+    "name": "卫仕猫用卵磷脂（180g）",
+    "model": "Lecithin-180g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "卫仕猫用卵磷脂180g，美毛护肤。",
+    "ingredients": [
+      "卵磷脂",
+      "鱼油",
+      "维生素E"
+    ],
+    "nutrition": {
+      "卵磷脂": "≥30%"
+    },
+    "pros": [
+      "美毛护肤",
+      "180g大包装"
+    ],
+    "cons": [
+      "效果需长期服用才可见"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛发皮肤养护/亮毛需求",
+      "main_benefits": "卫仕猫用卵磷脂180g，美毛护肤。；美毛护肤；180g大包装",
+      "core_ingredients": "卵磷脂、鱼油、维生素E",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日适量",
+      "precautions": "效果需长期服用才可见",
+      "package_spec": "180g/瓶",
+      "reference_price": "约50-60元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝麦芽化毛膏（经典款-50g）",
+    "model": "Malt-50g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝经典麦芽化毛膏50g，德国进口。大麦芽+植物油温和排毛。",
+    "ingredients": [
+      "大麦芽提取物",
+      "红花籽油",
+      "菜籽油",
+      "亚麻籽油",
+      "酵母",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥6%",
+      "粗脂肪": "≥35%"
+    },
+    "pros": [
+      "德国进口品质",
+      "50g小包装易保存"
+    ],
+    "cons": [
+      "小规格价格偏高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "俊宝经典麦芽化毛膏50g，德国进口。大麦芽+植物油温和排毛。；德国进口品质；50g小包装易保存",
+      "core_ingredients": "大麦芽提取物、红花籽油、菜籽油、亚麻籽油、酵母、维生素群",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "小规格价格偏高",
+      "package_spec": "50g/支",
+      "reference_price": "约35-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝麦芽化毛膏（经典款-100g）",
+    "model": "Malt-100g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝经典麦芽化毛膏100g，标准规格。",
+    "ingredients": [
+      "大麦芽提取物",
+      "红花籽油",
+      "菜籽油",
+      "亚麻籽油",
+      "酵母",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥6%",
+      "粗脂肪": "≥35%"
+    },
+    "pros": [
+      "100g标准规格",
+      "性价比适中"
+    ],
+    "cons": [],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "俊宝经典麦芽化毛膏100g，标准规格。；100g标准规格；性价比适中",
+      "core_ingredients": "大麦芽提取物、红花籽油、菜籽油、亚麻籽油、酵母、维生素群",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "package_spec": "100g/支",
+      "reference_price": "约60-80元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝麦芽化毛膏（经典款-200g）",
+    "model": "Malt-200g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝经典麦芽化毛膏200g，大包装。",
+    "ingredients": [
+      "大麦芽提取物",
+      "红花籽油",
+      "菜籽油",
+      "亚麻籽油",
+      "酵母",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥6%",
+      "粗脂肪": "≥35%"
+    },
+    "pros": [
+      "200g大包装性价比高"
+    ],
+    "cons": [
+      "大包装需注意保存"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "俊宝经典麦芽化毛膏200g，大包装。；200g大包装性价比高",
+      "core_ingredients": "大麦芽提取物、红花籽油、菜籽油、亚麻籽油、酵母、维生素群",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "大包装需注意保存",
+      "package_spec": "200g/支",
+      "reference_price": "约110-140元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝芝士化毛膏（双效款-50g）",
+    "model": "Cheese-Dual-50g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝芝士化毛膏双效款，芝士风味+化毛功能，适口性极佳。",
+    "ingredients": [
+      "芝士粉",
+      "大麦芽提取物",
+      "植物油",
+      "鱼油"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥8%",
+      "粗脂肪": "≥30%"
+    },
+    "pros": [
+      "芝士风味适口性极佳",
+      "双效化毛+营养"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "俊宝芝士化毛膏双效款，芝士风味+化毛功能，适口性极佳。；芝士风味适口性极佳；双效化毛+营养",
+      "core_ingredients": "芝士粉、大麦芽提取物、植物油、鱼油",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "价格较高",
+      "package_spec": "50g/支",
+      "reference_price": "约50-65元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝牛磺酸营养膏（50g）",
+    "model": "Taurine-50g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝牛磺酸营养膏50g，护心护眼。",
+    "ingredients": [
+      "牛磺酸",
+      "植物油",
+      "酵母",
+      "维生素群"
+    ],
+    "nutrition": {
+      "牛磺酸": "≥2%"
+    },
+    "pros": [
+      "补充必需牛磺酸",
+      "德国进口"
+    ],
+    "cons": [
+      "小规格"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "特定营养补充/免疫与呼吸道养护",
+      "main_benefits": "俊宝牛磺酸营养膏50g，护心护眼。；补充必需牛磺酸；德国进口",
+      "core_ingredients": "牛磺酸、植物油、酵母、维生素群",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "小规格",
+      "package_spec": "50g/支",
+      "reference_price": "约35-50元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝优加营养膏（100g）",
+    "model": "Premium-Nutrition-100g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝优加营养膏100g，全面营养补充。",
+    "ingredients": [
+      "植物油",
+      "酵母",
+      "12种维生素",
+      "牛磺酸"
+    ],
+    "nutrition": {},
+    "pros": [
+      "12种维生素全面",
+      "德国进口"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "营养补充/日常养护",
+      "main_benefits": "俊宝优加营养膏100g，全面营养补充。；12种维生素全面；德国进口",
+      "core_ingredients": "植物油、酵母、12种维生素、牛磺酸",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "价格较高",
+      "package_spec": "100g/支",
+      "reference_price": "约60-80元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝多维维生素营养膏（200g）",
+    "model": "Multi-Vitamin-200g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝多维营养膏200g，多种维生素补充。",
+    "ingredients": [
+      "植物油",
+      "12种维生素",
+      "酵母",
+      "牛磺酸"
+    ],
+    "nutrition": {},
+    "pros": [
+      "200g大包装",
+      "维生素全面"
+    ],
+    "cons": [
+      "价格较高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "维生素补充/日常营养均衡",
+      "main_benefits": "俊宝多维营养膏200g，多种维生素补充。；200g大包装；维生素全面",
+      "core_ingredients": "植物油、12种维生素、酵母、牛磺酸",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "价格较高",
+      "package_spec": "200g/支",
+      "reference_price": "约120-150元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝猫草膏（50g）",
+    "model": "Cat-Grass-50g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝猫草膏50g，天然猫草成分，温和排毛。",
+    "ingredients": [
+      "猫草粉",
+      "植物油",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥8%"
+    },
+    "pros": [
+      "天然猫草成分",
+      "德国进口"
+    ],
+    "cons": [
+      "小规格"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "俊宝猫草膏50g，天然猫草成分，温和排毛。；天然猫草成分；德国进口",
+      "core_ingredients": "猫草粉、植物油、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "precautions": "小规格",
+      "package_spec": "50g/支",
+      "reference_price": "约40-55元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "俊宝(GimCat)",
+    "name": "俊宝莹彩美毛膏（50g）",
+    "model": "Beauty-Coat-50g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "俊宝莹彩美毛膏50g，卵磷脂+鱼油美毛护肤。",
+    "ingredients": [
+      "卵磷脂",
+      "鱼油",
+      "维生素E",
+      "生物素"
+    ],
+    "nutrition": {},
+    "pros": [
+      "美毛护肤",
+      "改善掉毛"
+    ],
+    "cons": [
+      "小规格价格偏高"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛发皮肤养护/亮毛需求",
+      "main_benefits": "俊宝莹彩美毛膏50g，卵磷脂+鱼油美毛护肤。；美毛护肤；改善掉毛",
+      "core_ingredients": "卵磷脂、鱼油、维生素E、生物素",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "小规格价格偏高",
+      "package_spec": "50g/支",
+      "reference_price": "约45-60元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏猫用化毛膏（120g）",
+    "model": "Hairball-INPlus-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏猫用化毛膏120g，温和排毛。",
+    "ingredients": [
+      "植物油",
+      "纤维素",
+      "维生素群"
+    ],
+    "nutrition": {
+      "粗纤维": "≥5%",
+      "粗脂肪": "≥28%"
+    },
+    "pros": [
+      "品牌可靠",
+      "价格适中"
+    ],
+    "cons": [],
+    "extra_attrs": {
+      "suitable_issues": "毛球排出/肠胃养护",
+      "main_benefits": "麦德氏猫用化毛膏120g，温和排毛。；品牌可靠；价格适中",
+      "core_ingredients": "植物油、纤维素、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每次3-5cm，每周2-3次",
+      "package_spec": "120g/支",
+      "reference_price": "约35-45元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏猫用益生菌（10包/20g）",
+    "model": "Probiotics-INPlus-20g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏猫用益生菌20g，10包独立装。",
+    "ingredients": [
+      "嗜酸乳杆菌",
+      "双歧杆菌",
+      "枯草芽孢杆菌",
+      "果寡糖"
+    ],
+    "nutrition": {
+      "活菌量": "≥1.5亿CFU/包"
+    },
+    "pros": [
+      "独立包装方便",
+      "3种菌株"
+    ],
+    "cons": [
+      "活菌量一般"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "肠胃敏感/软便调理/菌群养护",
+      "main_benefits": "麦德氏猫用益生菌20g，10包独立装。；独立包装方便；3种菌株",
+      "core_ingredients": "嗜酸乳杆菌、双歧杆菌、枯草芽孢杆菌、果寡糖",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日1包",
+      "precautions": "活菌量一般",
+      "package_spec": "2g×10包",
+      "reference_price": "约25-35元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏猫用卵磷脂（250g）",
+    "model": "Lecithin-INPlus-250g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏猫用卵磷脂250g，美毛护肤。",
+    "ingredients": [
+      "卵磷脂",
+      "鱼油",
+      "维生素E"
+    ],
+    "nutrition": {
+      "卵磷脂": "≥25%"
+    },
+    "pros": [
+      "250g大包装",
+      "美毛效果好"
+    ],
+    "cons": [
+      "需长期服用"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛发皮肤养护/亮毛需求",
+      "main_benefits": "麦德氏猫用卵磷脂250g，美毛护肤。；250g大包装；美毛效果好",
+      "core_ingredients": "卵磷脂、鱼油、维生素E",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日适量",
+      "precautions": "需长期服用",
+      "package_spec": "250g/瓶",
+      "reference_price": "约60-80元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏护毛磷虾卵磷脂（250g）",
+    "model": "Lecithin-Krill-250g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏磷虾卵磷脂升级款，添加南极磷虾油，Omega-3美毛效果更好。",
+    "ingredients": [
+      "卵磷脂",
+      "南极磷虾油",
+      "鱼油",
+      "维生素E"
+    ],
+    "nutrition": {
+      "卵磷脂": "≥25%",
+      "Omega-3": "≥0.5%"
+    },
+    "pros": [
+      "磷虾油Omega-3美毛",
+      "升级版效果更好"
+    ],
+    "cons": [
+      "价格高于普通版"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "毛发皮肤养护/亮毛需求",
+      "main_benefits": "麦德氏磷虾卵磷脂升级款，添加南极磷虾油，Omega-3美毛效果更好。；磷虾油Omega-3美毛；升级版效果更好",
+      "core_ingredients": "卵磷脂、南极磷虾油、鱼油、维生素E",
+      "applicable_stage": "猫狗通用，按说明调整",
+      "usage_method": "每日适量",
+      "precautions": "价格高于普通版",
+      "package_spec": "250g/瓶",
+      "reference_price": "约80-100元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏鼻支安（猫胺膏-120g）",
+    "model": "Nose-Relief-120g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏鼻支安猫胺膏120g，含L-赖氨酸，辅助猫鼻支护理。",
+    "ingredients": [
+      "L-赖氨酸",
+      "牛磺酸",
+      "维生素群"
+    ],
+    "nutrition": {
+      "L-赖氨酸": "≥800mg/10g"
+    },
+    "pros": [
+      "辅助猫鼻支护理",
+      "120g大包装"
+    ],
+    "cons": [
+      "不能替代药物治疗"
+    ],
+    "extra_attrs": {
+      "suitable_issues": "特定营养补充/免疫与呼吸道养护",
+      "main_benefits": "麦德氏鼻支安猫胺膏120g，含L-赖氨酸，辅助猫鼻支护理。；辅助猫鼻支护理；120g大包装",
+      "core_ingredients": "L-赖氨酸、牛磺酸、维生素群",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "每日3-5cm",
+      "precautions": "不能替代药物治疗",
+      "package_spec": "120g/支",
+      "reference_price": "约50-65元"
+    },
+    "status": "active"
+  },
+  {
+    "brand": "麦德氏(IN-Plus)",
+    "name": "麦德氏四合一羊奶粉（300g）",
+    "model": "Milk-Powder-4in1-300g",
+    "pet_type": "cat",
+    "category_id": 87,
+    "description": "麦德氏四合一羊奶粉300g，幼猫/孕猫/术后营养补充。",
+    "ingredients": [
+      "羊奶粉",
+      "乳清蛋白",
+      "益生菌",
+      "DHA"
+    ],
+    "nutrition": {
+      "粗蛋白": "≥25%"
+    },
+    "pros": [
+      "四合一营养全面",
+      "300g大包装"
+    ],
+    "cons": [],
+    "extra_attrs": {
+      "suitable_issues": "幼猫或恢复期营养补充",
+      "main_benefits": "麦德氏四合一羊奶粉300g，幼猫/孕猫/术后营养补充。；四合一营养全面；300g大包装",
+      "core_ingredients": "羊奶粉、乳清蛋白、益生菌、DHA",
+      "applicable_stage": "猫咪日常养护，幼猫/老年猫按说明调整",
+      "usage_method": "按说明冲调",
+      "package_spec": "300g/罐",
+      "reference_price": "约60-80元"
+    },
+    "status": "active"
+  }
+]
