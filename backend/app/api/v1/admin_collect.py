@@ -301,6 +301,7 @@ async def list_jobs(
     status: str | None = Query(None),
     job_type: str | None = Query(None),
     data_source_id: int | None = Query(None),
+    spu_id: int | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
@@ -317,6 +318,9 @@ async def list_jobs(
     if data_source_id:
         query = query.where(DataFetchJob.data_source_id == data_source_id)
         count_query = count_query.where(DataFetchJob.data_source_id == data_source_id)
+    if spu_id:
+        query = query.where(DataFetchJob.spu_id == spu_id)
+        count_query = count_query.where(DataFetchJob.spu_id == spu_id)
 
     offset = (page - 1) * page_size
     result = await db.execute(query.offset(offset).limit(page_size))
@@ -336,7 +340,7 @@ async def list_jobs(
         items.append(CollectionJobResponse(
             id=j.id, data_source_id=j.data_source_id, data_source_name=ds_name,
             job_type=j.job_type, collection_type=getattr(j, "collection_type", "full"),
-            status=j.status, product_id=getattr(j, "product_id", None),
+            status=j.status, product_id=getattr(j, "product_id", None), spu_id=getattr(j, "spu_id", None),
             params=j.params, result=j.result, error_message=j.error_message,
             started_at=j.started_at, completed_at=j.completed_at, created_at=j.created_at,
         ).model_dump())
@@ -374,12 +378,35 @@ async def retry_job(
     new_job = DataFetchJob(
         data_source_id=old_job.data_source_id,
         job_type=old_job.job_type,
+        collection_type=getattr(old_job, "collection_type", "incremental"),
         status="pending",
         params=old_job.params,
+        spu_id=old_job.spu_id,
     )
     db.add(new_job)
     await db.commit()
     await db.refresh(new_job)
+
+    if new_job.job_type == "pdd_detail_refresh":
+        listing_id = (new_job.params or {}).get("listing_id")
+        if listing_id:
+            asyncio.create_task(_run_pdd_detail_refresh_retry(new_job.id, int(listing_id)))
+    elif new_job.job_type == "pdd_listing_search" and new_job.spu_id:
+        from app.api.v1.admin_goods import _run_import_for_spu_job
+        from app.services.spu_listing_service import ImportJobManager
+
+        params = new_job.params or {}
+        memory_job = ImportJobManager.create_job(f"SPU-{new_job.spu_id}")
+        asyncio.create_task(
+            _run_import_for_spu_job(
+                new_job.id,
+                memory_job.job_id,
+                new_job.spu_id,
+                params.get("keyword", ""),
+                int(params.get("max_results", 10)),
+                params.get("platform", "pdd"),
+            )
+        )
 
     return ApiResponse(
         data=JobRetryResponse(
@@ -388,6 +415,14 @@ async def retry_job(
             message="Job retry queued.",
         ).model_dump()
     )
+
+
+async def _run_pdd_detail_refresh_retry(job_id: int, listing_id: int) -> None:
+    from app.services.spu_service import SpuService
+
+    async with AsyncSessionLocal() as db:
+        service = SpuService(db)
+        await service.refresh_listing_price(job_id, listing_id)
 
 
 # === 4. XHS Reviews (SPU-based) ===

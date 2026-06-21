@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ExternalLink, Unlink, ArrowUpDown } from 'lucide-react'
+import { ExternalLink, Unlink, ArrowUpDown, RefreshCw, Star, Trash2 } from 'lucide-react'
 import ListingDetailModal from './ListingDetailModal'
 
 interface Listing {
@@ -12,16 +12,22 @@ interface Listing {
   url: string
   image_url?: string
   sales_count?: number
+  goods_sign?: string
+  is_primary?: boolean
+  last_sync_error?: string
   match_status: string
 }
 
 interface ListingTableProps {
   listings: Listing[]
   onUnlink?: (id: number) => void
+  onRefresh?: (id: number) => void
+  onSetPrimary?: (id: number) => void
+  onDelete?: (id: number) => void
   showUnlink?: boolean
 }
 
-export default function ListingTable({ listings = [], onUnlink, showUnlink = true }: ListingTableProps) {
+export default function ListingTable({ listings = [], onUnlink, onRefresh, onSetPrimary, onDelete, showUnlink = true }: ListingTableProps) {
   const [sortField, setSortField] = useState<keyof Listing>('price')
   const [sortAsc, setSortAsc] = useState(true)
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
@@ -68,7 +74,8 @@ export default function ListingTable({ listings = [], onUnlink, showUnlink = tru
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">店铺</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">状态</th>
-                {showUnlink && <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">操作</th>}
+                <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">购买能力</th>
+                {(showUnlink || onRefresh || onSetPrimary || onDelete) && <th className="px-4 py-3 text-left text-xs font-medium text-carbon/60 uppercase tracking-wider">操作</th>}
               </tr>
             </thead>
             <tbody>
@@ -92,8 +99,14 @@ export default function ListingTable({ listings = [], onUnlink, showUnlink = tru
                         />
                       )}
                       <span className="truncate max-w-[200px]">{listing.title}</span>
+                      {listing.is_primary && <Star className="w-3.5 h-3.5 flex-shrink-0 text-amber-400 fill-amber-400" />}
                       <ExternalLink className="w-3 h-3 flex-shrink-0 text-carbon/40" />
                     </button>
+                    {listing.last_sync_error && (
+                      <div className="text-xs text-red-500 mt-1 max-w-[260px] truncate">
+                        刷新失败：{listing.last_sync_error}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-sm font-medium text-deep-black">
@@ -117,15 +130,54 @@ export default function ListingTable({ listings = [], onUnlink, showUnlink = tru
                       {listing.match_status === 'linked' ? '已关联' : listing.match_status === 'candidate' ? '候选' : listing.match_status === 'rejected' ? '已拒绝' : '未匹配'}
                     </span>
                   </td>
-                  {showUnlink && (
+                  <td className="px-4 py-3">
+                    {listing.goods_sign ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">可转链</span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">仅展示</span>
+                    )}
+                  </td>
+                  {(showUnlink || onRefresh || onSetPrimary || onDelete) && (
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => onUnlink?.(listing.id)}
-                        className="p-1.5 rounded-lg text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all"
-                        title="取消关联"
-                      >
-                        <Unlink className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {onSetPrimary && (
+                          <button
+                            onClick={() => onSetPrimary(listing.id)}
+                            className="p-1.5 rounded-lg text-carbon/40 hover:text-amber-500 hover:bg-amber-50 transition-all"
+                            title="设为主推"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                        )}
+                        {onRefresh && (
+                          <button
+                            onClick={() => onRefresh(listing.id)}
+                            disabled={!listing.goods_sign}
+                            className="p-1.5 rounded-lg text-carbon/40 hover:text-peach hover:bg-peach/5 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title={listing.goods_sign ? '低频刷新价格' : '缺少 goods_sign，无法刷新'}
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </button>
+                        )}
+                        {showUnlink && (
+                          <button
+                            onClick={() => onUnlink?.(listing.id)}
+                            className="p-1.5 rounded-lg text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all"
+                            title="取消关联"
+                          >
+                            <Unlink className="w-4 h-4" />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(listing.id)}
+                            className="p-1.5 rounded-lg text-carbon/40 hover:text-red-500 hover:bg-red-50 transition-all"
+                            title="删除"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>

@@ -5,6 +5,7 @@ from typing import Any, Optional
 from loguru import logger
 
 from app.core.config import settings
+from app.services.pdd_rate_limiter import pdd_rate_limiter
 from app.utils.http_client import HttpClient
 
 PDD_API_URL = "https://gw-api.pinduoduo.com/api/router"
@@ -57,6 +58,11 @@ class PDDClient:
         price_max: Optional[int] = None,
         sort_type: int = 0,
     ) -> list[dict]:
+        await pdd_rate_limiter.wait(
+            "pdd.ddk.goods.search",
+            min_interval_seconds=5.0,
+            daily_limit=60,
+        )
         params = {
             "keyword": keyword,
             "page": str(page),
@@ -70,13 +76,26 @@ class PDDClient:
         if price_max is not None:
             params["price_range_upper"] = str(price_max * 100)
 
-        result = await self._call("pdd.ddk.goods.search", params)
+        try:
+            result = await self._call("pdd.ddk.goods.search", params)
+        except Exception as e:
+            pdd_rate_limiter.record_failure("pdd.ddk.goods.search", e)
+            raise
         goods_list = result.get("goods_search_response", {}).get("goods_list", [])
         logger.debug(f"PDD search keyword='{keyword}' page={page}: found {len(goods_list)} goods")
         return goods_list
 
     async def get_goods_detail(self, goods_sign: str) -> Optional[dict]:
-        result = await self._call("pdd.ddk.goods.detail", {"goods_sign": goods_sign})
+        await pdd_rate_limiter.wait(
+            "pdd.ddk.goods.detail",
+            min_interval_seconds=5.0,
+            daily_limit=120,
+        )
+        try:
+            result = await self._call("pdd.ddk.goods.detail", {"goods_sign": goods_sign})
+        except Exception as e:
+            pdd_rate_limiter.record_failure("pdd.ddk.goods.detail", e)
+            raise
         details = result.get("goods_detail_response", {}).get("goods_details", [])
         if details:
             logger.debug(f"PDD detail goods_sign={goods_sign}: fetched successfully")

@@ -1,15 +1,24 @@
 import asyncio
 
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.admin_deps import get_current_admin
 from app.core.database import AsyncSessionLocal, get_db
+from app.models.data_source import DataFetchJob
 from app.models.spu import Spu
 from app.schemas.common import ApiResponse, Pagination
 from app.schemas.spu import SpuCreate, SpuFilter, SpuResponse, SpuUpdate
-from app.schemas.spu_listing import SpuListingResponse, LinkListingRequest
+from app.schemas.spu_listing import (
+    LinkListingRequest,
+    SpuListingManualCreate,
+    SpuListingManualUpdate,
+    SpuListingResponse,
+)
 from app.services.spu_service import SpuService
 from app.services.spu_ai_service import spu_ai_extractor
 from app.services.spu_listing_service import ImportJobManager, SpuListingService
@@ -137,6 +146,88 @@ async def admin_get_spu_listings(
             "total": len(listings),
         }
     )
+
+
+@router.post("/admin/goods/spus/{spu_id}/listings", response_model=ApiResponse[dict], summary="Create Listing for SPU", description="Manually add a purchasable listing to an SPU.")
+async def admin_create_spu_listing(
+    spu_id: int,
+    data: SpuListingManualCreate,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    listing = await service.create_listing_for_spu(spu_id, data)
+    if not listing:
+        raise HTTPException(status_code=404, detail="SPU not found")
+    return ApiResponse(data={"listing": SpuListingResponse.model_validate(listing)})
+
+
+@router.put("/admin/goods/listings/{listing_id}", response_model=ApiResponse[dict], summary="Update Listing", description="Edit a manually maintained or imported listing.")
+async def admin_update_listing(
+    listing_id: int,
+    data: SpuListingManualUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    listing = await service.update_listing(listing_id, data)
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return ApiResponse(data={"listing": SpuListingResponse.model_validate(listing)})
+
+
+@router.delete("/admin/goods/listings/{listing_id}", response_model=ApiResponse[dict], summary="Delete Listing", description="Delete a maintained external listing.")
+async def admin_delete_listing(
+    listing_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    deleted = await service.delete_listing(listing_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return ApiResponse(data={"message": "Listing deleted"})
+
+
+@router.post("/admin/goods/listings/{listing_id}/primary", response_model=ApiResponse[dict], summary="Set Primary Listing", description="Mark a listing as the SPU's preferred display source.")
+async def admin_set_primary_listing(
+    listing_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    listing = await service.set_primary_listing(listing_id)
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found or not linked to an SPU")
+    return ApiResponse(data={"listing": SpuListingResponse.model_validate(listing)})
+
+
+@router.post("/admin/goods/listings/{listing_id}/refresh-price", response_model=ApiResponse[dict], summary="Refresh Listing Price", description="Refresh a single linked listing through low-frequency PDD detail API.")
+async def admin_refresh_listing_price(
+    listing_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin = Depends(get_current_admin),
+):
+    service = SpuService(db)
+    listing = await service.get_listing_by_id(listing_id)
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if not listing.spu_id:
+        raise HTTPException(status_code=400, detail="Listing is not linked to an SPU")
+
+    job = await service.create_listing_job(
+        job_type="pdd_detail_refresh",
+        spu_id=listing.spu_id,
+        params={"listing_id": listing_id, "api": "pdd.ddk.goods.detail"},
+    )
+    asyncio.create_task(_run_refresh_listing_price_job(job.id, listing_id))
+    return ApiResponse(data={"job_id": job.id, "status": job.status, "message": "Price refresh queued"})
+
+
+async def _run_refresh_listing_price_job(job_id: int, listing_id: int) -> None:
+    async with AsyncSessionLocal() as db:
+        service = SpuService(db)
+        await service.refresh_listing_price(job_id, listing_id)
 
 
 @router.post("/admin/goods/listings/{listing_id}/link", response_model=ApiResponse[dict], summary="Link Listing to SPU", description="Manually assign an unmatched listing to an SPU.")
@@ -271,31 +362,62 @@ async def admin_import_listings(
     if not keyword:
         raise HTTPException(status_code=400, detail="Keyword is required")
 
-    job = ImportJobManager.create_job(keyword)
-    await db.commit()
+    service = SpuService(db)
+    persistent_job = await service.create_listing_job(
+        job_type="pdd_listing_search",
+        spu_id=None,
+        params={
+            "keyword": keyword,
+            "max_results": max_results,
+            "platform": platform,
+            "api": "pdd.ddk.goods.search",
+            "scope": "global",
+        },
+    )
+    memory_job = ImportJobManager.create_job(keyword)
 
-    asyncio.create_task(_run_import_job(job.job_id, keyword, max_results, platform))
+    asyncio.create_task(_run_import_job(persistent_job.id, memory_job.job_id, keyword, max_results, platform))
 
     return ApiResponse(
         data={
-            "job_id": job.job_id,
-            "status": job.status,
-            "message": "Import and matching job started",
-            "estimated_duration": "2-5 minutes",
+            "job_id": persistent_job.id,
+            "legacy_job_id": memory_job.job_id,
+            "status": persistent_job.status,
+            "message": "Import and matching job queued. PDD search is rate-limited and should be used sparingly.",
+            "estimated_duration": "2-10 minutes",
         }
     )
 
 
-async def _run_import_job(job_id: str, keyword: str, max_results: int, platform: str) -> None:
+async def _run_import_job(persistent_job_id: int, memory_job_id: str, keyword: str, max_results: int, platform: str) -> None:
     """Background task to import listings and run auto-matching."""
     async with AsyncSessionLocal() as db:
+        job_result = await db.execute(select(DataFetchJob).where(DataFetchJob.id == persistent_job_id))
+        persistent_job = job_result.scalar_one_or_none()
+        if persistent_job:
+            persistent_job.status = "running"
+            persistent_job.started_at = datetime.now(UTC)
+            await db.commit()
+
         service = SpuListingService(db)
         await service.import_and_match(
-            job_id=job_id,
+            job_id=memory_job_id,
             keyword=keyword,
             max_results=max_results,
             platform=platform,
         )
+        memory_job = ImportJobManager.get_job(memory_job_id)
+        if persistent_job and memory_job:
+            persistent_job.status = memory_job.status
+            persistent_job.error_message = memory_job.error
+            persistent_job.result = {
+                "total_imported": memory_job.total_imported,
+                "auto_linked": memory_job.auto_linked,
+                "candidates": memory_job.candidates,
+                "unmatched": memory_job.unmatched,
+            }
+            persistent_job.completed_at = datetime.now(UTC)
+            await db.commit()
 
 
 @router.post("/admin/goods/spus/{spu_id}/import-listings", response_model=ApiResponse[dict], summary="Import Listings for SPU", description="Import listings for a specific SPU from external data source. If keyword is not provided, uses SPU's brand+name+model as the search keyword.")
@@ -317,41 +439,88 @@ async def admin_import_listings_for_spu(
     if not spu:
         raise HTTPException(status_code=404, detail="SPU not found")
 
-    job = ImportJobManager.create_job(f"SPU-{spu_id}")
-    await db.commit()
+    service = SpuService(db)
+    persistent_job = await service.create_listing_job(
+        job_type="pdd_listing_search",
+        spu_id=spu_id,
+        params={
+            "keyword": keyword,
+            "max_results": max_results,
+            "platform": platform,
+            "api": "pdd.ddk.goods.search",
+        },
+    )
+    memory_job = ImportJobManager.create_job(f"SPU-{spu_id}")
 
     asyncio.create_task(
-        _run_import_for_spu_job(job.job_id, spu_id, keyword, max_results, platform)
+        _run_import_for_spu_job(persistent_job.id, memory_job.job_id, spu_id, keyword, max_results, platform)
     )
 
     return ApiResponse(
         data={
-            "job_id": job.job_id,
-            "status": job.status,
-            "message": "SPU import job started",
-            "estimated_duration": "2-5 minutes",
+            "job_id": persistent_job.id,
+            "legacy_job_id": memory_job.job_id,
+            "status": persistent_job.status,
+            "message": "SPU import job queued. PDD search is rate-limited and should be used sparingly.",
+            "estimated_duration": "2-10 minutes",
         }
     )
 
 
-async def _run_import_for_spu_job(job_id: str, spu_id: int, keyword: str, max_results: int, platform: str) -> None:
+async def _run_import_for_spu_job(persistent_job_id: int, memory_job_id: str, spu_id: int, keyword: str, max_results: int, platform: str) -> None:
     """Background task to import listings for a specific SPU."""
     async with AsyncSessionLocal() as db:
+        job_result = await db.execute(select(DataFetchJob).where(DataFetchJob.id == persistent_job_id))
+        persistent_job = job_result.scalar_one_or_none()
+        if persistent_job:
+            persistent_job.status = "running"
+            persistent_job.started_at = datetime.now(UTC)
+            await db.commit()
+
         service = SpuListingService(db)
         await service.import_and_match_for_spu(
-            job_id=job_id,
+            job_id=memory_job_id,
             spu_id=spu_id,
             keyword=keyword,
             max_results=max_results,
             platform=platform,
         )
+        memory_job = ImportJobManager.get_job(memory_job_id)
+        if persistent_job and memory_job:
+            persistent_job.status = memory_job.status
+            persistent_job.error_message = memory_job.error
+            persistent_job.result = {
+                "total_imported": memory_job.total_imported,
+                "auto_linked": memory_job.auto_linked,
+                "candidates": memory_job.candidates,
+                "unmatched": memory_job.unmatched,
+            }
+            persistent_job.completed_at = datetime.now(UTC)
+            await db.commit()
 
 
 @router.get("/admin/goods/jobs/{job_id}", response_model=ApiResponse[dict], summary="Get Import Job Status", description="Get the status of an import and matching job.")
 async def admin_get_job_status(
     job_id: str,
+    db: AsyncSession = Depends(get_db),
     current_admin = Depends(get_current_admin),
 ):
+    if job_id.isdigit():
+        result = await db.execute(select(DataFetchJob).where(DataFetchJob.id == int(job_id)))
+        persistent_job = result.scalar_one_or_none()
+        if persistent_job:
+            return ApiResponse(
+                data={
+                    "job_id": persistent_job.id,
+                    "status": persistent_job.status,
+                    "result": persistent_job.result or {},
+                    "params": persistent_job.params or {},
+                    "error": persistent_job.error_message,
+                    "started_at": persistent_job.started_at,
+                    "completed_at": persistent_job.completed_at,
+                }
+            )
+
     job = ImportJobManager.get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
