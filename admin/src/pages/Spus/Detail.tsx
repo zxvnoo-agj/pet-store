@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Boxes, ExternalLink, Loader2, Download } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Boxes, ExternalLink, Loader2, Download, Plus, RefreshCw, Search } from 'lucide-react'
 import { useSpuStore } from '../../stores/spuStore'
 import { spuApi } from '../../services/spuApi'
 import { useToastStore } from '../../stores/toastStore'
@@ -15,16 +15,30 @@ export default function SpuDetail() {
   const { currentSpu, currentListings, detailLoading, fetchSpu, fetchListings } = useSpuStore()
   const [activeTab, setActiveTab] = useState('info')
   const [showImportForm, setShowImportForm] = useState(false)
+  const [showManualForm, setShowManualForm] = useState(false)
   const [importKeyword, setImportKeyword] = useState('')
-  const [importMaxResults, setImportMaxResults] = useState(100)
+  const [importMaxResults, setImportMaxResults] = useState(10)
   const [importLoading, setImportLoading] = useState(false)
   const [importJobId, setImportJobId] = useState<string | null>(null)
   const [importStatus, setImportStatus] = useState<string | null>(null)
+  const [jobs, setJobs] = useState<any[]>([])
+  const [manualForm, setManualForm] = useState({
+    title: '',
+    shop_name: '',
+    price: '',
+    original_price: '',
+    url: '',
+    image_url: '',
+    goods_id: '',
+    goods_sign: '',
+    is_primary: false,
+  })
 
   useEffect(() => {
     if (id) {
       fetchSpu(Number(id))
       fetchListings(Number(id))
+      fetchJobs(Number(id))
     }
   }, [id])
 
@@ -34,6 +48,19 @@ export default function SpuDetail() {
       setImportKeyword(`${currentSpu.brand} ${currentSpu.name} ${currentSpu.model}`.trim())
     }
   }, [currentSpu])
+
+  const fetchJobs = async (spuId: number) => {
+    try {
+      const res = await spuApi.listCollectionJobs({
+        spu_id: spuId,
+        page: 1,
+        page_size: 6,
+      })
+      setJobs(res.data.data?.items || [])
+    } catch (err) {
+      console.error('Fetch collection jobs failed', err)
+    }
+  }
 
   // Poll import job status
   useEffect(() => {
@@ -50,10 +77,12 @@ export default function SpuDetail() {
           setImportLoading(false)
           addToast(`导入完成：共导入 ${job.result?.total_imported || 0} 条，成功关联 ${job.result?.auto_linked || 0} 条`, 'success')
           fetchListings(Number(id))
+          fetchJobs(Number(id))
         } else if (job.status === 'failed') {
           setImportJobId(null)
           setImportLoading(false)
           addToast('导入失败：' + (job.error || '未知错误'), 'error')
+          fetchJobs(Number(id))
         }
       } catch (err: any) {
         console.error('Poll job failed', err)
@@ -79,17 +108,115 @@ export default function SpuDetail() {
       const res = await spuApi.importListingsForSpu(Number(id), {
         keyword,
         max_results: importMaxResults,
-        platform: 'pdd_ddk',
+        source: 'pdd_ddk',
       })
       const jobId = res.data.data?.job_id
       if (jobId) {
-        setImportJobId(jobId)
+        setImportJobId(String(jobId))
         setImportStatus('running')
       }
     } catch (err: any) {
       setImportLoading(false)
       setImportStatus(null)
       addToast(err.message || '导入失败', 'error')
+    }
+  }
+
+  const handleCreateListing = async () => {
+    if (!id) return
+    if (!manualForm.title.trim()) {
+      addToast('请输入商品标题', 'error')
+      return
+    }
+    try {
+      await spuApi.createListing(Number(id), {
+        platform: 'pdd',
+        title: manualForm.title.trim(),
+        shop_name: manualForm.shop_name.trim(),
+        price: Number(manualForm.price || 0),
+        original_price: manualForm.original_price ? Number(manualForm.original_price) : null,
+        url: manualForm.url.trim(),
+        image_url: manualForm.image_url.trim(),
+        goods_id: manualForm.goods_id.trim(),
+        goods_sign: manualForm.goods_sign.trim(),
+        is_primary: manualForm.is_primary,
+        match_status: 'linked',
+      })
+      addToast('购买商品已添加', 'success')
+      setShowManualForm(false)
+      setManualForm({
+        title: '',
+        shop_name: '',
+        price: '',
+        original_price: '',
+        url: '',
+        image_url: '',
+        goods_id: '',
+        goods_sign: '',
+        is_primary: false,
+      })
+      fetchSpu(Number(id))
+      fetchListings(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '添加失败', 'error')
+    }
+  }
+
+  const handleRefreshListing = async (listingId: number) => {
+    if (!id) return
+    try {
+      const res = await spuApi.refreshListingPrice(listingId)
+      addToast(`价格刷新已排队 (Job #${res.data.data?.job_id})`, 'success')
+      fetchJobs(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '刷新失败', 'error')
+    }
+  }
+
+  const handleSetPrimary = async (listingId: number) => {
+    if (!id) return
+    try {
+      await spuApi.setPrimaryListing(listingId)
+      addToast('已设为主推商品', 'success')
+      fetchSpu(Number(id))
+      fetchListings(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '设置失败', 'error')
+    }
+  }
+
+  const handleDeleteListing = async (listingId: number) => {
+    if (!id || !confirm('确定删除这个购买商品吗？')) return
+    try {
+      await spuApi.deleteListing(listingId)
+      addToast('购买商品已删除', 'success')
+      fetchSpu(Number(id))
+      fetchListings(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '删除失败', 'error')
+    }
+  }
+
+  const handleRetryJob = async (jobId: number) => {
+    if (!id) return
+    try {
+      const res = await spuApi.retryCollectionJob(jobId)
+      addToast(`重试任务已排队 (Job #${res.data.data?.new_job_id})`, 'success')
+      fetchJobs(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '重试失败', 'error')
+    }
+  }
+
+  const handleUnlinkListing = async (listingId: number) => {
+    if (!id || !confirm('确定取消关联这个链接吗？')) return
+    try {
+      await spuApi.unlinkListing(listingId)
+      addToast('已取消关联', 'success')
+      fetchSpu(Number(id))
+      fetchListings(Number(id))
+    } catch (err: any) {
+      addToast(err.response?.data?.detail || err.message || '取消关联失败', 'error')
     }
   }
 
@@ -178,7 +305,7 @@ export default function SpuDetail() {
             {[
               { key: 'info', label: '基本信息' },
               { key: 'attrs', label: '详细属性' },
-              { key: 'listings', label: `链接列表 (${currentListings.length})` },
+              { key: 'listings', label: `购买商品 (${currentListings.length})` },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -314,23 +441,100 @@ export default function SpuDetail() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs text-carbon/60">
-                    {currentListings.length > 0 ? `共 ${currentListings.length} 个外部链接` : '暂无外部链接'}
+                    {currentListings.length > 0 ? `共 ${currentListings.length} 个购买商品` : '暂无购买商品'}
                   </p>
-                  <button
-                    onClick={() => setShowImportForm(!showImportForm)}
-                    disabled={importLoading}
-                    className="px-4 py-2 bg-peach text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {importLoading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> 导入中...</>
-                    ) : (
-                      <><Download className="w-4 h-4" /> 导入链接</>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowManualForm(!showManualForm)}
+                      className="px-4 py-2 bg-peach text-white rounded-pill text-sm font-medium pill-button flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> 添加购买商品
+                    </button>
+                    <button
+                      onClick={() => setShowImportForm(!showImportForm)}
+                      disabled={importLoading}
+                      className="px-4 py-2 bg-white border border-amber-200 text-amber-700 rounded-pill text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {importLoading ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> 搜索中...</>
+                      ) : (
+                        <><Search className="w-4 h-4" /> 低频搜索补充</>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                {showImportForm && (
+                {jobs.length > 0 && (
+                  <div className="bg-white/60 rounded-xl p-4 mb-4 border border-peach/10">
+                    <div className="flex items-center gap-2 mb-3 text-sm font-medium text-deep-black">
+                      <RefreshCw className="w-4 h-4 text-peach" />
+                      最近采集/刷新任务
+                    </div>
+                    <div className="space-y-2">
+                      {jobs.map((job) => (
+                        <div key={job.id} className="flex items-start justify-between gap-4 text-xs bg-white/70 rounded-lg px-3 py-2">
+                          <div>
+                            <span className="font-medium text-carbon">#{job.id}</span>
+                            <span className="ml-2 text-carbon/60">{job.job_type}</span>
+                            {job.error_message && (
+                              <div className="text-red-500 mt-1 flex items-start gap-1">
+                                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                                <span>{job.error_message}</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full ${
+                            job.status === 'completed'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : job.status === 'failed'
+                              ? 'bg-red-50 text-red-600'
+                              : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {job.status === 'completed' ? '完成' : job.status === 'failed' ? '失败' : '进行中'}
+                          </span>
+                          {job.status === 'failed' && (
+                            <button
+                              onClick={() => handleRetryJob(job.id)}
+                              className="text-xs px-2 py-0.5 rounded-full bg-white border border-red-100 text-red-500 hover:bg-red-50"
+                            >
+                              重试
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {showManualForm && (
                   <div className="bg-white/50 rounded-xl p-4 mb-4 border border-peach/10">
+                    <div className="grid grid-cols-2 gap-4">
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="商品标题 *" value={manualForm.title} onChange={e => setManualForm(f => ({ ...f, title: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="店铺名称" value={manualForm.shop_name} onChange={e => setManualForm(f => ({ ...f, shop_name: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="价格" type="number" value={manualForm.price} onChange={e => setManualForm(f => ({ ...f, price: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="原价" type="number" value={manualForm.original_price} onChange={e => setManualForm(f => ({ ...f, original_price: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="商品链接" value={manualForm.url} onChange={e => setManualForm(f => ({ ...f, url: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="图片链接" value={manualForm.image_url} onChange={e => setManualForm(f => ({ ...f, image_url: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="goods_id" value={manualForm.goods_id} onChange={e => setManualForm(f => ({ ...f, goods_id: e.target.value }))} />
+                      <input className="px-4 py-2.5 bg-white/70 border border-peach/10 rounded-pill text-sm" placeholder="goods_sign（有值才可转链）" value={manualForm.goods_sign} onChange={e => setManualForm(f => ({ ...f, goods_sign: e.target.value }))} />
+                    </div>
+                    <label className="flex items-center gap-2 mt-3 text-xs text-carbon/70">
+                      <input type="checkbox" checked={manualForm.is_primary} onChange={e => setManualForm(f => ({ ...f, is_primary: e.target.checked }))} />
+                      设为主推商品，用作 SPU 首图优先来源
+                    </label>
+                    <div className="flex items-center gap-3 pt-4">
+                      <button onClick={handleCreateListing} className="px-6 py-2.5 bg-peach text-white rounded-pill text-sm font-medium pill-button">保存</button>
+                      <button onClick={() => setShowManualForm(false)} className="px-4 py-2.5 text-sm text-carbon hover:text-deep-black transition-colors">取消</button>
+                    </div>
+                  </div>
+                )}
+
+                {showImportForm && (
+                  <div className="bg-amber-50/70 rounded-xl p-4 mb-4 border border-amber-100">
+                    <div className="flex items-start gap-2 text-xs text-amber-700 mb-3">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>PDD 商品搜索接口容易因调用多、出单少被限制。建议优先手动维护少量可购买商品，仅在缺少商品时低频使用搜索补充。</span>
+                    </div>
                     <div className="space-y-3">
                       <div>
                         <label className="block text-xs text-carbon/60 mb-1.5">
@@ -351,8 +555,8 @@ export default function SpuDetail() {
                             type="number"
                             value={importMaxResults}
                             onChange={(e) => setImportMaxResults(Number(e.target.value))}
-                            min={10}
-                            max={500}
+                            min={1}
+                            max={20}
                             className="w-full px-4 py-2.5 bg-white/50 border border-peach/10 rounded-pill text-sm text-deep-black focus:outline-none focus:border-peach/40"
                           />
                         </div>
@@ -375,7 +579,7 @@ export default function SpuDetail() {
                           {importLoading ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /> 开始导入...</>
                           ) : (
-                            <><Download className="w-4 h-4" /> 开始导入</>
+                          <><Download className="w-4 h-4" /> 低频搜索</>
                           )}
                         </button>
                         <button
@@ -400,17 +604,15 @@ export default function SpuDetail() {
                   <div className="text-center py-12 text-carbon/40">
                     <ExternalLink className="w-10 h-10 mx-auto mb-2" />
                     <p className="text-sm">暂无链接</p>
-                    <p className="text-xs text-carbon/30 mt-1">点击上方"导入链接"按钮搜索外部商品</p>
+                    <p className="text-xs text-carbon/30 mt-1">建议先点击“添加购买商品”手动维护少量商品</p>
                   </div>
                 ) : currentListings.length > 0 ? (
                   <ListingTable
                     listings={currentListings}
-                    onUnlink={(listingId) => {
-                      if (confirm('确定要取消关联这个链接吗？')) {
-                        // TODO: implement unlink
-                        console.log('Unlink', listingId)
-                      }
-                    }}
+                    onUnlink={handleUnlinkListing}
+                    onRefresh={handleRefreshListing}
+                    onSetPrimary={handleSetPrimary}
+                    onDelete={handleDeleteListing}
                   />
                 ) : null}
               </div>

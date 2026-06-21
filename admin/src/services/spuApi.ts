@@ -52,6 +52,24 @@ export interface ImportParams {
   keyword: string
   max_results?: number
   platform?: string
+  source?: string
+}
+
+export interface ListingInput {
+  platform?: string
+  shop_name?: string
+  goods_id?: string
+  goods_sign?: string
+  title: string
+  price: number
+  original_price?: number | null
+  url?: string
+  image_url?: string
+  sales_count?: number | null
+  sku_specs?: any[]
+  service_tags?: any[]
+  is_primary?: boolean
+  match_status?: string
 }
 
 export const spuApi = {
@@ -75,6 +93,16 @@ export const spuApi = {
     apiClient.post(`/admin/goods/listings/${listingId}/link`, data),
   unlinkListing: (listingId: number) =>
     apiClient.post(`/admin/goods/listings/${listingId}/unlink`),
+  createListing: (spuId: number, data: ListingInput) =>
+    apiClient.post(`/admin/goods/spus/${spuId}/listings`, data),
+  updateListing: (listingId: number, data: Partial<ListingInput>) =>
+    apiClient.put(`/admin/goods/listings/${listingId}`, data),
+  deleteListing: (listingId: number) =>
+    apiClient.delete(`/admin/goods/listings/${listingId}`),
+  setPrimaryListing: (listingId: number) =>
+    apiClient.post(`/admin/goods/listings/${listingId}/primary`),
+  refreshListingPrice: (listingId: number) =>
+    apiClient.post(`/admin/goods/listings/${listingId}/refresh-price`),
 
   // Import
   importListings: (data: ImportParams) =>
@@ -83,6 +111,10 @@ export const spuApi = {
     apiClient.post(`/admin/goods/spus/${spuId}/import-listings`, data),
   getJob: (jobId: string) =>
     apiClient.get(`/admin/goods/jobs/${jobId}`),
+  listCollectionJobs: (params?: { spu_id?: number; job_type?: string; status?: string; page?: number; page_size?: number }) =>
+    apiClient.get('/admin/collect/jobs', { params }),
+  retryCollectionJob: (jobId: number) =>
+    apiClient.post(`/admin/collect/jobs/${jobId}/retry`),
 
   // Matching Queue
   getMatchingQueue: (params?: { tier?: string; page?: number; page_size?: number }) =>

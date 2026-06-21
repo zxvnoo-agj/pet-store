@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     DateTime,
@@ -6,6 +7,7 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    Text,
     UniqueConstraint,
     func,
 )
@@ -32,6 +34,8 @@ class SpuListing(Base):
     goods_sign = Column(String(128), nullable=True)
     sku_specs = Column(JSONB, nullable=True)
     service_tags = Column(JSONB, nullable=True)
+    is_primary = Column(Boolean, default=False, nullable=False)
+    last_sync_error = Column(Text, nullable=True)
     match_confidence = Column(Numeric(5, 4), nullable=True)
     match_status = Column(String(16), default="linked", index=True)
     last_synced_at = Column(DateTime(timezone=True), nullable=True)

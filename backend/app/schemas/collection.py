@@ -112,6 +112,7 @@ class CollectionJobResponse(BaseModel):
     collection_type: str = "full"
     status: str
     product_id: int | None = None
+    spu_id: int | None = None
     params: dict | None = None
     result: dict | None = None
     error_message: str | None = None

@@ -1,9 +1,13 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from app.models.data_source import DataFetchJob, DataSource
 from app.models.spu import Spu
 from app.models.spu_listing import SpuListing
+from app.schemas.spu_listing import SpuListingManualCreate, SpuListingManualUpdate
 from app.schemas.spu import SpuCreate, SpuFilter, SpuUpdate
 from app.utils.price_utils import update_spu_price_range
 
@@ -159,7 +163,7 @@ class SpuService:
                 SpuListing.spu_id.in_(spu_ids),
                 SpuListing.match_status == "linked",
             )
-            .order_by(SpuListing.spu_id.asc(), SpuListing.price.asc())
+            .order_by(SpuListing.spu_id.asc(), SpuListing.is_primary.desc(), SpuListing.price.asc())
         )
         listings_by_spu: dict[int, list[SpuListing]] = {}
         for listing in listings_result.scalars().all():
@@ -285,7 +289,7 @@ class SpuService:
                         SpuListing.match_status == "linked",
                         SpuListing.image_url.is_not(None),
                     )
-                    .order_by(SpuListing.price.asc())
+                    .order_by(SpuListing.is_primary.desc(), SpuListing.price.asc())
                     .limit(1)
                 )
                 image_url = image_result.scalar_one_or_none()
@@ -308,7 +312,7 @@ class SpuService:
         elif sort == "sales":
             query = query.order_by(desc(SpuListing.sales_count))
         else:
-            query = query.order_by(asc(SpuListing.price))
+            query = query.order_by(desc(SpuListing.is_primary), asc(SpuListing.price))
         
         result = await self.db.execute(query)
         return list(result.scalars().all())
@@ -365,9 +369,215 @@ class SpuService:
         )
         if match_status:
             query = query.where(SpuListing.match_status == match_status)
-        query = query.order_by(SpuListing.price.asc())
+        query = query.order_by(SpuListing.is_primary.desc(), SpuListing.price.asc())
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def create_listing_for_spu(self, spu_id: int, data: SpuListingManualCreate) -> SpuListing | None:
+        spu_result = await self.db.execute(select(Spu).where(Spu.id == spu_id))
+        spu = spu_result.scalar_one_or_none()
+        if not spu:
+            return None
+
+        listing = SpuListing(
+            spu_id=spu_id,
+            platform=data.platform or "pdd",
+            shop_name=data.shop_name or "",
+            goods_id=data.goods_id,
+            goods_sign=data.goods_sign,
+            title=data.title,
+            price=data.price or 0,
+            original_price=data.original_price,
+            url=data.url or "",
+            image_url=data.image_url,
+            sales_count=data.sales_count,
+            sku_specs=data.sku_specs or [],
+            service_tags=data.service_tags or [],
+            is_primary=data.is_primary,
+            match_confidence=1,
+            match_status=data.match_status or "linked",
+        )
+        self.db.add(listing)
+        await self.db.flush()
+
+        if data.is_primary:
+            await self._set_primary_listing(spu_id, listing.id)
+        elif listing.image_url and not spu.image_urls:
+            spu.image_urls = [listing.image_url]
+
+        await self.db.commit()
+        await self.db.refresh(listing)
+        await update_spu_price_range(self.db, spu_id)
+        return listing
+
+    async def update_listing(self, listing_id: int, data: SpuListingManualUpdate) -> SpuListing | None:
+        result = await self.db.execute(select(SpuListing).where(SpuListing.id == listing_id))
+        listing = result.scalar_one_or_none()
+        if not listing:
+            return None
+
+        update_data = data.model_dump(exclude_unset=True)
+        is_primary = update_data.pop("is_primary", None)
+        for key, value in update_data.items():
+            setattr(listing, key, value)
+
+        if is_primary is not None:
+            listing.is_primary = is_primary
+            if is_primary and listing.spu_id:
+                await self._set_primary_listing(listing.spu_id, listing.id)
+
+        await self.db.commit()
+        await self.db.refresh(listing)
+        if listing.spu_id:
+            await update_spu_price_range(self.db, listing.spu_id)
+        return listing
+
+    async def delete_listing(self, listing_id: int) -> bool:
+        result = await self.db.execute(select(SpuListing).where(SpuListing.id == listing_id))
+        listing = result.scalar_one_or_none()
+        if not listing:
+            return False
+        spu_id = listing.spu_id
+        await self.db.delete(listing)
+        await self.db.commit()
+        if spu_id:
+            await update_spu_price_range(self.db, spu_id)
+        return True
+
+    async def set_primary_listing(self, listing_id: int) -> SpuListing | None:
+        result = await self.db.execute(select(SpuListing).where(SpuListing.id == listing_id))
+        listing = result.scalar_one_or_none()
+        if not listing or not listing.spu_id:
+            return None
+        await self._set_primary_listing(listing.spu_id, listing.id)
+        await self.db.commit()
+        await self.db.refresh(listing)
+        return listing
+
+    async def _set_primary_listing(self, spu_id: int, listing_id: int) -> None:
+        from sqlalchemy import update
+
+        await self.db.execute(
+            update(SpuListing)
+            .where(SpuListing.spu_id == spu_id)
+            .values(is_primary=False)
+        )
+        await self.db.execute(
+            update(SpuListing)
+            .where(SpuListing.id == listing_id)
+            .values(is_primary=True)
+        )
+        listing_result = await self.db.execute(
+            select(SpuListing.image_url).where(SpuListing.id == listing_id)
+        )
+        image_url = listing_result.scalar_one_or_none()
+        if image_url:
+            spu_result = await self.db.execute(select(Spu).where(Spu.id == spu_id))
+            spu = spu_result.scalar_one_or_none()
+            if spu:
+                spu.image_urls = [image_url]
+
+    async def _get_pdd_data_source(self) -> DataSource:
+        result = await self.db.execute(select(DataSource).where(DataSource.platform == "pdd").limit(1))
+        source = result.scalar_one_or_none()
+        if source:
+            return source
+        source = DataSource(name="拼多多 DDK", platform="pdd", config={}, is_active=True)
+        self.db.add(source)
+        await self.db.flush()
+        return source
+
+    async def create_listing_job(self, *, job_type: str, spu_id: int | None, params: dict) -> DataFetchJob:
+        source = await self._get_pdd_data_source()
+        job = DataFetchJob(
+            data_source_id=source.id,
+            job_type=job_type,
+            collection_type="incremental",
+            status="pending",
+            params=params,
+            spu_id=spu_id,
+        )
+        self.db.add(job)
+        await self.db.commit()
+        await self.db.refresh(job)
+        return job
+
+    async def refresh_listing_price(self, job_id: int, listing_id: int) -> None:
+        from app.services.pdd_client import PDDClient
+
+        job_result = await self.db.execute(select(DataFetchJob).where(DataFetchJob.id == job_id))
+        job = job_result.scalar_one_or_none()
+        if not job:
+            return
+
+        job.status = "running"
+        job.started_at = datetime.now(UTC)
+        await self.db.commit()
+
+        listing_result = await self.db.execute(select(SpuListing).where(SpuListing.id == listing_id))
+        listing = listing_result.scalar_one_or_none()
+        if not listing:
+            job.status = "failed"
+            job.error_message = "Listing not found"
+            job.completed_at = datetime.now(UTC)
+            await self.db.commit()
+            return
+
+        if not listing.goods_sign:
+            job.status = "failed"
+            job.error_message = "Missing goods_sign; cannot refresh via PDD detail"
+            listing.last_sync_error = job.error_message
+            job.completed_at = datetime.now(UTC)
+            await self.db.commit()
+            return
+
+        pdd = PDDClient()
+        try:
+            detail = await pdd.get_goods_detail(listing.goods_sign)
+            if not detail:
+                raise ValueError("PDD detail returned empty result")
+            parsed = pdd.parse_goods(detail)
+            listing.price = parsed["group_price"] or listing.price
+            listing.original_price = parsed["single_price"] or listing.original_price
+            listing.title = parsed["name"] or listing.title
+            listing.shop_name = parsed["mall_name"] or listing.shop_name
+            listing.image_url = parsed["image_urls"][0] if parsed["image_urls"] else listing.image_url
+            listing.sales_count = self._parse_sales_count_for_refresh(parsed["sales_tip"]) or listing.sales_count
+            listing.last_synced_at = datetime.now(UTC)
+            listing.last_sync_error = None
+            job.status = "completed"
+            job.result = {
+                "listing_id": listing.id,
+                "price": float(listing.price),
+                "original_price": float(listing.original_price) if listing.original_price else None,
+            }
+            job.completed_at = datetime.now(UTC)
+            await self.db.commit()
+            if listing.spu_id:
+                await update_spu_price_range(self.db, listing.spu_id)
+        except Exception as e:
+            listing.last_sync_error = str(e)
+            job.status = "failed"
+            job.error_message = str(e)
+            job.completed_at = datetime.now(UTC)
+            await self.db.commit()
+        finally:
+            await pdd.close()
+
+    @staticmethod
+    def _parse_sales_count_for_refresh(sales_tip: str | None) -> int | None:
+        if not sales_tip:
+            return None
+        cleaned = sales_tip.replace("+", "").strip()
+        if "万" in cleaned:
+            try:
+                return int(float(cleaned.replace("万", "")) * 10000)
+            except ValueError:
+                return None
+        try:
+            return int(cleaned)
+        except ValueError:
+            return None
 
     async def link_listing(self, listing_id: int, spu_id: int) -> SpuListing | None:
         result = await self.db.execute(

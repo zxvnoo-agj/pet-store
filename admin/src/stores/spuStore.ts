@@ -49,6 +49,11 @@ export interface SpuListing {
   url: string
   image_url?: string
   sales_count?: number
+  goods_sign?: string
+  sku_specs?: any[]
+  service_tags?: any[]
+  is_primary?: boolean
+  last_sync_error?: string
   match_confidence?: number
   match_status: string
   spu_name?: string
